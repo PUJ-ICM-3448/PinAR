@@ -40,3 +40,11 @@ Tengo 20 años y curso el sexto semestre de Ingeniería de sistemas en la Javeri
 Me intereso principalmente en temas de ciberseguridad y desarrollo web. Actualmente, trabajo en varios proyectos del último. 
 
 Fuera de la carrera, soy apasionado por el cine, y he trabajado en varios proyectos de cortometrajes de cine análogo. 
+
+### Andres Felipe Beltran
+<img src="img/andres.jpeg" width="100" height="100">
+
+Tengo 20 años y estoy en sexto semestre de Ingeniería de sistemas en la Javeriana.
+Estoy interesado en desarrollo web, pero no estoy cerrado a aprender otras areas relacionadas. 
+
+Fuera de la carrera, me gusta la producción musical, el beatmaking, los videojuegos y aprender cosas nuevas. 
