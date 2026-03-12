@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">PinAR</string>
+    <string name="hace">Hace %1$s</string>
+    <string name="visitas">%1$s visitas</string>
+    <string name="hola_usuario">Hola, Usuario 👋</string>
+    <string name="explora_y_navega_por_espacios_interiores">Explora y navega por espacios interiores!</string>
+    <string name="crear_pin">Crear Pin</string>
+    <string name="ver_mapa">Ver Mapa</string>
+    <string name="navegaci_n">Navegación</string>
+    <string name="vista_ar">Vista AR</string>
+    <string name="ver_todos">Ver todos</string>
+    <string name="pines_recientes">Pines Recientes</string>
+    <string name="sala_de_conferencias_a">Sala de Conferencias A</string>
+    <string name="edificio_principal_piso_3">Edificio Principal - Piso 3</string>
+    <string name="cafeter_a">Cafetería</string>
+    <string name="edificio_principal_piso_1">Edificio Principal - Piso 1</string>
+    <string name="lugares_populares">Lugares Populares</string>
+    <string name="auditorio_principal">Auditorio Principal</string>
+    <string name="biblioteca">Biblioteca</string>
+    <string name="edificio_de_investigaci_n_piso_2">Edificio de investigación - Piso 2</string>
+    <string name="laboratorio_204">Laboratorio 204</string>
+</resources>
