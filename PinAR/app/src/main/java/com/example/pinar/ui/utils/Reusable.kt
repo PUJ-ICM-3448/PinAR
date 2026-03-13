@@ -77,6 +77,22 @@ fun IconoConTexto(iconRes: Int, text: String) {
 }
 
 @Composable
+fun LogoVertical(modifier: Modifier = Modifier, icono: Int, text: String) {
+    Box() {
+        Column(modifier = Modifier) {
+            Image(
+                painter = painterResource(icono),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = text,
+            )
+        }
+    }
+}
+
+@Composable
 fun Footer(modifier: Modifier = Modifier) {
     NavigationBar(
         modifier = modifier,

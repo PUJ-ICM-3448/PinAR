@@ -19,4 +19,10 @@
     <string name="biblioteca">Biblioteca</string>
     <string name="edificio_de_investigaci_n_piso_2">Edificio de investigación - Piso 2</string>
     <string name="laboratorio_204">Laboratorio 204</string>
+    <string name="pinar">PinAR</string>
+    <string name="realidad_aumentada_para_ubicarte_en_espacios_cerrados">Realidad Aumentada para ubicarte en espacios cerrados</string>
+    <string name="iniciar_sesi_n">Iniciar Sesión</string>
+    <string name="registrarse">Registrarse</string>
+    <string name="pines">Pines</string>
+    <string name="crear_cuenta">Crear Cuenta</string>
 </resources>
