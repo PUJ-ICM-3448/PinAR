@@ -145,7 +145,10 @@ fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToMap: () -> Unit
+) {
     Box(modifier = modifier) {
         LazyColumn(
             modifier = Modifier
@@ -269,7 +272,10 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             item { Spacer(modifier = Modifier.height(80.dp)) }
 
         }
-        Footer(modifier = Modifier.align(Alignment.BottomCenter))
+        Footer(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            onMapClick = onNavigateToMap
+        )
     }
 
 }

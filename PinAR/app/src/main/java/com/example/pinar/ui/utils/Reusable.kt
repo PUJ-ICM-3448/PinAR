@@ -93,14 +93,20 @@ fun LogoVertical(modifier: Modifier = Modifier, icono: Int, text: String) {
 }
 
 @Composable
-fun Footer(modifier: Modifier = Modifier) {
+fun Footer(
+    modifier: Modifier = Modifier,
+    onHomeClick: () -> Unit = {},
+    onMapClick: () -> Unit = {},
+    onARClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
+) {
     NavigationBar(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         NavigationBarItem(
             selected = true,
-            onClick = {/*TODO*/},
+            onClick = onHomeClick,
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.home),
@@ -117,7 +123,7 @@ fun Footer(modifier: Modifier = Modifier) {
         )
         NavigationBarItem(
             selected = false,
-            onClick = {/*TODO*/},
+            onClick = onMapClick,
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.map),
@@ -134,7 +140,7 @@ fun Footer(modifier: Modifier = Modifier) {
         )
         NavigationBarItem(
             selected = false,
-            onClick = {/*TODO*/},
+            onClick = onARClick,
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.clock),
@@ -151,7 +157,7 @@ fun Footer(modifier: Modifier = Modifier) {
         )
         NavigationBarItem(
             selected = false,
-            onClick = {/*TODO*/},
+            onClick = onProfileClick,
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.profile),

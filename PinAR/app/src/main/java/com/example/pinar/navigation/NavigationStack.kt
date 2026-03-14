@@ -7,13 +7,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.pinar.ui.SignScreen
 import com.example.pinar.ui.HomeScreen
+import com.example.pinar.ui.MapScreen
 
 @Composable
 fun NavigationStack() {
@@ -29,7 +29,7 @@ fun NavigationStack() {
 
         composable(route = Screen.Sign.route) {
             SignScreen(
-                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
                 onUserClick = { navController.navigate(Screen.Home.route) }
                 //onUserClick = { user ->
                     //navController.navigate(Screen.Detail.route + "?userId=${user.id}")},
@@ -37,8 +37,14 @@ fun NavigationStack() {
         }
 
         composable(route = Screen.Home.route) {
-                HomeScreen()
-                //UserDetailScreen(user = user, image = user.image, modifier = Modifier.fillMaxSize())
+            HomeScreen(
+                onNavigateToMap = { navController.navigate(Screen.Map.route) }
+            )
+        }
+        composable(route = Screen.Map.route) {
+            MapScreen(
+                onNavigateToHome = { navController.navigate(Screen.Home.route) }
+            )
         }
     }
 }
