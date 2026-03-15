@@ -77,16 +77,23 @@ fun IconoConTexto(iconRes: Int, text: String) {
 }
 
 @Composable
-fun LogoVertical(modifier: Modifier = Modifier, icono: Int, text: String) {
-    Box() {
-        Column(modifier = Modifier) {
+fun LogoVertical(
+    modifier: Modifier = Modifier,
+    icono: Int,
+    text: String
+) {
+    Box(modifier = modifier) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Image(
                 painter = painterResource(icono),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
+
             Text(
-                text = text,
+                text = text
             )
         }
     }

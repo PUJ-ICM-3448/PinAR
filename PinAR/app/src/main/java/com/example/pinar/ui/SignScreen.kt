@@ -18,6 +18,8 @@ import com.example.pinar.R
 import com.example.pinar.ui.utils.LogoVertical
 import com.example.pinar.ui.utils.PinArLogo
 
+
+
 @Composable
 fun SignButton(onClick: () -> Unit, text: String) {
     FilledTonalButton(
@@ -47,7 +49,7 @@ fun Logos(modifier: Modifier = Modifier) {
     ) {
         LogoVertical(icono = R.drawable.camera, text = stringResource(R.string.vista_ar))
         LogoVertical(icono = R.drawable.location, text = stringResource(R.string.pines))
-        LogoVertical(icono = R.drawable.navigation, text = stringResource(R.string.navegaci_n))
+        LogoVertical(icono = R.drawable.navegaci_on, text = stringResource(R.string.navegaci_n))
     }
 }
 
