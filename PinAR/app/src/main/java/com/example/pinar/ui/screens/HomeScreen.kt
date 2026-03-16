@@ -98,7 +98,7 @@ fun PinDetallesInferiores(tiempo: String, distancia: String, personas: Int) {
 @Composable
 fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, distancia: String, personas: Int) {
     Card(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
