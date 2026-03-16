@@ -6,17 +6,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.ui.viewinterop.AndroidView
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.example.pinar.R
 import androidx.compose.foundation.layout.Column
 import com.example.pinar.ui.utils.Footer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-
+import androidx.compose.foundation.background
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
@@ -25,19 +33,17 @@ fun MapScreen(
     onNavigateToProfile: () -> Unit
 ) {
     Column (modifier = modifier) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Search(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             textFieldState = remember { TextFieldState() },
             onSearch = {/*despues*/}
         )
-        Map(modifier = Modifier.weight(1f).padding(16.dp))
-        Spacer(modifier = Modifier.height(16.dp))
+        Map(modifier = Modifier.weight(1f).padding(horizontal = 16.dp))
         Footer(
             onHomeClick = onNavigateToHome,
             onARClick = onNavigateToAR,
             onProfileClick = onNavigateToProfile
-
         )
     }
 }
@@ -64,14 +70,30 @@ fun Search(
 
 @Composable
 fun Map(modifier: Modifier = Modifier) {
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            WebView(context).apply {
-                webViewClient = WebViewClient()
-                loadUrl("https://www.openstreetmap.org/")
-            }
-        }
-    )
+    Box(modifier = modifier) {
+        Image(
+            painter = painterResource(id = R.drawable.bogota),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(Color.Red)
+                .align(Alignment.TopCenter)
+                .padding(0.dp, 40.dp)
+        )
+        
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(Color.Blue)
+                .align(Alignment.Center)
+        )
+    }
 }
 
