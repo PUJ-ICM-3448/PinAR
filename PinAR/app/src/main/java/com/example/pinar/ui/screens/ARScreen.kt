@@ -1,6 +1,5 @@
 package com.example.pinar.ui.screens
 
-
 import com.example.pinar.ui.utils.Footer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,11 +32,11 @@ import androidx.compose.ui.graphics.Brush
 
 
 @Composable
-fun ProfileScreen(
+fun ARScreen(
     modifier: Modifier = Modifier,
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
-    onNavigateToAR: () -> Unit
+    onNavigateToProfile: () -> Unit
 
 ) {
 
@@ -98,9 +97,9 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
 
-                            StatCard("42", "Pines\nCreados")
-                            StatCard("128", "Rutas\nNavegadas")
-                            StatCard("8", "Logros")
+                            StatCard1("42", "Pines\nCreados")
+                            StatCard1("128", "Rutas\nNavegadas")
+                            StatCard1("8", "Logros")
 
                         }
 
@@ -165,14 +164,14 @@ fun ProfileScreen(
             modifier = Modifier.align(Alignment.BottomCenter),
             onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
-            onARClick = onNavigateToAR
+            onProfileClick = onNavigateToProfile
 
         )
     }
 }
 
 @Composable
-fun StatCard(numero: String, texto: String) {
+fun StatCard1(numero: String, texto: String) {
 
     Card(
         shape = RoundedCornerShape(16.dp),

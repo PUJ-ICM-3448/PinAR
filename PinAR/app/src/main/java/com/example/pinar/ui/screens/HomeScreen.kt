@@ -34,121 +34,12 @@ import com.example.pinar.ui.utils.PinArLogo
 import androidx.compose.material3.CardDefaults
 
 @Composable
-fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-
-        Column(modifier = Modifier.padding(12.dp)) {
-            PinMiniLogo()
-            Text(texto)
-            Text(
-                textoMini,
-                color= MaterialTheme.colorScheme.onPrimary,
-                fontSize = 10.sp
-            )
-        }
-    }
-
-}
-
-@Composable
-fun PinInfoPrincipal(titulo: String, subtitulo: String) {
-    Column {
-        Text(
-            titulo,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            subtitulo,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun PinDetallesInferiores(tiempo: String, distancia: String, personas: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        IconoConTexto(
-            R.drawable.clock,
-            stringResource(R.string.hace, tiempo)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = distancia,
-            style = MaterialTheme.typography.bodySmall,
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        IconoConTexto(
-            R.drawable.user,
-            personas.toString()
-        )
-    }
-}
-
-
-@Composable
-fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, distancia: String, personas: Int) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PinMiniLogo()
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                PinInfoPrincipal(titulo = nombre, subtitulo = sitio)
-                Spacer(modifier = Modifier.height(8.dp))
-                PinDetallesInferiores(tiempo, distancia, personas)
-            }
-        }
-    }
-}
-
-@Composable
-fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
-    Card(
-        modifier = modifier,
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.trend),
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(sitio)
-            }
-            Text(stringResource(R.string.visitas, visitas))
-        }
-    }
-}
-
-@Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onNavigateToMap: () -> Unit,
+    onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit
+
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -276,8 +167,122 @@ fun HomeScreen(
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
             onMapClick = onNavigateToMap,
+            onARClick = onNavigateToAR,
             onProfileClick = onNavigateToProfile
         )
     }
 
 }
+
+@Composable
+fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(4.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+
+        Column(modifier = Modifier.padding(12.dp)) {
+            PinMiniLogo()
+            Text(texto)
+            Text(
+                textoMini,
+                color= MaterialTheme.colorScheme.onPrimary,
+                fontSize = 10.sp
+            )
+        }
+    }
+
+}
+
+@Composable
+fun PinInfoPrincipal(titulo: String, subtitulo: String) {
+    Column {
+        Text(
+            titulo,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            subtitulo,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun PinDetallesInferiores(tiempo: String, distancia: String, personas: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconoConTexto(
+            R.drawable.clock,
+            stringResource(R.string.hace, tiempo)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = distancia,
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        IconoConTexto(
+            R.drawable.user,
+            personas.toString()
+        )
+    }
+}
+
+
+@Composable
+fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, distancia: String, personas: Int) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PinMiniLogo()
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                PinInfoPrincipal(titulo = nombre, subtitulo = sitio)
+                Spacer(modifier = Modifier.height(8.dp))
+                PinDetallesInferiores(tiempo, distancia, personas)
+            }
+        }
+    }
+}
+
+@Composable
+fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
+    Card(
+        modifier = modifier,
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.trend),
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(sitio)
+            }
+            Text(stringResource(R.string.visitas, visitas))
+        }
+    }
+}
+
+

@@ -17,6 +17,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 
+@Composable
+fun MapScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToHome: () -> Unit,
+    onNavigateToAR: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
+    Column (modifier = modifier) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Search(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            textFieldState = remember { TextFieldState() },
+            onSearch = {/*despues*/}
+        )
+        Map(modifier = Modifier.weight(1f).padding(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Footer(
+            onHomeClick = onNavigateToHome,
+            onARClick = onNavigateToAR,
+            onProfileClick = onNavigateToProfile
+
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Search(
@@ -50,22 +75,3 @@ fun Map(modifier: Modifier = Modifier) {
     )
 }
 
-@Composable
-fun MapScreen(
-    modifier: Modifier = Modifier,
-    onNavigateToHome: () -> Unit
-) {
-    Column (modifier = modifier) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Search(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            textFieldState = remember { TextFieldState() },
-            onSearch = {/*despues*/}
-        )
-        Map(modifier = Modifier.weight(1f).padding(16.dp))
-        Spacer(modifier = Modifier.height(16.dp))
-        Footer(
-            onHomeClick = onNavigateToHome
-        )
-    }
-}

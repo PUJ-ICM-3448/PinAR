@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.pinar.ui.screens.ARScreen
 import com.example.pinar.ui.screens.SignScreen
 import com.example.pinar.ui.screens.HomeScreen
 import com.example.pinar.ui.screens.MapScreen
@@ -37,12 +38,28 @@ fun NavigationStack() {
         composable(route = Screen.Home.route) {
             HomeScreen(
                 onNavigateToMap = { navController.navigate(Screen.Map.route)},
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route)},
+                onNavigateToAR = { navController.navigate(Screen.AR.route)},
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route)}
             )
         }
         composable(route = Screen.Map.route) {
             MapScreen(
-                onNavigateToHome = { navController.navigate(Screen.Home.route) }
+                onNavigateToHome = { navController.navigate(Screen.Home.route)},
+                onNavigateToAR = { navController.navigate(Screen.AR.route)},
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route)}
+            )
+        }
+        composable(route = Screen.AR.route) {
+            ARScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route)
+                },
+                onNavigateToMap = {
+                    navController.navigate(Screen.Map.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                }
             )
         }
         composable(route = Screen.Profile.route) {
@@ -52,6 +69,9 @@ fun NavigationStack() {
                 },
                 onNavigateToMap = {
                     navController.navigate(Screen.Map.route)
+                },
+                onNavigateToAR = {
+                    navController.navigate(Screen.AR.route)
                 }
             )
         }
