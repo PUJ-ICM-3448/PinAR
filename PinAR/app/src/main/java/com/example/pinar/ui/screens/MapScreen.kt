@@ -1,9 +1,8 @@
-package com.example.pinar.ui
+package com.example.pinar.ui.screens
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.material3.SearchBar
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.text.input.TextFieldState
@@ -15,7 +14,6 @@ import com.example.pinar.ui.utils.Footer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 

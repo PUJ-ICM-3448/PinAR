@@ -4,17 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.example.pinar.ui.SignScreen
-import com.example.pinar.ui.HomeScreen
-import com.example.pinar.ui.MapScreen
-import com.example.pinar.ui.ProfileScreen
+import com.example.pinar.ui.screens.SignScreen
+import com.example.pinar.ui.screens.HomeScreen
+import com.example.pinar.ui.screens.MapScreen
+import com.example.pinar.ui.screens.ProfileScreen
 
 @Composable
 fun NavigationStack() {

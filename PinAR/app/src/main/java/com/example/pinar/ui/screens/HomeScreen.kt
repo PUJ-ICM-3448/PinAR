@@ -1,4 +1,4 @@
-package com.example.pinar.ui
+package com.example.pinar.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
