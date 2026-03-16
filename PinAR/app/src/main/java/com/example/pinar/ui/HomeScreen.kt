@@ -147,7 +147,8 @@ fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onNavigateToMap: () -> Unit
+    onNavigateToMap: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -274,7 +275,8 @@ fun HomeScreen(
         }
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
-            onMapClick = onNavigateToMap
+            onMapClick = onNavigateToMap,
+            onProfileClick = onNavigateToProfile
         )
     }
 
