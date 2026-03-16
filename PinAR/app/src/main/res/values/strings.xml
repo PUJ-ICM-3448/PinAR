@@ -26,4 +26,9 @@
     <string name="pines">Pines</string>
     <string name="crear_cuenta">Crear Cuenta</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="esperando_permisos_de_c_mara">Esperando permisos de cámara...</string>
+    <string name="inicializando_ar">Inicializando AR...</string>
+    <string name="ar_no_disponible">AR no disponible</string>
+    <string name="ver_pines">Ver Pines</string>
+    <string name="publicar">Publicar</string>
 </resources>

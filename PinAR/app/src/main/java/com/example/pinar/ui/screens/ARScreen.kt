@@ -1,34 +1,47 @@
 package com.example.pinar.ui.screens
 
-import com.example.pinar.ui.utils.Footer
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.view.View
+import android.widget.Button
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.pinar.R
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CardDefaults
-import androidx.compose.ui.graphics.Brush
+import com.example.pinar.data.ARSessionState
+import com.example.pinar.ui.utils.Footer
+import com.google.ar.core.ArCoreApk
+import com.google.ar.core.Session
+import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
+import io.github.sceneview.ar.ArSceneView
+import androidx.compose.material3.Button
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import com.example.pinar.ui.utils.LogoVertical
 
 
 @Composable
@@ -37,169 +50,195 @@ fun ARScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
     onNavigateToProfile: () -> Unit
-
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    Box(modifier = modifier.fillMaxSize()) {
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        )
+    }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (!isGranted) {
+            Toast.makeText(context, "Se requiere permiso de cámara para AR", Toast.LENGTH_SHORT).show()
+        }
+    }
 
-            item {
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFF7B1FA2),
-                                    Color(0xFFD81B60)
-                                )
-                            )
-                        )
-                        .padding(24.dp)
-                ) {
+    var sessionState by remember { mutableStateOf(ARSessionState()) }
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+    if (hasCameraPermission) {
+        ARSessionHandler(
+            activity = activity,
+            context = context,
+            lifecycleOwner = lifecycleOwner,
+            sessionState = sessionState,
+            onSessionStateChange = { sessionState = it }
+        )
+    }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+    ARScreenContent(
+        modifier = modifier.fillMaxSize(),
+        sessionState = sessionState,
+        hasCameraPermission = hasCameraPermission,
+        onNavigateToHome = onNavigateToHome,
+        onNavigateToMap = onNavigateToMap,
+        onNavigateToProfile = onNavigateToProfile
+    )
+}
 
-                        Image(
-                            painter = painterResource(R.drawable.profile),
-                            contentDescription = null,
-                            modifier = Modifier.size(100.dp)
-                        )
+@Composable
+fun ARSessionHandler(
+    activity: Activity?,
+    context: android.content.Context,
+    lifecycleOwner: LifecycleOwner,
+    sessionState: ARSessionState,
+    onSessionStateChange: (ARSessionState) -> Unit
+) {
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    if (activity == null) return@LifecycleEventObserver
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            "María González",
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            "Entusiasta de la tecnología AR y exploradora de espacios interiores.",
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-
-                            StatCard1("42", "Pines\nCreados")
-                            StatCard1("128", "Rutas\nNavegadas")
-                            StatCard1("8", "Logros")
-
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Editar Perfil")
+                    try {
+                        if (sessionState.session == null) {
+                            when (ArCoreApk.getInstance().requestInstall(activity, sessionState.userRequestedInstall)) {
+                                ArCoreApk.InstallStatus.INSTALLED -> {
+                                    val newSession = Session(activity)
+                                    onSessionStateChange(
+                                        sessionState.copy(
+                                            session = newSession,
+                                            isInitialized = true
+                                        )
+                                    )
+                                    newSession.resume()
+                                }
+                                ArCoreApk.InstallStatus.INSTALL_REQUESTED -> {
+                                    onSessionStateChange(
+                                        sessionState.copy(userRequestedInstall = false)
+                                    )
+                                    return@LifecycleEventObserver
+                                }
                             }
+                        } else {
+                            sessionState.session?.resume()
                         }
-
+                    } catch (e: UnavailableUserDeclinedInstallationException) {
+                        Toast.makeText(context, "Instalación de ARCore fallida", Toast.LENGTH_LONG).show()
+                    } catch (e: Exception) {
                     }
                 }
-
+                Lifecycle.Event.ON_PAUSE -> {
+                    sessionState.session?.pause()
+                }
+                else -> {}
             }
-
-            item {
-
-                Text(
-                    "Actividad Reciente",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp)
-                )
-
-            }
-
-            item {
-                PinReciente(
-                    nombre = "Sala A",
-                    sitio = "Edificio 1",
-                    tiempo = "5 min",
-                    distancia = "12m",
-                    personas = 3
-                )
-            }
-
-            item {
-                PinReciente(
-                    nombre = "Biblioteca",
-                    sitio = "Piso 2",
-                    tiempo = "10 min",
-                    distancia = "30m",
-                    personas = 5
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(80.dp)) }
-
         }
 
-        Footer(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            onHomeClick = onNavigateToHome,
-            onMapClick = onNavigateToMap,
-            onProfileClick = onNavigateToProfile
+        lifecycleOwner.lifecycle.addObserver(observer)
 
-        )
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            sessionState.session?.close()
+            onSessionStateChange(sessionState.copy(session = null, isInitialized = false))
+        }
     }
 }
 
 @Composable
-fun StatCard1(numero: String, texto: String) {
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .width(80.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(
-                numero,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+fun ARScreenContent(
+    modifier: Modifier = Modifier,
+    sessionState: ARSessionState,
+    hasCameraPermission: Boolean,
+    onNavigateToHome: () -> Unit,
+    onNavigateToMap: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
+    Box(modifier = modifier) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            ARCameraView(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                sessionState = sessionState,
+                hasCameraPermission = hasCameraPermission
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                texto,
-                fontSize = 12.sp
+            Footer(
+                onHomeClick = onNavigateToHome,
+                onMapClick = onNavigateToMap,
+                onARClick = {},
+                onProfileClick = onNavigateToProfile
             )
-
         }
-
     }
+}
 
+@Composable
+fun ARCameraView(
+    modifier: Modifier = Modifier,
+    sessionState: ARSessionState,
+    hasCameraPermission: Boolean
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            !hasCameraPermission -> {
+                Text(text = stringResource(R.string.esperando_permisos_de_c_mara))
+            }
+            !sessionState.isInitialized -> {
+                Text(text = stringResource(R.string.inicializando_ar))
+            }
+            sessionState.session != null -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+
+                    AndroidView(
+                        factory = { ctx ->
+                            ArSceneView(ctx)
+                        }
+                    )
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.align(Alignment.TopEnd).padding(20.dp)
+                    ) {
+                        Text(stringResource(R.string.ver_pines))
+                    }
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp)
+                    ) {
+                        LogoVertical(icono = R.drawable.camera, text = stringResource(R.string.publicar))
+                    }
+                }
+            }
+            else -> {
+                Text(text = stringResource(R.string.ar_no_disponible))
+            }
+        }
+    }
+}
+
+fun maybeEnableArButton(context: android.content.Context, arButton: Button) {
+    val availability = ArCoreApk.getInstance().checkAvailability(context)
+    if (availability.isSupported) {
+        arButton.visibility = View.VISIBLE
+        arButton.isEnabled = true
+    } else {
+        arButton.visibility = View.INVISIBLE
+        arButton.isEnabled = false
+    }
 }
