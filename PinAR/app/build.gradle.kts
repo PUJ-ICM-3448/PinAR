@@ -56,6 +56,7 @@ dependencies {
     implementation("com.google.ar:core:1.33.0")
     implementation("io.github.sceneview:arsceneview:0.10.0")
     implementation("com.google.android.gms:play-services-base:18.2.0")
+    implementation("androidx.compose.material:material-icons-extended")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
