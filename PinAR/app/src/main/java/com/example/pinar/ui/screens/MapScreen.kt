@@ -67,7 +67,7 @@ fun Search(
     SearchBar(
         modifier = modifier,
         query = textFieldState.text.toString(),
-        onQueryChange = { },
+        onQueryChange = {textFieldState.edit { replace(0, length, it) } },
         onSearch = { query -> onSearch(query) },
         active = false,
         onActiveChange = { },

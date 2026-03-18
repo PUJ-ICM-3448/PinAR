@@ -19,8 +19,6 @@ import com.example.pinar.R
 import com.example.pinar.ui.utils.LogoVertical
 import com.example.pinar.ui.utils.PinArLogo
 
-
-
 @Composable
 fun SignButton(onClick: () -> Unit, text: String) {
     FilledTonalButton(

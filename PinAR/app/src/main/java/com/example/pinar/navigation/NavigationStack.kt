@@ -11,12 +11,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pinar.ui.screens.ARScreen
 import com.example.pinar.ui.screens.SignScreen
 import com.example.pinar.ui.screens.HomeScreen
+import com.example.pinar.ui.screens.LogInScreen
 import com.example.pinar.ui.screens.MapScreen
 import com.example.pinar.ui.screens.NewPinDetailsScreen
 import com.example.pinar.ui.screens.NewPinLocationScreen
 import com.example.pinar.ui.screens.NewPinScreen
 import com.example.pinar.ui.screens.ProfileScreen
 import com.example.pinar.ui.screens.NotificationsScreen
+import com.example.pinar.ui.screens.RegisterScreen
 
 @Composable
 fun NavigationStack() {
@@ -33,10 +35,31 @@ fun NavigationStack() {
         composable(route = Screen.Sign.route) {
             SignScreen(
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
-                onUserClick = { navController.navigate(Screen.Home.route) }
+                onNavigateToLogin = { navController.navigate(Screen.Login.route) },
+                onNavigateToRegister = {navController.navigate(Screen.Register.route)}
+
                 //onUserClick = { user ->
                     //navController.navigate(Screen.Detail.route + "?userId=${user.id}")},
             )
+        }
+
+        composable(route = Screen.Login.route) {
+            LogInScreen (
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
+                onNavigateBack = { navController.navigate(Screen.Sign.route)},
+                onNavigateToHome = { navController.navigate(Screen.Home.route)},
+                onNavigateToRegister = { navController.navigate(Screen.Sign.route)},
+
+            )
+        }
+
+        composable(route = Screen.Register.route) {
+            RegisterScreen (
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
+                onNavigateBack = { navController.navigate(Screen.Sign.route)},
+                onNavigateToHome = { navController.navigate(Screen.Home.route)},
+                onNavigateToLogin = { navController.navigate(Screen.Login.route)}
+                )
         }
 
         composable(route = Screen.Home.route) {
@@ -100,6 +123,7 @@ fun NavigationStack() {
                 onNavigateToAR = { navController.navigate(Screen.AR.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
             )
+
         }
 
         composable(route = Screen.NewPinDetails.route){
