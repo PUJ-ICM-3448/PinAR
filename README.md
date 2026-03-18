@@ -22,6 +22,44 @@ Aplicación de realidad aumentada enfocada en ayuda a las personas a guiarse en 
 
 ---
 
+## Características Principales
+
+### 🎯 Navegación en Realidad Aumentada
+- Vista AR para mostrar pines virtuales en espacios cerrados 
+
+### 📍 Sistema de Pines
+- Creación de pines de ubicación personalizados
+- Visualización de pines cercanos y populares
+- Información detallada de cada ubicación (nombre, descripción, visitas)
+
+### 🗺️ Mapas Interactivos
+- Vista de mapas de edificios y pisos
+- Integración con el sistema de pines
+
+### 👤 Gestión de Usuarios
+- Sistema de autenticación (inicio de sesión y registro)
+- Perfil de usuario personalizado
+- Historial de pines visitados
+
+## Arquitectura Técnica
+
+### Requisitos Mínimos
+- **Android API**: 24 (Android 7.0) o superior
+- **RAM**: 4GB recomendados
+- **Procesador**: Soporte para ARCore
+- **Cámara**: Cámara trasera
+
+### Tecnologías Utilizadas
+- **Lenguaje**: Kotlin
+- **UI Framework**: Jetpack Compose
+- **AR Framework**: Google ARCore
+- **Navegación**: Navigation Compose
+- **Arquitectura**: MVVM (Model-View-ViewModel)
+
+### Compatibilidad ARCore
+- El dispositivo debe ser compatible con Google ARCore
+- Lista de dispositivos compatibles: [ARCore Supported Devices](https://developers.google.com/ar/devices)
+
 ## 👤 Integrantes  
 
 ### Carlos Daniel Guiza  
