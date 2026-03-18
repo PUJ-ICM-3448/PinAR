@@ -53,7 +53,9 @@ fun Logos(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SignScreen(modifier: Modifier = Modifier, onUserClick: () -> Unit = {}) {
+fun SignScreen(modifier: Modifier = Modifier,
+               onNavigateToLogin: () -> Unit,
+                onNavigateToRegister: () -> Unit){
     Box(modifier = modifier
         .fillMaxSize()
         .background(
@@ -96,10 +98,10 @@ fun SignScreen(modifier: Modifier = Modifier, onUserClick: () -> Unit = {}) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                SignButton(onClick = onUserClick, text = stringResource(R.string.iniciar_sesi_n))
+                SignButton(onClick = onNavigateToLogin, text = stringResource(R.string.iniciar_sesi_n))
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedButton(
-                    onClick = onUserClick,
+                    onClick = onNavigateToRegister,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
