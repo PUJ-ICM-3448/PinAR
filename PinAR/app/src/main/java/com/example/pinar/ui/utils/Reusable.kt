@@ -26,10 +26,15 @@ import androidx.compose.ui.unit.dp
 import com.example.pinar.R
 import com.example.pinar.ui.theme.RedDeep
 import com.example.pinar.ui.theme.RedPrimary
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
+import com.example.pinar.navigation.Screen
 
 @Composable
 fun PinMiniLogo() {
@@ -102,17 +107,27 @@ fun LogoVertical(
 @Composable
 fun Footer(
     modifier: Modifier = Modifier,
+    currentScreen: Screen = Screen.Home,
+    unreadCount: Int = 0,
     onHomeClick: () -> Unit = {},
     onMapClick: () -> Unit = {},
     onARClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
+    val navColors = NavigationBarItemDefaults.colors(
+        unselectedIconColor = Color.LightGray,
+        unselectedTextColor = Color.LightGray,
+        indicatorColor = Color.Transparent,
+        selectedIconColor = MaterialTheme.colorScheme.primary,
+        selectedTextColor = MaterialTheme.colorScheme.primary
+    )
     NavigationBar(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         NavigationBarItem(
-            selected = true,
+            selected = currentScreen == Screen.Home,
             onClick = onHomeClick,
             icon = {
                 Icon(
@@ -122,14 +137,10 @@ fun Footer(
                 )
             },
             label = { Text("Inicio", fontSize = 12.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.LightGray,
-                unselectedTextColor = Color.LightGray,
-                indicatorColor = Color.Transparent
-            )
+            colors = navColors
         )
         NavigationBarItem(
-            selected = false,
+            selected = currentScreen == Screen.Map,
             onClick = onMapClick,
             icon = {
                 Icon(
@@ -139,14 +150,10 @@ fun Footer(
                 )
             },
             label = { Text("Mapa", fontSize = 12.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.LightGray,
-                unselectedTextColor = Color.LightGray,
-                indicatorColor = Color.Transparent
-            )
+            colors = navColors
         )
         NavigationBarItem(
-            selected = false,
+            selected = currentScreen == Screen.AR,
             onClick = onARClick,
             icon = {
                 Icon(
@@ -156,14 +163,36 @@ fun Footer(
                 )
             },
             label = { Text("AR", fontSize = 12.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.LightGray,
-                unselectedTextColor = Color.LightGray,
-                indicatorColor = Color.Transparent
-            )
+            colors = navColors
         )
         NavigationBarItem(
-            selected = false,
+            selected = currentScreen == Screen.Notifications,
+            onClick = onNotificationsClick,
+            icon = {
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge(
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            ) {
+                                Text(text = unreadCount.toString(), fontSize = 10.sp)
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            label = { Text("Notif", fontSize = 12.sp) },
+            colors = navColors
+        )
+        NavigationBarItem(
+            selected = currentScreen == Screen.Profile,
             onClick = onProfileClick,
             icon = {
                 Icon(
@@ -173,11 +202,7 @@ fun Footer(
                 )
             },
             label = { Text("Perfil", fontSize = 12.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.LightGray,
-                unselectedTextColor = Color.LightGray,
-                indicatorColor = Color.Transparent
-            )
+            colors = navColors
         )
     }
 }

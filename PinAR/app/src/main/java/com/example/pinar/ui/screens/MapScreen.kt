@@ -25,12 +25,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.background
+import com.example.pinar.navigation.Screen
+
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
+    currentScreen: Screen = Screen.Map,
     onNavigateToHome: () -> Unit,
+    onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     Column (modifier = modifier) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -41,8 +46,12 @@ fun MapScreen(
         )
         Map(modifier = Modifier.weight(1f).padding(horizontal = 16.dp))
         Footer(
+            currentScreen = currentScreen,
+            unreadCount = 3,
             onHomeClick = onNavigateToHome,
+            onMapClick = onNavigateToMap,
             onARClick = onNavigateToAR,
+            onNotificationsClick = onNavigateToNotifications,
             onProfileClick = onNavigateToProfile
         )
     }
@@ -72,7 +81,7 @@ fun Search(
 fun Map(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         Image(
-            painter = painterResource(id = R.drawable.bogota),
+            painter = painterResource(id = R.drawable.map),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

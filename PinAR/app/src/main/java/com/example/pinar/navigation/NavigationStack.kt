@@ -13,6 +13,7 @@ import com.example.pinar.ui.screens.SignScreen
 import com.example.pinar.ui.screens.HomeScreen
 import com.example.pinar.ui.screens.MapScreen
 import com.example.pinar.ui.screens.ProfileScreen
+import com.example.pinar.ui.screens.NotificationsScreen
 
 @Composable
 fun NavigationStack() {
@@ -37,44 +38,51 @@ fun NavigationStack() {
 
         composable(route = Screen.Home.route) {
             HomeScreen(
-                onNavigateToMap = { navController.navigate(Screen.Map.route)},
-                onNavigateToAR = { navController.navigate(Screen.AR.route)},
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route)}
+                currentScreen = Screen.Home,
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToMap = { navController.navigate(Screen.Map.route) },
+                onNavigateToAR = { navController.navigate(Screen.AR.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
             )
         }
         composable(route = Screen.Map.route) {
             MapScreen(
-                onNavigateToHome = { navController.navigate(Screen.Home.route)},
-                onNavigateToAR = { navController.navigate(Screen.AR.route)},
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route)}
+                currentScreen = Screen.Map,
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToMap = { navController.navigate(Screen.Map.route) },
+                onNavigateToAR = { navController.navigate(Screen.AR.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
             )
         }
         composable(route = Screen.AR.route) {
             ARScreen(
-                onNavigateToHome = {
-                    navController.navigate(Screen.Home.route)
-                },
-                onNavigateToMap = {
-                    navController.navigate(Screen.Map.route)
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route)
-                }
+                currentScreen = Screen.AR,
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToMap = { navController.navigate(Screen.Map.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
             )
         }
         composable(route = Screen.Profile.route) {
             ProfileScreen(
-                onNavigateToHome = {
-                    navController.navigate(Screen.Home.route)
-                },
-                onNavigateToMap = {
-                    navController.navigate(Screen.Map.route)
-                },
-                onNavigateToAR = {
-                    navController.navigate(Screen.AR.route)
-                }
+                currentScreen = Screen.Profile,
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToMap = { navController.navigate(Screen.Map.route) },
+                onNavigateToAR = { navController.navigate(Screen.AR.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
             )
         }
 
+        composable(route = Screen.Notifications.route) {
+            NotificationsScreen(
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToMap = { navController.navigate(Screen.Map.route) },
+                onNavigateToAR = { navController.navigate(Screen.AR.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+            )
+        }
     }
 }

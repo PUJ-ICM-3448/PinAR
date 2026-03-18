@@ -30,16 +30,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.pinar.ui.utils.Footer
+import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.PinArLogo
 import androidx.compose.material3.CardDefaults
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    currentScreen: Screen = Screen.Home,
+    onNavigateToHome: () -> Unit = {},
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
-    onNavigateToProfile: () -> Unit
-
+    onNavigateToProfile: () -> Unit,
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -166,8 +169,12 @@ fun HomeScreen(
         }
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
+            currentScreen = currentScreen,
+            unreadCount = 3,
+            onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
             onARClick = onNavigateToAR,
+            onNotificationsClick = onNavigateToNotifications,
             onProfileClick = onNavigateToProfile
         )
     }
