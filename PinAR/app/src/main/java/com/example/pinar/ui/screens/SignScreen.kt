@@ -1,12 +1,14 @@
 package com.example.pinar.ui.screens
-
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,44 +53,67 @@ fun Logos(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SignScreen(
-    modifier: Modifier = Modifier,
-    onNavigateToLogin: () -> Unit = {},
-    onNavigateToRegister: () -> Unit = {}
-) {
-    Box(modifier = modifier) {
+fun SignScreen(modifier: Modifier = Modifier, onUserClick: () -> Unit = {}) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(
+            Brush.verticalGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.primaryContainer
+                )
+            )
+        )) {
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(80.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier.fillMaxSize()
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
-            PinArLogo()
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(R.string.pinar),
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.realidad_aumentada_para_ubicarte_en_espacios_cerrados),
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Logos(modifier = Modifier.padding(horizontal = 24.dp))
-            Spacer(modifier = Modifier.height(48.dp))
-            SignButton(
-                onClick = onNavigateToLogin,
-                text = stringResource(R.string.iniciar_sesi_n)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            SignButton(
-                onClick = onNavigateToRegister,
-                text = stringResource(R.string.crear_cuenta)
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                PinArLogo()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.pinar),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.realidad_aumentada_para_ubicarte_en_espacios_cerrados),
+                    color = Color.White.copy(alpha = 0.85f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+
+            }
+            Logos()
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                SignButton(onClick = onUserClick, text = stringResource(R.string.iniciar_sesi_n))
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onUserClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.crear_cuenta),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
     }
 }
