@@ -48,3 +48,12 @@ Tengo 20 años y estoy en sexto semestre de Ingeniería de sistemas en la Javeri
 Estoy interesado en desarrollo web, pero no estoy cerrado a aprender otras areas relacionadas. 
 
 Fuera de la carrera, me gusta la producción musical, el beatmaking, los videojuegos y aprender cosas nuevas. 
+
+
+### Alejandro Parrado Di Doménico
+<img src="img/alejandro.jpg" width="100" height="100">
+
+Tengo 20 a;os y estoy en sexto semestre de Ingeniería de Sistemas en la Javeriana.
+Trabajo en desarrollo Full-stack de producto y sistemas agenticos de AI
+
+Fuera de la carrera, me gusta leer libros de comportamiento humano, biografías y emprendimiento; también entrenar en el gym.
