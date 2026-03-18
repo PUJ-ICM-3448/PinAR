@@ -48,7 +48,7 @@ fun HomeScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToNewPin: () -> Unit
+    onNavigateToNewPin: () -> Unit,
 
     onNavigateToNotifications: () -> Unit = {}
 ) {

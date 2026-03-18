@@ -1,4 +1,5 @@
 package com.example.pinar.ui.screens
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,8 +16,6 @@ import androidx.compose.ui.unit.sp
 import com.example.pinar.R
 import com.example.pinar.ui.utils.LogoVertical
 import com.example.pinar.ui.utils.PinArLogo
-
-
 
 @Composable
 fun SignButton(onClick: () -> Unit, text: String) {
@@ -52,7 +51,11 @@ fun Logos(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SignScreen(modifier: Modifier = Modifier, onUserClick: () -> Unit = {}) {
+fun SignScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToRegister: () -> Unit = {}
+) {
     Box(modifier = modifier) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -77,9 +80,15 @@ fun SignScreen(modifier: Modifier = Modifier, onUserClick: () -> Unit = {}) {
             Spacer(modifier = Modifier.height(32.dp))
             Logos(modifier = Modifier.padding(horizontal = 24.dp))
             Spacer(modifier = Modifier.height(48.dp))
-            SignButton(onClick = onUserClick, text = stringResource(R.string.iniciar_sesi_n))
+            SignButton(
+                onClick = onNavigateToLogin,
+                text = stringResource(R.string.iniciar_sesi_n)
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            SignButton(onClick = onUserClick, text = stringResource(R.string.crear_cuenta))
+            SignButton(
+                onClick = onNavigateToRegister,
+                text = stringResource(R.string.crear_cuenta)
+            )
         }
     }
 }

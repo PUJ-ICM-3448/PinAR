@@ -16,6 +16,7 @@ import com.example.pinar.ui.screens.MapScreen
 import com.example.pinar.ui.screens.NewPinScreen
 import com.example.pinar.ui.screens.ProfileScreen
 import com.example.pinar.ui.screens.NotificationsScreen
+import com.example.pinar.ui.screens.RegisterScreen
 
 @Composable
 fun NavigationStack() {
@@ -32,7 +33,9 @@ fun NavigationStack() {
         composable(route = Screen.Sign.route) {
             SignScreen(
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
-                onUserClick = { navController.navigate(Screen.Login.route) }
+                onNavigateToLogin = { navController.navigate(Screen.Login.route) },
+                onNavigateToRegister = {navController.navigate(Screen.Register.route)}
+
                 //onUserClick = { user ->
                     //navController.navigate(Screen.Detail.route + "?userId=${user.id}")},
             )
@@ -48,17 +51,23 @@ fun NavigationStack() {
             )
         }
 
+        composable(route = Screen.Register.route) {
+            RegisterScreen (
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
+                onNavigateBack = { navController.navigate(Screen.Sign.route)},
+                onNavigateToHome = { navController.navigate(Screen.Home.route)},
+                onNavigateToLogin = { navController.navigate(Screen.Login.route)}
+                )
+        }
+
         composable(route = Screen.Home.route) {
             HomeScreen(
                 onNavigateToMap = { navController.navigate(Screen.Map.route)},
                 onNavigateToAR = { navController.navigate(Screen.AR.route)},
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route)},
-                onNavigateToNewPin = { navController.navigate(Screen.NewPin.route)}
-                currentScreen = Screen.Home,
+                onNavigateToNewPin = { navController.navigate(Screen.NewPin.route)},
+                //currentScreen = Screen.Home,
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
-                onNavigateToMap = { navController.navigate(Screen.Map.route) },
-                onNavigateToAR = { navController.navigate(Screen.AR.route) },
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
             )
         }
