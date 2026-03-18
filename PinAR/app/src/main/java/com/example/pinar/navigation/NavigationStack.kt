@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pinar.ui.screens.ARScreen
 import com.example.pinar.ui.screens.SignScreen
 import com.example.pinar.ui.screens.HomeScreen
+import com.example.pinar.ui.screens.LogInScreen
 import com.example.pinar.ui.screens.MapScreen
 import com.example.pinar.ui.screens.ProfileScreen
 import com.example.pinar.ui.screens.NotificationsScreen
@@ -30,9 +31,19 @@ fun NavigationStack() {
         composable(route = Screen.Sign.route) {
             SignScreen(
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
-                onUserClick = { navController.navigate(Screen.Home.route) }
+                onUserClick = { navController.navigate(Screen.Login.route) }
                 //onUserClick = { user ->
                     //navController.navigate(Screen.Detail.route + "?userId=${user.id}")},
+            )
+        }
+
+        composable(route = Screen.Login.route) {
+            LogInScreen (
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
+                onNavigateBack = { navController.navigate(Screen.Sign.route)},
+                onNavigateToHome = { navController.navigate(Screen.Home.route)},
+                onNavigateToRegister = { navController.navigate(Screen.Sign.route)},
+
             )
         }
 
@@ -83,6 +94,7 @@ fun NavigationStack() {
                 onNavigateToAR = { navController.navigate(Screen.AR.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
             )
+
         }
     }
 }
