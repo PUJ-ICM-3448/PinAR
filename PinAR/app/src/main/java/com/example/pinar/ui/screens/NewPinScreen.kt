@@ -1,5 +1,6 @@
 package com.example.pinar.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,9 +32,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+import com.example.pinar.ui.utils.TopBar;
+
 @Composable
 fun NewPinScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    onCloseClick: () -> Unit,
+    onTakePhoto: () -> Unit
 ){
     Column(
         modifier = Modifier
@@ -41,10 +47,10 @@ fun NewPinScreen(
             .padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBarNuevoPin()
+        TopBar(titulo = "Nuevo pin", onBackClick = onBackClick, onCloseClick = onCloseClick)
         Spacer(Modifier.height(16.dp))
         LinearProgressIndicator(
-            progress = { 0.25f },
+            progress = { 0.333f },
             modifier = Modifier.fillMaxWidth(),
             color = ProgressIndicatorDefaults.linearColor,
             trackColor = ProgressIndicatorDefaults.linearTrackColor,
@@ -64,27 +70,12 @@ fun NewPinScreen(
         Spacer(Modifier.height(24.dp))
         CardZonaImagen()
         Spacer(Modifier.height(24.dp))
-        BotonTomarFoto()
+        BotonTomarFoto(onTakePhoto)
         Spacer(Modifier.height(12.dp))
         BotonGaleria()
     }
 }
 
-@Composable
-fun TopBarNuevoPin(){
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-        Text(
-            text = "Nuevo pin",
-            fontWeight = FontWeight.Bold
-        )
-        Icon(Icons.Default.Close, contentDescription = "Close")
-    }
-}
 
 @Composable
 fun CardZonaImagen(){
@@ -112,9 +103,11 @@ fun CardZonaImagen(){
 }
 
 @Composable
-fun BotonTomarFoto(){
+fun BotonTomarFoto(
+    onTakePhoto: () -> Unit
+){
     Button(
-        onClick = {},
+        onClick = onTakePhoto,
         modifier = Modifier
             .fillMaxWidth()
             .height(55.dp)

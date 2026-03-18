@@ -81,7 +81,7 @@ fun Search(
 fun Map(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         Image(
-            painter = painterResource(id = R.drawable.map),
+            painter = painterResource(id = R.drawable.mapabogota),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
