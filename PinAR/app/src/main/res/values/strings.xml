@@ -31,4 +31,15 @@
     <string name="ar_no_disponible">AR no disponible</string>
     <string name="ver_pines">Ver Pines</string>
     <string name="publicar">Publicar</string>
+    <string name="notificaciones">Notificaciones</string>
+    <string name="sin_leer">%1$d sin leer</string>
+    <string name="marcar_todas_leidas">Marcar todas leídas</string>
+    <string name="filtro_todas">Todas</string>
+    <string name="filtro_comentarios">Comentarios</string>
+    <string name="filtro_me_gusta">Me gusta</string>
+    <string name="filtro_seguidores">Seguidores</string>
+    <string name="filtro_comunidades">Comunidades</string>
+    <string name="filtro_sistema">Sistema</string>
+    <string name="no_hay_notificaciones">No hay notificaciones</string>
+    <string name="notificaciones_apareceran_aqui">Aquí aparecerán tus notificaciones</string>
 </resources>

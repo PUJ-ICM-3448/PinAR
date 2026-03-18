@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import com.example.pinar.ui.utils.Footer
+import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.PinArLogo
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -42,11 +43,14 @@ import androidx.compose.material3.Icon
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    currentScreen: Screen = Screen.Home,
+    onNavigateToHome: () -> Unit = {},
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNewPin: () -> Unit
 
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -175,8 +179,12 @@ fun HomeScreen(
         }
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
+            currentScreen = currentScreen,
+            unreadCount = 3,
+            onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
             onARClick = onNavigateToAR,
+            onNotificationsClick = onNavigateToNotifications,
             onProfileClick = onNavigateToProfile
         )
         BotonFAB(

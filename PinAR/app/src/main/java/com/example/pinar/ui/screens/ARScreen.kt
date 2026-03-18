@@ -32,6 +32,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.pinar.R
 import com.example.pinar.data.ARSessionState
+import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Session
@@ -47,9 +48,11 @@ import com.example.pinar.ui.utils.LogoVertical
 @Composable
 fun ARScreen(
     modifier: Modifier = Modifier,
+    currentScreen: Screen = Screen.AR,
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -92,9 +95,11 @@ fun ARScreen(
         modifier = modifier.fillMaxSize(),
         sessionState = sessionState,
         hasCameraPermission = hasCameraPermission,
+        currentScreen = currentScreen,
         onNavigateToHome = onNavigateToHome,
         onNavigateToMap = onNavigateToMap,
-        onNavigateToProfile = onNavigateToProfile
+        onNavigateToProfile = onNavigateToProfile,
+        onNavigateToNotifications = onNavigateToNotifications
     )
 }
 
@@ -162,9 +167,11 @@ fun ARScreenContent(
     modifier: Modifier = Modifier,
     sessionState: ARSessionState,
     hasCameraPermission: Boolean,
+    currentScreen: Screen = Screen.AR,
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     Box(modifier = modifier) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -177,9 +184,12 @@ fun ARScreenContent(
             )
 
             Footer(
+                currentScreen = currentScreen,
+                unreadCount = 3,
                 onHomeClick = onNavigateToHome,
                 onMapClick = onNavigateToMap,
                 onARClick = {},
+                onNotificationsClick = onNavigateToNotifications,
                 onProfileClick = onNavigateToProfile
             )
         }

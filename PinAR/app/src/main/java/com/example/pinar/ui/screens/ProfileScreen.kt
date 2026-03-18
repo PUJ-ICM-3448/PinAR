@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pinar.R
+import com.example.pinar.navigation.Screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,10 +36,12 @@ import androidx.compose.ui.graphics.Brush
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    currentScreen: Screen = Screen.Profile,
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
-    onNavigateToAR: () -> Unit
-
+    onNavigateToAR: () -> Unit,
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {}
 ) {
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -163,10 +166,13 @@ fun ProfileScreen(
 
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
+            currentScreen = currentScreen,
+            unreadCount = 3,
             onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
-            onARClick = onNavigateToAR
-
+            onARClick = onNavigateToAR,
+            onNotificationsClick = onNavigateToNotifications,
+            onProfileClick = onNavigateToProfile
         )
     }
 }
