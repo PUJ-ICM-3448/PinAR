@@ -23,15 +23,15 @@ Este proyecto es una plataforma móvil de vanguardia que fusiona el mundo físic
 ---
 
 ## 📖 Tabla de Contenidos
-1. [Características Principales](#-características-principales)
-2. [Arquitectura técnica](#-arquitectura-técnica)
-3. [Visión General](#-visión-general)
-4. [Arquitectura del Sistema](#-arquitectura-del-sistema)
-5. [Módulos Principales (Screens)](#-módulos-principales-screens)
-6. [Deep Dive: El Motor AR](#-deep-dive-el-motor-ar)
-7. [Modelo de Datos y Mocks](#-modelo-de-datos-y-mocks)
-8. [Guía de Desarrollo y Troubleshooting](#-guía-de-desarrollo-y-troubleshooting)
-9. [Integrantes](#-integrantes-)
+1. [Características Principales](#características-principales)
+2. [Arquitectura Técnica](#arquitectura-técnica)
+3. [Visión General](#visión-general)
+4. [Arquitectura del Sistema](#arquitectura-del-sistema)
+5. [Módulos Principales (Screens)](#módulos-principales-screens)
+6. [Deep Dive: El Motor AR](#deep-dive-el-motor-ar)
+7. [Modelo de Datos y Mocks](#modelo-de-datos-y-mocks)
+8. [Guía de Desarrollo y Troubleshooting](#guía-de-desarrollo-y-troubleshooting)
+9. [Integrantes](#integrantes)
 
 ---
 
@@ -75,7 +75,7 @@ Este proyecto es una plataforma móvil de vanguardia que fusiona el mundo físic
 
 ---
 
-## 🎯 Visión General
+## 🌐 Visión General
 **PinAR** no es solo un mapa; es una interfaz de interacción espacial. Los usuarios pueden:
 
 - **Detectar superficies** en tiempo real mediante la cámara del dispositivo.
@@ -94,6 +94,7 @@ El proyecto sigue un patrón de diseño **State-driven UI** (Interfaz dirigida p
 - **Navigation:** Uso de `NavigationStack` con `rememberNavController` para la gestión de rutas.
 
 ---
+
 ## 📱 Módulos Principales (Screens)
 
 ### 📂 Sign Screen
@@ -111,6 +112,7 @@ Es la integración más compleja del proyecto. Combina la cámara del dispositiv
 - **Interacción:** Soporta el gesto de "Tap" para colocar objetos en planos detectados.
 
 ---
+
 ## ⚙️ Deep Dive: El Motor AR
 
 ### El `ARSessionHandler`
@@ -123,6 +125,7 @@ Componente crítico que sincroniza el ciclo de vida de la aplicación con el har
 Utilizamos `io.github.sceneview:arsceneview` para simplificar la carga de modelos 3D y la gestión de nodos (`ArModelNode`) sin necesidad de manejar OpenGL directamente.
 
 ---
+
 ## 📊 Modelo de Datos y Mocks
 
 El sistema de notificaciones está diseñado para escalar, con tipos de datos predefinidos:
@@ -135,6 +138,7 @@ El sistema de notificaciones está diseñado para escalar, con tipos de datos pr
 *Referencia de archivo: `com.example.pinar.data.mock.MockNotifications.kt`*
 
 ---
+
 ## 🛠 Guía de Desarrollo y Troubleshooting
 
 ### Configuración Necesaria
@@ -154,7 +158,7 @@ El sistema de notificaciones está diseñado para escalar, con tipos de datos pr
 
 ### Carlos Daniel Guiza  
 
-<img src="/img/daniel.jpg" width="100" height="100"/>
+<img src="img/daniel.jpg" width="100" height="100"/>
 
 Tengo 21 años y actualmente estoy en sexto semestre de Ingeniería de Sistemas.  
 Me gusta el desarrollo web, por lo que también me interesa aprender y profundizar en el área de computación móvil.
@@ -162,7 +166,8 @@ Me gusta el desarrollo web, por lo que también me interesa aprender y profundiz
 Fuera de la carrera, disfruto los videojuegos, el fútbol, ver películas y series, y compartir tiempo con mi perro. Me motiva aprender constantemente y enfrentar nuevos retos tecnológicos.
 
 ### Juan Felipe Rubiano
-<img src="img/j.png" width="100" height="100">
+
+<img src="img/j.png" width="100" height="100"/>
 
 Tengo 20 años y curso el sexto semestre de Ingeniería de sistemas en la Javeriana.
 Me intereso principalmente en temas de ciberseguridad y desarrollo web. Actualmente, trabajo en varios proyectos del último. 
@@ -170,18 +175,19 @@ Me intereso principalmente en temas de ciberseguridad y desarrollo web. Actualme
 Fuera de la carrera, soy apasionado por el cine, y he trabajado en varios proyectos de cortometrajes de cine análogo. 
 
 ### Andres Felipe Beltran
-<img src="img/andres.jpeg" width="100" height="100">
+
+<img src="img/andres.jpeg" width="100" height="100"/>
 
 Tengo 20 años y estoy en sexto semestre de Ingeniería de sistemas en la Javeriana.
 Estoy interesado en desarrollo web, pero no estoy cerrado a aprender otras areas relacionadas. 
 
 Fuera de la carrera, me gusta la producción musical, el beatmaking, los videojuegos y aprender cosas nuevas. 
 
-
 ### Alejandro Parrado Di Doménico
-<img src="img/alejandro.jpg" width="100" height="100">
 
-Tengo 20 a;os y estoy en sexto semestre de Ingeniería de Sistemas en la Javeriana.
-Trabajo en desarrollo Full-stack de producto y sistemas agenticos de AI
+<img src="img/alejandro.jpg" width="100" height="100"/>
+
+Tengo 20 años y estoy en sexto semestre de Ingeniería de Sistemas en la Javeriana.
+Trabajo en desarrollo Full-stack de producto y sistemas agénticos de AI.
 
 Fuera de la carrera, me gusta leer libros de comportamiento humano, biografías y emprendimiento; también entrenar en el gym.
