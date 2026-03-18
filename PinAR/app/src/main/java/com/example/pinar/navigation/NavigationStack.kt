@@ -12,6 +12,7 @@ import com.example.pinar.ui.screens.ARScreen
 import com.example.pinar.ui.screens.SignScreen
 import com.example.pinar.ui.screens.HomeScreen
 import com.example.pinar.ui.screens.MapScreen
+import com.example.pinar.ui.screens.NewPinScreen
 import com.example.pinar.ui.screens.ProfileScreen
 
 @Composable
@@ -39,7 +40,8 @@ fun NavigationStack() {
             HomeScreen(
                 onNavigateToMap = { navController.navigate(Screen.Map.route)},
                 onNavigateToAR = { navController.navigate(Screen.AR.route)},
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route)}
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route)},
+                onNavigateToNewPin = { navController.navigate(Screen.NewPin.route)}
             )
         }
         composable(route = Screen.Map.route) {
@@ -74,6 +76,9 @@ fun NavigationStack() {
                     navController.navigate(Screen.AR.route)
                 }
             )
+        }
+        composable(route = Screen.NewPin.route) {
+            NewPinScreen()
         }
 
     }
