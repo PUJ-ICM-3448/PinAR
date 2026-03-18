@@ -67,7 +67,7 @@ fun Search(
     SearchBar(
         modifier = modifier,
         query = textFieldState.text.toString(),
-        onQueryChange = { },
+        onQueryChange = {textFieldState.edit { replace(0, length, it) } },
         onSearch = { query -> onSearch(query) },
         active = false,
         onActiveChange = { },
@@ -81,7 +81,7 @@ fun Search(
 fun Map(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         Image(
-            painter = painterResource(id = R.drawable.map),
+            painter = painterResource(id = R.drawable.mapabogota),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

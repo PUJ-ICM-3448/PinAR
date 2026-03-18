@@ -49,7 +49,6 @@ fun HomeScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNewPin: () -> Unit,
-
     onNavigateToNotifications: () -> Unit = {}
 ) {
     Box(modifier = modifier) {
