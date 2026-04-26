@@ -38,6 +38,7 @@ import com.example.pinar.navigation.Screen
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import com.example.pinar.data.UserData
 
 @Composable
 fun HomeScreen(
@@ -48,7 +49,8 @@ fun HomeScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNewPin: () -> Unit,
-    onNavigateToNotifications: () -> Unit = {}
+    onNavigateToNotifications: () -> Unit = {},
+    userData: UserData?
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -65,9 +67,8 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier.padding(top = 40.dp),
                 ) {
-                    //Despues se cambia para que reciba el texto el nombre de usuario
                     Text(
-                        stringResource(R.string.hola_usuario),
+                        text = stringResource(R.string.hola2, userData?.nombre ?: "Usuario"),
                         fontWeight = FontWeight.Bold,
                         fontSize = 40.sp
                     )

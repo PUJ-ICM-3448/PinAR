@@ -35,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.SemanticsActions.OnClick
+import com.example.pinar.data.UserData
 import com.example.pinar.ui.screens.home.PinReciente
 
 
@@ -47,7 +48,8 @@ fun ProfileScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
-    onClickLogout: () -> Unit = {}
+    onClickLogout: () -> Unit = {},
+    userData: UserData?
 ) {
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -87,7 +89,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            "María González",
+                            text = userData?.nombre ?: "Usuario",
                             color = Color.White,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
@@ -125,7 +127,7 @@ fun ProfileScreen(
                                     .padding(12.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("Editar Perfil")
+                                Text(stringResource(R.string.editar_perfil))
                             }
                         }
 
@@ -169,7 +171,10 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(50.dp))
                 Button(
                     onClick = onClickLogout,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(55.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(55.dp),
                     shape = RoundedCornerShape(16.dp)
                 )
                 {

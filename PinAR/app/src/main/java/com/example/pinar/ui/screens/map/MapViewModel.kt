@@ -26,7 +26,7 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-class MapViewModel(
+class MapViewModel @JvmOverloads constructor(
     application: Application,
     private val pinRepository: PinRepository = ExistingBackendPinRepository()
 ) : AndroidViewModel(application) {

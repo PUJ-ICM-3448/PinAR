@@ -2,7 +2,6 @@
     <string name="app_name">PinAR</string>
     <string name="hace">Hace %1$s</string>
     <string name="visitas">%1$s visitas</string>
-    <string name="hola_usuario">Hola, Usuario 👋</string>
     <string name="explora_y_navega_por_espacios_interiores">Explora y navega por espacios interiores!</string>
     <string name="crear_pin">Crear Pin</string>
     <string name="ver_mapa">Ver Mapa</string>
@@ -43,4 +42,7 @@
     <string name="no_hay_notificaciones">No hay notificaciones</string>
     <string name="notificaciones_apareceran_aqui">Aquí aparecerán tus notificaciones</string>
     <string name="cerrar_sesi_n">Cerrar Sesión</string>
+    <string name="hola">Hola %1$s</string>
+    <string name="hola2">Hola %1$s</string>
+    <string name="editar_perfil">Editar Perfil</string>
 </resources>

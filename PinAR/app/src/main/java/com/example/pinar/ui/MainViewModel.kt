@@ -4,6 +4,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.pinar.data.AuthState
+import com.example.pinar.data.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 class MainViewModel : ViewModel() {
@@ -12,6 +13,9 @@ class MainViewModel : ViewModel() {
     private val _authState = mutableStateOf<AuthState>(AuthState.cargando)
     val authState: State<AuthState> = _authState
 
+    private val _userData = mutableStateOf<UserData?>(null)
+    val userData: State<UserData?> = _userData
+
     init {
         verificarAuth()
     }
@@ -19,6 +23,7 @@ class MainViewModel : ViewModel() {
     fun verificarAuth() {
         if (auth.currentUser != null) {
             _authState.value = AuthState.autenticado
+            guardarUsuarioActivo(auth.currentUser?.email ?: "", auth.currentUser?.email?.split("@")[0] ?: "")
         } else {
             _authState.value = AuthState.noAutenticado
         }
@@ -34,8 +39,10 @@ class MainViewModel : ViewModel() {
             .addOnCompleteListener { tarea ->
                 if (tarea.isSuccessful) {
                     _authState.value = AuthState.autenticado
+                    guardarUsuarioActivo(mail, mail.split("@")[0])
                 } else {
-                    _authState.value = AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
+                    _authState.value =
+                        AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
                 }
             }
     }
@@ -50,10 +57,20 @@ class MainViewModel : ViewModel() {
             .addOnCompleteListener { tarea ->
                 if (tarea.isSuccessful) {
                     _authState.value = AuthState.autenticado
+                    guardarUsuarioActivo(mail, mail.split("@")[0])
                 } else {
                     _authState.value = AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
                 }
             }
+    }
+
+    fun guardarUsuarioActivo(mail: String, nombre: String) {
+        val usuarioNuevo = UserData(mail, nombre)
+        guardarUsuario(usuarioNuevo)
+    }
+
+    fun guardarUsuario (usuarioNuevo: UserData) {
+        _userData.value = usuarioNuevo
     }
 
     fun cerrar() {
