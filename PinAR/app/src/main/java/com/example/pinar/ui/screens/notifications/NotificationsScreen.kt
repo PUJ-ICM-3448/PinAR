@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.notifications
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,10 +38,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -55,14 +50,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
 import com.example.pinar.navigation.Screen
-import com.example.pinar.ui.theme.MutedGold
-import com.example.pinar.ui.theme.SoftCream
 import com.example.pinar.ui.utils.Footer
-import com.example.pinar.data.models.Notification
 import com.example.pinar.data.models.NotificationType
-import com.example.pinar.data.mock.mockNotifications
 import com.example.pinar.ui.utils.avatarColorFor
 import com.example.pinar.ui.utils.initialFromDetalle
 
@@ -73,18 +65,16 @@ fun NotificationsScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    viewModel: NotificationsViewModel = viewModel()
 ) {
-    val notificaciones = remember { mutableStateListOf(*mockNotifications.toTypedArray()) }
-    var todasLeidas by remember { mutableStateOf(false) }
-    var filtroSeleccionado by remember { mutableStateOf(NotificationType.ALL) }
-    var filterChipsVisible by remember { mutableStateOf(false) }
+    val state by viewModel.state
 
-    val unreadCount = notificaciones.count { it.unread && !todasLeidas }
+    val unreadCount = state.notificaciones.count { it.unread && !state.todasLeidas }
 
     // Lista filtrada según el chip seleccionado
-    val notificacionesFiltradas = if (filtroSeleccionado == NotificationType.ALL) notificaciones
-    else notificaciones.filter { it.type == filtroSeleccionado }
+    val notificacionesFiltradas = if (state.filtroSeleccionado == NotificationType.ALL) state.notificaciones
+    else state.notificaciones.filter { it.type == state.filtroSeleccionado }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -123,12 +113,12 @@ fun NotificationsScreen(
                         }
                     }
                 }
-                IconButton(onClick = { filterChipsVisible = !filterChipsVisible }) {
+                IconButton(onClick = { viewModel.toggleFilterChips() }) {
                     Icon(
                         imageVector = Icons.Outlined.FilterList,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = if (filterChipsVisible) MaterialTheme.colorScheme.primary
+                        tint = if (state.filterChipsVisible) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -136,13 +126,13 @@ fun NotificationsScreen(
 
             // Chips de filtro: solo visibles al presionar el icono de filtro
             AnimatedVisibility(
-                visible = filterChipsVisible,
+                visible = state.filterChipsVisible,
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
                 FilterChipsRow(
-                    filtroSeleccionado = filtroSeleccionado,
-                    onFiltroSelected = { filtroSeleccionado = it }
+                    filtroSeleccionado = state.filtroSeleccionado,
+                    onFiltroSelected = { viewModel.setFiltro(it) }
                 )
             }
 
@@ -162,7 +152,7 @@ fun NotificationsScreen(
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { todasLeidas = true },
+                        .clickable { viewModel.marcarTodasLeidas() },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -177,7 +167,7 @@ fun NotificationsScreen(
                     )
                 }
                 IconButton(
-                    onClick = { notificaciones.clear() },
+                    onClick = { viewModel.borrarNotificaciones() },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -210,8 +200,8 @@ fun NotificationsScreen(
                             detalle = notif.detail,
                             preview = notif.preview,
                             tiempo = notif.time,
-                            unread = notif.unread && !todasLeidas,
-                            onDismiss = { notificaciones.remove(notif) }
+                            unread = notif.unread && !state.todasLeidas,
+                            onDismiss = { viewModel.removeNotification(notif) }
                         )
                     }
                     item {

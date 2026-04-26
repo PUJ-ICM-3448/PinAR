@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.newpindetails
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +22,6 @@ import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
 import com.example.pinar.ui.utils.InputCard
 import com.example.pinar.ui.utils.TopBar
@@ -52,11 +50,11 @@ fun NewPinDetailsScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit,
     onCloseClick: () -> Unit,
-    onContinueClick: () -> Unit
+    onContinueClick: () -> Unit,
+    viewModel: NewPinDetailsViewModel = viewModel()
 ){
-    var titulo by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var categoriaSeleccionada by remember { mutableStateOf<Categoria?>(null) }
+    val state by viewModel.state
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -98,13 +96,11 @@ fun NewPinDetailsScreen(
         Spacer(Modifier.height(24.dp))
         InputCard(
             titulo = "Título",
-            contador = "${titulo.length}/50"
+            contador = "${state.titulo.length}/50"
         ) {
             OutlinedTextField(
-                value = titulo,
-                onValueChange = {
-                    if(it.length <= 50) titulo = it
-                },
+                value = state.titulo,
+                onValueChange = { viewModel.onTituloChange(it) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -112,13 +108,11 @@ fun NewPinDetailsScreen(
         Spacer(Modifier.height(24.dp))
         InputCard(
             titulo = "Descripción (Opcional)",
-            contador = "${descripcion.length}/200"
+            contador = "${state.descripcion.length}/200"
         ) {
             OutlinedTextField(
-                value = descripcion,
-                onValueChange = {
-                    if(it.length <= 200) descripcion = it
-                },
+                value = state.descripcion,
+                onValueChange = { viewModel.onDescripcionChange(it) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -129,8 +123,8 @@ fun NewPinDetailsScreen(
         ) {
             CategorySelector(
                 categorias = categoriasMock,
-                selected = categoriaSeleccionada,
-                onSelect = {categoriaSeleccionada = it}
+                selected = state.categoriaSeleccionada,
+                onSelect = { viewModel.onCategoriaSelect(it) }
             )
         }
         Spacer(Modifier.height(32.dp))

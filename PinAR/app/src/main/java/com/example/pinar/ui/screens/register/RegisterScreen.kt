@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.register
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +24,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pinar.data.AuthState
 import com.example.pinar.ui.theme.Charcoal
 import com.example.pinar.ui.theme.MutedGold
 import com.example.pinar.ui.theme.RedDark
@@ -36,18 +38,17 @@ fun RegisterScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onClickRegister: (String, String) -> Unit = { _, _ -> },
+    authState: AuthState = AuthState.noAutenticado,
+    viewModel: RegisterViewModel = viewModel()
 ) {
-    var nombre by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    val state by viewModel.state
 
     val textGray = Color(0xFF9E9E9E)
 
     Box(modifier = modifier.fillMaxSize()) {
 
-        // Header con gradiente RedDark → RedDeep
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,7 +73,6 @@ fun RegisterScreen(
             }
         }
 
-        // Card crema con esquinas redondeadas
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,8 +115,8 @@ fun RegisterScreen(
                             color = Charcoal
                         )
                         OutlinedTextField(
-                            value = nombre,
-                            onValueChange = { nombre = it },
+                            value = state.nombre,
+                            onValueChange = { viewModel.onNombreChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("Tu nombre", color = textGray) },
                             leadingIcon = {
@@ -147,8 +147,8 @@ fun RegisterScreen(
                             color = Charcoal
                         )
                         OutlinedTextField(
-                            value = email,
-                            onValueChange = { email = it },
+                            value = state.email,
+                            onValueChange = { viewModel.onEmailChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("tu@email.com", color = textGray) },
                             leadingIcon = {
@@ -179,8 +179,8 @@ fun RegisterScreen(
                             color = Charcoal
                         )
                         OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
+                            value = state.password,
+                            onValueChange = { viewModel.onPasswordChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("••••••••", color = textGray) },
                             leadingIcon = {
@@ -212,8 +212,8 @@ fun RegisterScreen(
                             color = Charcoal
                         )
                         OutlinedTextField(
-                            value = confirmPassword,
-                            onValueChange = { confirmPassword = it },
+                            value = state.confirmPassword,
+                            onValueChange = { viewModel.onConfirmPasswordChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("••••••••", color = textGray) },
                             leadingIcon = {
@@ -235,6 +235,15 @@ fun RegisterScreen(
                             )
                         )
                     }
+
+                    if (authState is AuthState.Error) {
+                        Text(
+                            text = authState.mensaje,
+                            color = Color.Red,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -254,7 +263,7 @@ fun RegisterScreen(
                                     colors = listOf(RedDark, RedPrimary)
                                 )
                             )
-                            .clickable { onNavigateToHome() },
+                            .clickable { onClickRegister(state.email, state.password) },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

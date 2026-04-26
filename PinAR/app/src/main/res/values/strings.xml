@@ -42,4 +42,5 @@
     <string name="filtro_sistema">Sistema</string>
     <string name="no_hay_notificaciones">No hay notificaciones</string>
     <string name="notificaciones_apareceran_aqui">Aquí aparecerán tus notificaciones</string>
+    <string name="cerrar_sesi_n">Cerrar Sesión</string>
 </resources>

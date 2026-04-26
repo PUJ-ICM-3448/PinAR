@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +21,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pinar.data.AuthState
 import com.example.pinar.ui.theme.Charcoal
 import com.example.pinar.ui.theme.MutedGold
 import com.example.pinar.ui.theme.RedDark
@@ -29,15 +31,17 @@ import com.example.pinar.ui.theme.RedPrimary
 import com.example.pinar.ui.theme.SoftCream
 
 @Composable
-fun LogInScreen(
+fun LoginScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
-    onForgotPassword: () -> Unit = {}
+    onForgotPassword: () -> Unit = {},
+    onClickLogin: (String, String) -> Unit = { _, _ -> },
+    authState: AuthState = AuthState.noAutenticado,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val state by viewModel.state
 
     val textGray = Color(0xFF9E9E9E)
 
@@ -110,8 +114,8 @@ fun LogInScreen(
                             color = Charcoal
                         )
                         OutlinedTextField(
-                            value = email,
-                            onValueChange = { email = it },
+                            value = state.email,
+                            onValueChange = { viewModel.onEmailChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("tu@email.com", color = textGray) },
                             leadingIcon = {
@@ -142,8 +146,8 @@ fun LogInScreen(
                             color = Charcoal
                         )
                         OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
+                            value = state.password,
+                            onValueChange = { viewModel.onPasswordChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("••••••••", color = textGray) },
                             leadingIcon = {
@@ -177,9 +181,16 @@ fun LogInScreen(
                             )
                         }
                     }
-                }
 
-                // Botón + link registro
+                    if (authState is AuthState.Error) {
+                        Text(
+                            text = authState.mensaje,
+                            color = Color.Red,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -194,7 +205,7 @@ fun LogInScreen(
                                     colors = listOf(RedDark, RedPrimary)
                                 )
                             )
-                            .clickable { onNavigateToHome() },
+                            .clickable { onClickLogin(state.email, state.password) },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

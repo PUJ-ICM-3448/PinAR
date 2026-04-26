@@ -1,7 +1,7 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.sign
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -53,9 +53,11 @@ fun Logos(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SignScreen(modifier: Modifier = Modifier,
-               onNavigateToLogin: () -> Unit,
-                onNavigateToRegister: () -> Unit){
+fun SignScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
     Box(modifier = modifier
         .fillMaxSize()
         .background(

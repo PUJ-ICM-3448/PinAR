@@ -1,31 +1,32 @@
-package com.example.pinar.ui.screens
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.material3.SearchBar
-import androidx.compose.ui.Modifier
-import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.foundation.text.input.TextFieldState
+package com.example.pinar.ui.screens.map
+
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.pinar.R
-import androidx.compose.foundation.layout.Column
-import com.example.pinar.ui.utils.Footer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.background
 import com.example.pinar.navigation.Screen
+import com.example.pinar.ui.utils.Footer
 
 @Composable
 fun MapScreen(
@@ -41,7 +42,7 @@ fun MapScreen(
         Spacer(modifier = Modifier.height(8.dp))
         Search(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            textFieldState = remember { TextFieldState() },
+            textFieldState = rememberTextFieldState(),
             onSearch = {/*despues*/}
         )
         Map(modifier = Modifier.weight(1f).padding(horizontal = 16.dp))
@@ -67,7 +68,7 @@ fun Search(
     SearchBar(
         modifier = modifier,
         query = textFieldState.text.toString(),
-        onQueryChange = {textFieldState.edit { replace(0, length, it) } },
+        onQueryChange = { query -> textFieldState.edit { replace(0, length, query) } },
         onSearch = { query -> onSearch(query) },
         active = false,
         onActiveChange = { },
@@ -105,4 +106,3 @@ fun Map(modifier: Modifier = Modifier) {
         )
     }
 }
-

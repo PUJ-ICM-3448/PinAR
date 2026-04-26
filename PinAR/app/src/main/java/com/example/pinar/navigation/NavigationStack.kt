@@ -4,52 +4,67 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.pinar.ui.screens.ARScreen
-import com.example.pinar.ui.screens.SignScreen
-import com.example.pinar.ui.screens.HomeScreen
-import com.example.pinar.ui.screens.LogInScreen
-import com.example.pinar.ui.screens.MapScreen
-import com.example.pinar.ui.screens.NewPinDetailsScreen
-import com.example.pinar.ui.screens.NewPinLocationScreen
-import com.example.pinar.ui.screens.NewPinScreen
-import com.example.pinar.ui.screens.ProfileScreen
-import com.example.pinar.ui.screens.NotificationsScreen
-import com.example.pinar.ui.screens.RegisterScreen
+import com.example.pinar.data.AuthState
+import com.example.pinar.ui.MainViewModel
+import com.example.pinar.ui.screens.register.RegisterScreen
+import com.example.pinar.ui.screens.ar.ARScreen
+import com.example.pinar.ui.screens.sign.SignScreen
+import com.example.pinar.ui.screens.home.HomeScreen
+import com.example.pinar.ui.screens.login.LoginScreen
+import com.example.pinar.ui.screens.map.MapScreen
+import com.example.pinar.ui.screens.newpindetails.NewPinDetailsScreen
+import com.example.pinar.ui.screens.newpinlocation.NewPinLocationScreen
+import com.example.pinar.ui.screens.newpin.NewPinScreen
+import com.example.pinar.ui.screens.profile.ProfileScreen
+import com.example.pinar.ui.screens.notifications.NotificationsScreen
 
 @Composable
 fun NavigationStack() {
 
     val navController = rememberNavController()
+    val mainViewModel: MainViewModel = viewModel()
+    var ruta by remember{mutableStateOf(Screen.Sign.route)}
+
+    LaunchedEffect(mainViewModel.authState.value) {
+        val auth = mainViewModel.authState.value
+        if (auth is AuthState.autenticado) {
+            ruta = Screen.Home.route
+        } else if (auth is AuthState.noAutenticado) {
+            ruta = Screen.Sign.route
+        }
+    }
 
 
     // Estructura de navegación (NavGraph, conjunto de destinos navegables dentro de la app)
     NavHost(
         navController = navController,
-        startDestination = Screen.Sign.route
+        startDestination = ruta
     ) {
+ 
 
         composable(route = Screen.Sign.route) {
             SignScreen(
-                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
-                onNavigateToRegister = {navController.navigate(Screen.Register.route)}
-
-                //onUserClick = { user ->
-                    //navController.navigate(Screen.Detail.route + "?userId=${user.id}")},
+                onNavigateToRegister = {navController.navigate(Screen.Register.route)},
             )
         }
 
         composable(route = Screen.Login.route) {
-            LogInScreen (
+            LoginScreen (
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
                 onNavigateBack = { navController.navigate(Screen.Sign.route)},
-                onNavigateToHome = { navController.navigate(Screen.Home.route)},
-                onNavigateToRegister = { navController.navigate(Screen.Sign.route)},
-
+                onNavigateToRegister = { navController.navigate(Screen.Register.route)},
+                onClickLogin = { mail, contra -> mainViewModel.login(mail, contra) },
             )
         }
 
@@ -57,9 +72,9 @@ fun NavigationStack() {
             RegisterScreen (
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
                 onNavigateBack = { navController.navigate(Screen.Sign.route)},
-                onNavigateToHome = { navController.navigate(Screen.Home.route)},
-                onNavigateToLogin = { navController.navigate(Screen.Login.route)}
-                )
+                onNavigateToLogin = { navController.navigate(Screen.Login.route)},
+                onClickRegister = { mail, contra -> mainViewModel.registrar(mail, contra) }
+            )
         }
 
         composable(route = Screen.Home.route) {
@@ -99,7 +114,8 @@ fun NavigationStack() {
                 onNavigateToMap = { navController.navigate(Screen.Map.route) },
                 onNavigateToAR = { navController.navigate(Screen.AR.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
-                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onClickLogout = { mainViewModel.cerrar() }
             )
         }
         composable(route = Screen.NewPin.route) {

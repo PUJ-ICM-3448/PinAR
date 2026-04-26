@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -35,7 +35,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.navigation.Screen
-import com.example.pinar.ui.utils.PinArLogo
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -319,4 +318,3 @@ fun BotonFAB(onClick: ()-> Unit, modifier: Modifier = Modifier){
         Icon(Icons.Filled.Add, "Agregar pin")
     }
 }
-
