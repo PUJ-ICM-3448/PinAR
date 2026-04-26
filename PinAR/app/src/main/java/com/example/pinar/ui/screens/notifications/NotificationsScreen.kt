@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.notifications
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,13 +38,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,48 +50,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
 import com.example.pinar.navigation.Screen
-import com.example.pinar.ui.theme.MutedGold
-import com.example.pinar.ui.theme.SoftCream
 import com.example.pinar.ui.utils.Footer
+import com.example.pinar.data.models.NotificationType
+import com.example.pinar.ui.utils.avatarColorFor
+import com.example.pinar.ui.utils.initialFromDetalle
 
-// Colores para el avatar por inicial (determinístico según el nombre)
-private val avatarColors = listOf(
-    Color(0xFFE3F2FD), // azul claro
-    Color(0xFFFCE4EC), // rosa claro
-    Color(0xFFE8F5E9), // verde claro
-    Color(0xFFFFF3E0), // naranja claro
-    Color(0xFFF3E5F5), // violeta claro
-    Color(0xFFE0F7FA), // cyan claro
-    Color(0xFFFFEBEE), // rojo muy claro
-    Color(0xFFEFEBE9), // marrón claro
-    MutedGold.copy(alpha = 0.3f),
-    SoftCream
-)
-
-private fun avatarColorFor(name: String): Color =
-    avatarColors[kotlin.math.abs(name.hashCode()) % avatarColors.size]
-
-// Tipo de filtro para las notificaciones (coincide con los chips)
-private enum class TipoFiltro {
-    Todas,
-    Comentarios,
-    MeGusta,
-    Seguidores,
-    Comunidades,
-    Sistema
-}
-
-// Datos de ejemplo para la lista de notificaciones
-private data class NotificacionMock(
-    val titulo: String,
-    val detalle: String,
-    val preview: String?,
-    val tiempo: String,
-    val unread: Boolean,
-    val tipo: TipoFiltro
-)
 
 @Composable
 fun NotificationsScreen(
@@ -103,85 +65,22 @@ fun NotificationsScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    viewModel: NotificationsViewModel = viewModel()
 ) {
-    // Lista de notificaciones de ejemplo (se puede cambiar por datos reales después)
-    val notificacionesIniciales = remember {
-        listOf(
-            NotificacionMock(
-                titulo = "Nuevo comentario",
-                detalle = "Ana Torres comentó en tu pin",
-                preview = "Cafetería Central",
-                tiempo = "Hace 5 min",
-                unread = true,
-                tipo = TipoFiltro.Comentarios
-            ),
-            NotificacionMock(
-                titulo = "Le gustó tu pin",
-                detalle = "Carlos Ruiz le dio me gusta a tu publicación",
-                preview = "Biblioteca Principal",
-                tiempo = "Hace 15 min",
-                unread = true,
-                tipo = TipoFiltro.MeGusta
-            ),
-            NotificacionMock(
-                titulo = "Te mencionaron",
-                detalle = "Luis Mendoza te mencionó en un comentario",
-                preview = "Laboratorio 5",
-                tiempo = "Hace 1 hora",
-                unread = true,
-                tipo = TipoFiltro.Comentarios
-            ),
-            NotificacionMock(
-                titulo = "Nuevo seguidor",
-                detalle = "María González comenzó a seguirte",
-                preview = null,
-                tiempo = "Ayer",
-                unread = false,
-                tipo = TipoFiltro.Seguidores
-            ),
-            NotificacionMock(
-                titulo = "Respuesta a tu comentario",
-                detalle = "Diego Vargas respondió a tu comentario",
-                preview = "Auditorio Mayor",
-                tiempo = "Ayer",
-                unread = false,
-                tipo = TipoFiltro.Comentarios
-            ),
-            NotificacionMock(
-                titulo = "Múltiples me gusta",
-                detalle = "5 personas le dieron me gusta a tu pin",
-                preview = "Gimnasio",
-                tiempo = "Hace 2 días",
-                unread = false,
-                tipo = TipoFiltro.MeGusta
-            ),
-            NotificacionMock(
-                titulo = "Reporte revisado",
-                detalle = "Tu reporte ha sido revisado por los moderadores",
-                preview = null,
-                tiempo = "Hace 3 días",
-                unread = false,
-                tipo = TipoFiltro.Sistema
-            )
-        )
-    }
-    val notificaciones = remember { mutableStateListOf(*notificacionesIniciales.toTypedArray()) }
-    var todasLeidas by remember { mutableStateOf(false) }
-    var filtroSeleccionado by remember { mutableStateOf(TipoFiltro.Todas) }
-    var filterChipsVisible by remember { mutableStateOf(false) }
+    val state by viewModel.state
 
-    val unreadCount = notificaciones.count { it.unread && !todasLeidas }
+    val unreadCount = state.notificaciones.count { it.unread && !state.todasLeidas }
 
     // Lista filtrada según el chip seleccionado
-    val notificacionesFiltradas = if (filtroSeleccionado == TipoFiltro.Todas) notificaciones
-    else notificaciones.filter { it.tipo == filtroSeleccionado }
+    val notificacionesFiltradas = if (state.filtroSeleccionado == NotificationType.ALL) state.notificaciones
+    else state.notificaciones.filter { it.type == state.filtroSeleccionado }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 30.dp)
         ) {
             // Encabezado: icono campana, título, subtítulo sin leer, icono filtro
             Row(
@@ -214,12 +113,12 @@ fun NotificationsScreen(
                         }
                     }
                 }
-                IconButton(onClick = { filterChipsVisible = !filterChipsVisible }) {
+                IconButton(onClick = { viewModel.toggleFilterChips() }) {
                     Icon(
                         imageVector = Icons.Outlined.FilterList,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = if (filterChipsVisible) MaterialTheme.colorScheme.primary
+                        tint = if (state.filterChipsVisible) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -227,13 +126,13 @@ fun NotificationsScreen(
 
             // Chips de filtro: solo visibles al presionar el icono de filtro
             AnimatedVisibility(
-                visible = filterChipsVisible,
+                visible = state.filterChipsVisible,
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
                 FilterChipsRow(
-                    filtroSeleccionado = filtroSeleccionado,
-                    onFiltroSelected = { filtroSeleccionado = it }
+                    filtroSeleccionado = state.filtroSeleccionado,
+                    onFiltroSelected = { viewModel.setFiltro(it) }
                 )
             }
 
@@ -253,7 +152,7 @@ fun NotificationsScreen(
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { todasLeidas = true },
+                        .clickable { viewModel.marcarTodasLeidas() },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -268,7 +167,7 @@ fun NotificationsScreen(
                     )
                 }
                 IconButton(
-                    onClick = { notificaciones.clear() },
+                    onClick = { viewModel.borrarNotificaciones() },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -292,16 +191,17 @@ fun NotificationsScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
                     itemsIndexed(notificacionesFiltradas) { _, notif ->
                         NotificationCard(
-                            titulo = notif.titulo,
-                            detalle = notif.detalle,
+                            titulo = notif.title,
+                            detalle = notif.detail,
                             preview = notif.preview,
-                            tiempo = notif.tiempo,
-                            unread = notif.unread && !todasLeidas,
-                            onDismiss = { notificaciones.remove(notif) }
+                            tiempo = notif.time,
+                            unread = notif.unread && !state.todasLeidas,
+                            onDismiss = { viewModel.removeNotification(notif) }
                         )
                     }
                     item {
@@ -324,11 +224,6 @@ fun NotificationsScreen(
     }
 }
 
-// Inicial de la persona a partir del detalle (ej. "Ana Torres comentó..." -> "A")
-private fun initialFromDetalle(detalle: String): String {
-    val firstWord = detalle.trim().split(Regex("\\s+")).firstOrNull() ?: return "?"
-    return firstWord.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
-}
 
 // Tarjeta de notificación: avatar circular con inicial y color aleatorio, título, detalle, preview chip, tiempo y cerrar
 @Composable
@@ -454,8 +349,8 @@ private fun NotificationCard(
 @Composable
 private fun FilterChipsRow(
     modifier: Modifier = Modifier,
-    filtroSeleccionado: TipoFiltro,
-    onFiltroSelected: (TipoFiltro) -> Unit
+    filtroSeleccionado: NotificationType,
+    onFiltroSelected: (NotificationType) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -466,7 +361,7 @@ private fun FilterChipsRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            listOf(TipoFiltro.Todas, TipoFiltro.Comentarios, TipoFiltro.MeGusta).forEach { tipo ->
+            listOf(NotificationType.ALL, NotificationType.COMMENTS, NotificationType.LIKES).forEach { tipo ->
                 FilterChipItem(
                     tipo = tipo,
                     selected = filtroSeleccionado == tipo,
@@ -477,7 +372,7 @@ private fun FilterChipsRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            listOf(TipoFiltro.Seguidores, TipoFiltro.Comunidades, TipoFiltro.Sistema).forEach { tipo ->
+            listOf(NotificationType.FOLLOWERS, NotificationType.COMMUNITIES, NotificationType.SYSTEM).forEach { tipo ->
                 FilterChipItem(
                     tipo = tipo,
                     selected = filtroSeleccionado == tipo,
@@ -490,9 +385,9 @@ private fun FilterChipsRow(
 
 @Composable
 private fun FilterChipItem(
-    tipo: TipoFiltro,
+    tipo: NotificationType,
     selected: Boolean,
-    onFiltroSelected: (TipoFiltro) -> Unit
+    onFiltroSelected: (NotificationType) -> Unit
 ) {
     FilterChip(
         selected = selected,
@@ -500,12 +395,12 @@ private fun FilterChipItem(
         label = {
             Text(
                 text = when (tipo) {
-                    TipoFiltro.Todas -> stringResource(R.string.filtro_todas)
-                    TipoFiltro.Comentarios -> stringResource(R.string.filtro_comentarios)
-                    TipoFiltro.MeGusta -> stringResource(R.string.filtro_me_gusta)
-                    TipoFiltro.Seguidores -> stringResource(R.string.filtro_seguidores)
-                    TipoFiltro.Comunidades -> stringResource(R.string.filtro_comunidades)
-                    TipoFiltro.Sistema -> stringResource(R.string.filtro_sistema)
+                    NotificationType.ALL -> stringResource(R.string.filtro_todas)
+                    NotificationType.COMMENTS -> stringResource(R.string.filtro_comentarios)
+                    NotificationType.LIKES -> stringResource(R.string.filtro_me_gusta)
+                    NotificationType.FOLLOWERS -> stringResource(R.string.filtro_seguidores)
+                    NotificationType.COMMUNITIES -> stringResource(R.string.filtro_comunidades)
+                    NotificationType.SYSTEM -> stringResource(R.string.filtro_sistema)
                 },
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
             )
@@ -513,12 +408,12 @@ private fun FilterChipItem(
         leadingIcon = {
             Icon(
                 imageVector = when (tipo) {
-                    TipoFiltro.Todas -> Icons.Outlined.Notifications
-                    TipoFiltro.Comentarios -> Icons.Outlined.ChatBubbleOutline
-                    TipoFiltro.MeGusta -> Icons.Outlined.FavoriteBorder
-                    TipoFiltro.Seguidores -> Icons.Outlined.Person
-                    TipoFiltro.Comunidades -> Icons.Outlined.LocationOn
-                    TipoFiltro.Sistema -> Icons.Outlined.Settings
+                    NotificationType.ALL -> Icons.Outlined.Notifications
+                    NotificationType.COMMENTS -> Icons.Outlined.ChatBubbleOutline
+                    NotificationType.LIKES -> Icons.Outlined.FavoriteBorder
+                    NotificationType.FOLLOWERS -> Icons.Outlined.Person
+                    NotificationType.COMMUNITIES -> Icons.Outlined.LocationOn
+                    NotificationType.SYSTEM -> Icons.Outlined.Settings
                 },
                 contentDescription = null,
                 modifier = Modifier.size(FilterChipDefaults.IconSize),

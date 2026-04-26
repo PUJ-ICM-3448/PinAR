@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.profile
 
 
 import com.example.pinar.ui.utils.Footer
@@ -29,8 +29,13 @@ import com.example.pinar.navigation.Screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.SemanticsActions.OnClick
+import com.example.pinar.ui.screens.home.PinReciente
 
 
 @Composable
@@ -41,7 +46,8 @@ fun ProfileScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {}
+    onNavigateToNotifications: () -> Unit = {},
+    onClickLogout: () -> Unit = {}
 ) {
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -49,7 +55,6 @@ fun ProfileScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-
             item {
 
                 Box(
@@ -160,10 +165,19 @@ fun ProfileScreen(
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(80.dp)) }
-
+            item {
+                Spacer(modifier = Modifier.height(50.dp))
+                Button(
+                    onClick = onClickLogout,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(55.dp),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                {
+                    Text(stringResource(R.string.cerrar_sesi_n), fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(150.dp))
+            }
         }
-
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
             currentScreen = currentScreen,

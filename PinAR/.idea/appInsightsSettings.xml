@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.pinar" />
+                  <option name="mobileSdkAppId" value="1:283295989167:android:a1656cbd439faeb833835a" />
+                  <option name="projectId" value="pinar-e98e9" />
+                  <option name="projectNumber" value="283295989167" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

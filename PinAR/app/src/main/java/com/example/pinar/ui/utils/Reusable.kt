@@ -3,10 +3,13 @@ package com.example.pinar.ui.utils
 import androidx.compose.animation.core.copy
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,7 +36,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Card
 import com.example.pinar.navigation.Screen
 
 @Composable
@@ -204,5 +210,65 @@ fun Footer(
             label = { Text("Perfil", fontSize = 12.sp) },
             colors = navColors
         )
+    }
+}
+
+@Composable
+fun TopBar(
+    titulo: String,
+    onBackClick: () -> Unit,
+    onCloseClick: () -> Unit
+){
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.ArrowBack, contentDescription = "Back",
+            modifier = Modifier.clickable{onBackClick()})
+        Text(
+            text = titulo,
+            fontWeight = FontWeight.Bold
+        )
+        Icon(Icons.Default.Close, contentDescription = "Close",
+            modifier = Modifier.clickable{onCloseClick()})
+    }
+}
+
+@Composable
+fun InputCard(
+    titulo: String,
+    contador: String? = null,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+){
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = titulo,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier= Modifier.height(12.dp))
+            content()
+            if(contador != null){
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = contador,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
     }
 }

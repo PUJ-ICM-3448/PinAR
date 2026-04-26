@@ -1,4 +1,4 @@
-package com.example.pinar.ui.screens
+package com.example.pinar.ui.screens.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -28,11 +28,16 @@ import com.example.pinar.ui.utils.PinMiniLogo
 import com.example.pinar.ui.utils.IconoConTexto
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.navigation.Screen
-import com.example.pinar.ui.utils.PinArLogo
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 
 @Composable
 fun HomeScreen(
@@ -42,24 +47,29 @@ fun HomeScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToNewPin: () -> Unit,
     onNavigateToNotifications: () -> Unit = {}
 ) {
     Box(modifier = modifier) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(
+                top = 40.dp,
+                bottom = 160.dp
+            )
         ) {
             item {
                 Column(
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 40.dp),
                 ) {
-                    PinArLogo(modifier = Modifier.size(170.dp))
                     //Despues se cambia para que reciba el texto el nombre de usuario
                     Text(
                         stringResource(R.string.hola_usuario),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 40.sp
                     )
                     Text(
                         stringResource(R.string.explora_y_navega_por_espacios_interiores),
@@ -164,8 +174,6 @@ fun HomeScreen(
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(80.dp)) }
-
         }
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -176,6 +184,12 @@ fun HomeScreen(
             onARClick = onNavigateToAR,
             onNotificationsClick = onNavigateToNotifications,
             onProfileClick = onNavigateToProfile
+        )
+        BotonFAB(
+            onClick = onNavigateToNewPin,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 120.dp, end = 10.dp)
         )
     }
 
@@ -292,4 +306,15 @@ fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
     }
 }
 
-
+@Composable
+fun BotonFAB(onClick: ()-> Unit, modifier: Modifier = Modifier){
+    FloatingActionButton(
+        modifier = modifier,
+        onClick = { onClick() },
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = Color.White,
+        shape = CircleShape
+    ) {
+        Icon(Icons.Filled.Add, "Agregar pin")
+    }
+}
