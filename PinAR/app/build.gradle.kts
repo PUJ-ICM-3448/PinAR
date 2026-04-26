@@ -18,6 +18,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["MAPS_API_KEY"] =
+            (project.findProperty("MAPS_API_KEY") as String?) ?: ""
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -56,6 +58,12 @@ dependencies {
     implementation("com.google.ar:core:1.33.0")
     implementation("io.github.sceneview:arsceneview:0.10.0")
     implementation("com.google.android.gms:play-services-base:18.2.0")
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.location)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
