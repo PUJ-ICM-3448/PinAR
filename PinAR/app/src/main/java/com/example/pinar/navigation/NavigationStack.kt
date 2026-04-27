@@ -86,7 +86,9 @@ fun NavigationStack() {
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary),
                 onNavigateBack = { navController.navigate(Screen.Sign.route)},
                 onNavigateToLogin = { navController.navigate(Screen.Login.route)},
-                onClickRegister = { mail, contra -> mainViewModel.registrar(mail, contra) },
+                onClickRegister = { nombre, mail, contra, biografia -> 
+                    mainViewModel.registrar(nombre, mail, contra, biografia) 
+                },
                 authState = mainViewModel.authState.value
             )
         }

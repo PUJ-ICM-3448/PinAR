@@ -3,9 +3,12 @@ package com.example.pinar.ui
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.pinar.data.AuthState
 import com.example.pinar.data.UserData
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -16,14 +19,23 @@ class MainViewModel : ViewModel() {
     private val _userData = mutableStateOf<UserData?>(null)
     val userData: State<UserData?> = _userData
 
+    private val db = FirebaseFirestore.getInstance()
+
     init {
         verificarAuth()
     }
 
     fun verificarAuth() {
         if (auth.currentUser != null) {
-            _authState.value = AuthState.autenticado
-            guardarUsuarioActivo(auth.currentUser?.email ?: "", auth.currentUser?.email?.split("@")[0] ?: "")
+            val user = auth.currentUser
+            user?.uid?.let { uid ->
+                db.collection("usuarios").document(uid).get()
+                    .addOnSuccessListener { document ->
+                        val data = document.toObject(UserData::class.java)
+                        _userData.value = data
+                        _authState.value = AuthState.autenticado
+                    }
+            }
         } else {
             _authState.value = AuthState.noAutenticado
         }
@@ -38,8 +50,15 @@ class MainViewModel : ViewModel() {
         auth.signInWithEmailAndPassword(mail, contrasena)
             .addOnCompleteListener { tarea ->
                 if (tarea.isSuccessful) {
-                    _authState.value = AuthState.autenticado
-                    guardarUsuarioActivo(mail, mail.split("@")[0])
+                    val user = auth.currentUser
+                    user?.uid?.let { uid ->
+                        db.collection("usuarios").document(uid).get()
+                            .addOnSuccessListener { document ->
+                                val data = document.toObject(UserData::class.java)
+                                _userData.value = data
+                                _authState.value = AuthState.autenticado
+                            }
+                    }
                 } else {
                     _authState.value =
                         AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
@@ -47,8 +66,8 @@ class MainViewModel : ViewModel() {
             }
     }
 
-    fun registrar(mail: String, contrasena: String) {
-        if (mail.isEmpty() || contrasena.isEmpty()) {
+    fun registrar(nombre: String, mail: String, contrasena: String, biografia: String) {
+        if (mail.isEmpty() || contrasena.isEmpty() || nombre.isEmpty()) {
             _authState.value = AuthState.Error("Por favor, completa todos los campos")
             return
         }
@@ -56,25 +75,32 @@ class MainViewModel : ViewModel() {
         auth.createUserWithEmailAndPassword(mail, contrasena)
             .addOnCompleteListener { tarea ->
                 if (tarea.isSuccessful) {
-                    _authState.value = AuthState.autenticado
-                    guardarUsuarioActivo(mail, mail.split("@")[0])
+                    val uid = auth.currentUser?.uid ?: ""
+                    val nuevoUsuario = UserData(
+                        uid = uid,
+                        correo = mail,
+                        nombre = nombre,
+                        biografia = biografia,
+                        creacion = Timestamp.now()
+                    )
+                    
+                    db.collection("usuarios").document(uid).set(nuevoUsuario)
+                        .addOnSuccessListener {
+                            _userData.value = nuevoUsuario
+                            _authState.value = AuthState.autenticado
+                        }
+                        .addOnFailureListener {
+                            _authState.value = AuthState.Error("Error al guardar en base de datos")
+                        }
                 } else {
                     _authState.value = AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
                 }
             }
     }
 
-    fun guardarUsuarioActivo(mail: String, nombre: String) {
-        val usuarioNuevo = UserData(mail, nombre)
-        guardarUsuario(usuarioNuevo)
-    }
-
-    fun guardarUsuario (usuarioNuevo: UserData) {
-        _userData.value = usuarioNuevo
-    }
-
     fun cerrar() {
         auth.signOut()
+        _userData.value = null
         _authState.value = AuthState.noAutenticado
     }
 }

@@ -19,12 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pinar.R
 import com.example.pinar.data.AuthState
 import com.example.pinar.ui.theme.Charcoal
 import com.example.pinar.ui.theme.MutedGold
@@ -39,7 +41,7 @@ fun RegisterScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
-    onClickRegister: (String, String) -> Unit = { _, _ -> },
+    onClickRegister: (String, String, String, String) -> Unit = { _, _, _, _ -> },
     authState: AuthState = AuthState.noAutenticado,
     viewModel: RegisterViewModel = viewModel()
 ) {
@@ -100,7 +102,7 @@ fun RegisterScreen(
                             color = Charcoal
                         )
                         Text(
-                            text = "Completa tus datos para registrarte",
+                            text = stringResource(R.string.completa_tus_datos_para_registrarte),
                             fontSize = 14.sp,
                             color = textGray
                         )
@@ -150,7 +152,7 @@ fun RegisterScreen(
                             value = state.email,
                             onValueChange = { viewModel.onEmailChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("tu@email.com", color = textGray) },
+                            placeholder = { Text(stringResource(R.string.tu_email_com), color = textGray) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Email,
@@ -160,6 +162,36 @@ fun RegisterScreen(
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = RedPrimary,
+                                unfocusedBorderColor = Color(0xFFE0E0E0),
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White
+                            )
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "Biografía",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Charcoal
+                        )
+                        OutlinedTextField(
+                            value = state.biografia,
+                            onValueChange = { viewModel.onBiografiaChange(it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text(stringResource(R.string.cu_ntanos_sobre_ti), color = textGray) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = RedDark
+                                )
+                            },
+                            singleLine = false,
+                            maxLines = 3,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = RedPrimary,
@@ -203,7 +235,6 @@ fun RegisterScreen(
                         )
                     }
 
-                    // Campo confirmar contraseña
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = "Confirmar contraseña",
@@ -263,7 +294,14 @@ fun RegisterScreen(
                                     colors = listOf(RedDark, RedPrimary)
                                 )
                             )
-                            .clickable { onClickRegister(state.email, state.password) },
+                            .clickable {
+                                onClickRegister(
+                                    state.nombre,
+                                    state.email,
+                                    state.password,
+                                    state.biografia
+                                )
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

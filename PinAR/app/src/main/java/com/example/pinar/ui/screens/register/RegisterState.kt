@@ -4,6 +4,7 @@ package com.example.pinar.ui.screens.register
 data class RegisterState(
     val nombre: String = "",
     val email: String = "",
+    val biografia: String = "",
     val password: String = "",
-    val confirmPassword: String = "",
+    val confirmPassword: String = ""
 )

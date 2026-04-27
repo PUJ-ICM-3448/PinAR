@@ -94,9 +94,14 @@ fun ProfileScreen(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        Text(
+                            "Perfil creado el ${userData?.creacion?.toDate()}",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
 
                         Text(
-                            "Entusiasta de la tecnología AR y exploradora de espacios interiores.",
+                            userData?.biografia ?: "El usuario no tiene biografia",
                             color = Color.White,
                             fontSize = 14.sp
                         )

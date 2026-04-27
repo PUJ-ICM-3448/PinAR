@@ -18,6 +18,10 @@ class RegisterViewModel : ViewModel() {
         _state.value = _state.value.copy(email = email)
     }
 
+    fun onBiografiaChange(biografia: String) {
+        _state.value = _state.value.copy(biografia = biografia)
+    }
+
     fun onPasswordChange(password: String) {
         _state.value = _state.value.copy(password = password)
     }
