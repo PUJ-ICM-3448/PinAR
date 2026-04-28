@@ -6,16 +6,12 @@ import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.pinar.R
 import com.example.pinar.data.AuthState
 import com.example.pinar.data.UserData
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.tasks.await
-
 class MainViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     
@@ -139,5 +135,47 @@ class MainViewModel : ViewModel() {
         auth.signOut()
         _userData.value = null
         _authState.value = AuthState.noAutenticado
+    }
+    fun modificarNombre(nombre: String, uid: String) {
+        if (nombre == _userData.value?.nombre) {
+            return
+        }
+        db.collection("usuarios").document(uid).update("nombre", nombre)
+            .addOnSuccessListener {
+                _userData.value = _userData.value?.copy(nombre = nombre)
+            }
+    }
+
+    fun modificarBiografia(biografia: String, uid: String) {
+        if (biografia == _userData.value?.biografia) {
+            return
+        }
+        db.collection("usuarios").document(uid).update("biografia", biografia)
+            .addOnSuccessListener {
+                _userData.value = _userData.value?.copy(biografia = biografia)
+            }
+    }
+
+    fun modificarImagen(uri: Uri, uid: String, context: Context) {
+        val storageRef = FirebaseStorage.getInstance().reference
+        val fotoRef = storageRef.child("imagenes/perfil/foto_${uid}.jpg")
+
+        fotoRef.delete()
+            .addOnSuccessListener {
+                subirFotoPerfil(uri, context)
+            }
+            .addOnFailureListener {
+                subirFotoPerfil(uri, context)
+            }
+    }
+
+    fun modificarDatos(nombre: String, biografia: String, uid: String, uri: Uri?, context: Context) {
+        if (nombre.isNotEmpty() && biografia.isNotEmpty()) {
+            modificarNombre(nombre, uid)
+            modificarBiografia(biografia, uid)
+            uri?.let {
+                modificarImagen(it, uid, context)
+            }
+        }
     }
 }

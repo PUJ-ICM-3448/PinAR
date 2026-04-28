@@ -29,6 +29,7 @@ import com.example.pinar.ui.screens.newpin.NewPinScreen
 import com.example.pinar.ui.screens.profile.ProfileScreen
 import com.example.pinar.ui.screens.notifications.NotificationsScreen
 import com.example.pinar.ui.screens.profile.EditProfileScreen
+import com.example.pinar.ui.screens.profile.EditProfileViewModel
 
 @Composable
 fun NavigationStack() {
@@ -37,6 +38,7 @@ fun NavigationStack() {
     val mainViewModel: MainViewModel = viewModel()
     val userData by mainViewModel.userData
     var ruta by remember{mutableStateOf(Screen.Sign.route)}
+    val editViewModel: EditProfileViewModel = viewModel()
 
     LaunchedEffect(mainViewModel.authState.value) {
         val auth = mainViewModel.authState.value
@@ -190,12 +192,13 @@ fun NavigationStack() {
             )
         }
 
-        //composable (route = Screen.EditProfile.route){
-           // EditProfileScreen(
-               // userData = userData,
-              //  onBackClick = { navController.popBackStack() },
-           //     MainViewModel = mainViewModel
-          //  )
-       // }
+        composable (route = Screen.EditProfile.route){
+           EditProfileScreen(
+               userData = userData,
+               onBackClick = { navController.popBackStack() },
+               viewModel = editViewModel,
+               mainViewModel = mainViewModel
+           )
+        }
     }
 }

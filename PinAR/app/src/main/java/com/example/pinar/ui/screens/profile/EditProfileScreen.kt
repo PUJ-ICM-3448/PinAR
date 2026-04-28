@@ -1,5 +1,7 @@
 package com.example.pinar.ui.screens.profile
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,12 +16,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.pinar.R
 import com.example.pinar.data.UserData
+import com.example.pinar.ui.MainViewModel
 import com.example.pinar.ui.theme.Charcoal
 import com.example.pinar.ui.theme.RedPrimary
 import com.example.pinar.ui.theme.SoftCream
@@ -28,9 +34,17 @@ import com.example.pinar.ui.theme.SoftCream
 fun EditProfileScreen(
     userData: UserData?,
     onBackClick: () -> Unit,
-    viewModel: EditProfileViewModel = viewModel()
+    viewModel: EditProfileViewModel = viewModel(),
+    mainViewModel: MainViewModel = viewModel()
 ) {
+
     val state by viewModel.state
+    val context = LocalContext.current
+    val onePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.seleccionarFoto(it, context) }
+    }
 
     LaunchedEffect(userData) {
         viewModel.inicializar(userData)
@@ -54,12 +68,23 @@ fun EditProfileScreen(
                 nombre = state.nombre,
                 biografia = state.biografia,
                 onNombreChange = { viewModel.modificarNombre(it) },
-                onBioChange = { viewModel.modificarBiografia(it) }
+                onBioChange = { viewModel.modificarBiografia(it) },
+                onImageClick = { onePhotoPickerLauncher.launch("image/*") },
+                state = state
             )
 
             Spacer(modifier = Modifier.weight(1f))
             
-            BotonGuardar { }
+            BotonGuardar {mainViewModel.modificarDatos(state.nombre, state.biografia, userData?.uid.toString(), state.fotoUri, context)}
+
+            Button(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(stringResource(R.string.regresar))
+            }
         }
     }
 }
@@ -68,7 +93,7 @@ fun EditProfileScreen(
 @Composable
 fun Cabecera(onBackClick: () -> Unit) {
     CenterAlignedTopAppBar(
-        title = { Text("Editar Perfil", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.editar_perfilcab), fontSize = 18.sp, fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -110,11 +135,51 @@ fun SeccionCampos(
     nombre: String,
     biografia: String,
     onNombreChange: (String) -> Unit,
-    onBioChange: (String) -> Unit
+    onBioChange: (String) -> Unit,
+    onImageClick: () -> Unit,
+    state: EditProfileState
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        CampoEdicion(etiqueta = "Nombre", valor = nombre, onValueChange = onNombreChange)
-        CampoEdicion(etiqueta = "Biografía", valor = biografia, onValueChange = onBioChange, esLineaUnica = false)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CampoEdicion(
+            etiqueta = stringResource(R.string.nombre),
+            valor = nombre, 
+            onValueChange = onNombreChange
+        )
+        
+        CampoEdicion(
+            etiqueta = stringResource(R.string.biograf_a),
+            valor = biografia, 
+            onValueChange = onBioChange, 
+            esLineaUnica = false
+        )
+
+        OutlinedButton(
+            onClick = { onImageClick() },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Charcoal)
+        ) {
+            Text(text = stringResource(R.string.seleccionar_foto_de_perfil))
+        }
+        if (state.fotoUri != null) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color.LightGray)
+            ) {
+                AsyncImage(
+                    model = state.fotoUri,
+                    contentDescription = "Preview",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
     }
 }
 
@@ -147,10 +212,12 @@ fun CampoEdicion(
 fun BotonGuardar(onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(50.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(containerColor = RedPrimary)
     ) {
-        Text("Guardar", fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.guardar), fontWeight = FontWeight.Bold)
     }
 }
