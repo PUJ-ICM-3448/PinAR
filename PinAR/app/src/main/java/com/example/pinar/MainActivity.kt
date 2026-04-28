@@ -11,10 +11,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.pinar.navigation.NavigationStack
+import com.google.android.gms.maps.MapsInitializer
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        MapsInitializer.initialize(applicationContext, MapsInitializer.Renderer.LATEST) { }
+
         enableEdgeToEdge()
         setContent {
             PinARTheme(darkTheme = isSystemInDarkTheme()) {
