@@ -28,6 +28,7 @@ import com.example.pinar.ui.screens.newpinlocation.NewPinLocationScreen
 import com.example.pinar.ui.screens.newpin.NewPinScreen
 import com.example.pinar.ui.screens.profile.ProfileScreen
 import com.example.pinar.ui.screens.notifications.NotificationsScreen
+import com.example.pinar.ui.screens.profile.EditProfileScreen
 
 @Composable
 fun NavigationStack() {
@@ -188,5 +189,11 @@ fun NavigationStack() {
                 }
             )
         }
+
+        //composable (route = Screen.EditProfile.route){
+            //EditProfileScreen(
+
+            //)
+        //}
     }
 }

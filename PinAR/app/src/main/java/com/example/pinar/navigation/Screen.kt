@@ -18,4 +18,6 @@ sealed class Screen(val route: String) {
     object NewPinLocation: Screen("new_pin_location")
 
     object Notifications : Screen("notifications")
+
+    object EditProfile : Screen("edit_profile")
 }

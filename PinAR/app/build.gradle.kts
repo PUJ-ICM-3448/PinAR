@@ -54,7 +54,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.9.7")
     implementation("androidx.compose.ui:ui-text-google-fonts:1.10.4")
-    implementation("com.google.ar:core:1.33.0")
+    implementation("com.google.ar:core:1.45.0")
     implementation("io.github.sceneview:arsceneview:0.10.0")
     implementation("com.google.android.gms:play-services-base:18.2.0")
     implementation(libs.play.services.maps)

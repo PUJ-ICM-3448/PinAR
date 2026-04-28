@@ -26,7 +26,7 @@ import com.example.pinar.ui.theme.RedDark
 import com.example.pinar.ui.theme.RedPrimary
 
 @Composable
-fun EditProfileScreen(userData: UserData?, modifier: Modifier = Modifier) {
+fun EditProfileScreen(userData: UserData?, modifier: Modifier = Modifier, onProfileClick: () -> Unit, ) {
     Column(modifier = modifier) {
         Text(
             text = "Editar Perfil",
