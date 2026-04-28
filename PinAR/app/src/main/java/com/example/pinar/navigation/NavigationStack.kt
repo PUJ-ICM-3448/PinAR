@@ -191,9 +191,11 @@ fun NavigationStack() {
         }
 
         //composable (route = Screen.EditProfile.route){
-            //EditProfileScreen(
-
-            //)
-        //}
+           // EditProfileScreen(
+               // userData = userData,
+              //  onBackClick = { navController.popBackStack() },
+           //     MainViewModel = mainViewModel
+          //  )
+       // }
     }
 }

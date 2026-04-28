@@ -216,17 +216,42 @@ fun ARCameraView(
                             ArSceneView(ctx).also { view ->
                                 arView = view
 
+                                // Listener de frames para actualización constante de calidad e inicialización
+                                view.onArFrame = { frame ->
+                                    val arSession = view.arSession
+                                    if (arSession != null) {
+                                        if (viewModel.state.value.sessionState.session == null) {
+                                            viewModel.onSessionCreated(arSession)
+                                        }
+
+                                        if (viewModel.state.value.hostingState == HostingState.MAPPING) {
+                                            // Asegurar configuración agresiva de ARCore
+                                            val config = arSession.config
+                                            if (config.cloudAnchorMode != com.google.ar.core.Config.CloudAnchorMode.ENABLED || 
+                                                config.planeFindingMode == com.google.ar.core.Config.PlaneFindingMode.DISABLED) {
+                                                config.cloudAnchorMode = com.google.ar.core.Config.CloudAnchorMode.ENABLED
+                                                config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+                                                config.focusMode = com.google.ar.core.Config.FocusMode.AUTO
+                                                config.updateMode = com.google.ar.core.Config.UpdateMode.LATEST_CAMERA_IMAGE
+                                                arSession.configure(config)
+                                            }
+
+                                            frame.camera?.pose?.let { cameraPose ->
+                                                viewModel.updateFeatureMapQuality(cameraPose)
+                                            }
+                                        }
+                                    }
+                                }
+
                                 // Touch listener para hit-test
-                                // Lee currentHostingMode/currentHostingState (mutableState, siempre actual)
                                 @android.annotation.SuppressLint("ClickableViewAccessibility")
                                 view.setOnTouchListener { _, event ->
                                     if (event.action == MotionEvent.ACTION_UP &&
-                                        currentHostingMode &&
-                                        currentHostingState == HostingState.PLACING
+                                        viewModel.state.value.isHostingMode &&
+                                        viewModel.state.value.hostingState == HostingState.PLACING
                                     ) {
-                                        view.arSession?.let { session ->
+                                        view.arSession?.update()?.let { frame ->
                                             try {
-                                                val frame = session.update()
                                                 val hits = frame.hitTest(event)
                                                 hits.firstOrNull { hit ->
                                                     val trackable = hit.trackable
@@ -260,31 +285,7 @@ fun ARCameraView(
                                 }
                             }
                         },
-                        update = { view ->
-                            view.arSession?.let { arSession ->
-                                if (!sessionConfigured) {
-                                    viewModel.onSessionCreated(arSession)
-
-                                    val config = arSession.config
-                                    config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-                                    config.focusMode = Config.FocusMode.AUTO
-                                    config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
-                                    arSession.configure(config)
-
-                                    sessionConfigured = true
-                                }
-
-                                // Actualizar calidad de mapping durante fase MAPPING
-                                if (currentHostingState == HostingState.MAPPING) {
-                                    try {
-                                        val frame = arSession.update()
-                                        frame.camera?.pose?.let { cameraPose ->
-                                            viewModel.updateFeatureMapQuality(cameraPose)
-                                        }
-                                    } catch (_: Exception) { }
-                                }
-                            }
-                        }
+                        update = { _ -> }
                     )
 
                     DisposableEffect(lifecycleOwner) {
