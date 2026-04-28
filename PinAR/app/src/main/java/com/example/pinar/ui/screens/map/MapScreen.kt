@@ -1,6 +1,12 @@
 package com.example.pinar.ui.screens.map
 
 import android.Manifest
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +17,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -24,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,6 +53,7 @@ import com.example.pinar.ui.screens.map.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -67,6 +79,9 @@ fun MapScreen(
     val cameraState = rememberCameraPositionState()
     val snackbarHostState = remember { SnackbarHostState() }
     var searchQuery by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    
+    var isCompassModeEnabled by remember { mutableStateOf(false) }
 
     val locationPermissions = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -74,6 +89,54 @@ fun MapScreen(
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
+
+    DisposableEffect(isCompassModeEnabled) {
+        if (!isCompassModeEnabled) {
+            onDispose {}
+        } else {
+            val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            val rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+
+            val listener = object : SensorEventListener {
+                override fun onSensorChanged(event: SensorEvent) {
+                    if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
+                        try {
+                            val rotationMatrix = FloatArray(9)
+                            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                            val orientation = FloatArray(3)
+                            SensorManager.getOrientation(rotationMatrix, orientation)
+                            
+                            val bearing = Math.toDegrees(orientation[0].toDouble()).toFloat()
+                            val pitch = Math.toDegrees(orientation[1].toDouble()).toFloat()
+                            val tilt = (-pitch).coerceIn(0f, 67.5f)
+
+                            if (!cameraState.isMoving) {
+                                cameraState.move(
+                                    CameraUpdateFactory.newCameraPosition(
+                                        CameraPosition.builder(cameraState.position)
+                                            .bearing(bearing)
+                                            .tilt(tilt)
+                                            .build()
+                                    )
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MapScreen", "Error actualizando orientación: ${e.message}")
+                        }
+                    }
+                }
+                override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+            }
+
+            if (rotationSensor != null) {
+                sensorManager.registerListener(listener, rotationSensor, SensorManager.SENSOR_DELAY_UI)
+            }
+
+            onDispose {
+                sensorManager.unregisterListener(listener)
+            }
+        }
+    }
 
     LaunchedEffect(locationPermissions.allPermissionsGranted) {
         viewModel.onLocationPermissionChanged(locationPermissions.allPermissionsGranted)
@@ -141,7 +204,8 @@ fun MapScreen(
                     ),
                     uiSettings = MapUiSettings(
                         myLocationButtonEnabled = locationPermissions.allPermissionsGranted,
-                        zoomControlsEnabled = true
+                        zoomControlsEnabled = true,
+                        compassEnabled = !isCompassModeEnabled
                     )
                 ) {
                     uiState.pins
@@ -174,6 +238,23 @@ fun MapScreen(
                         )
                     }
                 }
+
+                FloatingActionButton(
+                    onClick = { isCompassModeEnabled = !isCompassModeEnabled },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp),
+                    containerColor = if (isCompassModeEnabled) MaterialTheme.colorScheme.primary else Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isCompassModeEnabled) Icons.Default.Explore else Icons.Default.Navigation,
+                        contentDescription = "Modo Brújula",
+                        tint = if (isCompassModeEnabled) Color.White else Color.Gray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier
