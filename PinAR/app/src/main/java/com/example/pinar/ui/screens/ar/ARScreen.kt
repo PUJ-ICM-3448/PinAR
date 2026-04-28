@@ -64,7 +64,6 @@ import com.google.ar.core.Config
 import com.google.ar.core.Plane
 import com.google.ar.core.Session
 import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.ar.node.ArModelNode
 
 @Composable
@@ -219,6 +218,7 @@ fun ARCameraView(
 
                                 // Touch listener para hit-test
                                 // Lee currentHostingMode/currentHostingState (mutableState, siempre actual)
+                                @android.annotation.SuppressLint("ClickableViewAccessibility")
                                 view.setOnTouchListener { _, event ->
                                     if (event.action == MotionEvent.ACTION_UP &&
                                         currentHostingMode &&
@@ -236,22 +236,17 @@ fun ARCameraView(
                                                     // Crear anchor y colocar modelo 3D
                                                     val anchor = hitResult.createAnchor()
 
-                                                    val anchorNode = AnchorNode(
-                                                        engine = view.engine,
-                                                        anchor = anchor
-                                                    )
                                                     val modelNode = ArModelNode(
                                                         engine = view.engine
                                                     ).apply {
                                                         loadModelGlbAsync(
-                                                            context = ctx,
                                                             glbFileLocation = "models/map_pin_location_pin.glb",
                                                             autoAnimate = true,
                                                             scaleToUnits = 0.5f
                                                         )
+                                                        this.anchor = anchor
                                                     }
-                                                    anchorNode.addChildNode(modelNode)
-                                                    view.addChildNode(anchorNode)
+                                                    view.addChild(modelNode)
 
                                                     // Notificar al ViewModel
                                                     viewModel.onPlaneTapped(hitResult)
