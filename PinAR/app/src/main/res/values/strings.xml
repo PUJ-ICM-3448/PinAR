@@ -45,4 +45,9 @@
     <string name="hola">Hola %1$s</string>
     <string name="hola2">Hola %1$s</string>
     <string name="editar_perfil">Editar Perfil</string>
+    <string name="cu_ntanos_sobre_ti">Cuéntanos sobre ti</string>
+    <string name="tu_email_com">tu@email.com</string>
+    <string name="completa_tus_datos_para_registrarte">Completa tus datos para registrarte</string>
+    <string name="seleccionar_foto_de_perfil">Seleccionar foto de perfil</string>
+    <string name="foto_subida_correctamente">Foto subida correctamente</string>
 </resources>
