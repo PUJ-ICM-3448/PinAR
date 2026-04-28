@@ -6,22 +6,28 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -51,6 +57,7 @@ import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.screens.map.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -83,13 +90,38 @@ fun MapScreen(
     
     var isCompassModeEnabled by remember { mutableStateOf(false) }
 
-    val locationPermissions = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
+    // Permisos de Ubicación y Actividad Física
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = buildList {
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                add(Manifest.permission.ACTIVITY_RECOGNITION)
+            }
+        }
     )
 
+    // Notificar al ViewModel sobre los permisos
+    LaunchedEffect(permissionsState.allPermissionsGranted) {
+        val locationGranted = permissionsState.permissions.any { 
+            (it.permission == Manifest.permission.ACCESS_FINE_LOCATION || 
+             it.permission == Manifest.permission.ACCESS_COARSE_LOCATION) && it.status.isGranted 
+        }
+        viewModel.onLocationPermissionChanged(locationGranted)
+
+        val activityGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            permissionsState.permissions.any { 
+                it.permission == Manifest.permission.ACTIVITY_RECOGNITION && it.status.isGranted 
+            }
+        } else true
+        viewModel.onActivityPermissionChanged(activityGranted)
+
+        if (!permissionsState.allPermissionsGranted) {
+            permissionsState.launchMultiplePermissionRequest()
+        }
+    }
+
+    // Efecto del sensor de rotación (Giroscopio)
     DisposableEffect(isCompassModeEnabled) {
         if (!isCompassModeEnabled) {
             onDispose {}
@@ -138,13 +170,6 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(locationPermissions.allPermissionsGranted) {
-        viewModel.onLocationPermissionChanged(locationPermissions.allPermissionsGranted)
-        if (!locationPermissions.allPermissionsGranted) {
-            locationPermissions.launchMultiplePermissionRequest()
-        }
-    }
-
     LaunchedEffect(uiState.routeError) {
         uiState.routeError?.let {
             snackbarHostState.showSnackbar(it)
@@ -154,7 +179,9 @@ fun MapScreen(
 
     LaunchedEffect(uiState.userLocation) {
         uiState.userLocation?.let { location ->
-            cameraState.animate(CameraUpdateFactory.newLatLngZoom(location, 18f))
+            try {
+                cameraState.animate(CameraUpdateFactory.newLatLngZoom(location, 18f))
+            } catch (_: Exception) {}
         }
     }
 
@@ -163,7 +190,9 @@ fun MapScreen(
             val bounds = LatLngBounds.Builder().apply {
                 uiState.routePolyline.forEach { include(it) }
             }.build()
-            cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 120))
+            try {
+                cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 120))
+            } catch (_: Exception) {}
         }
     }
 
@@ -187,23 +216,15 @@ fun MapScreen(
                 )
             )
 
-            if (!locationPermissions.allPermissionsGranted) {
-                Text(
-                    text = "Habilita ubicacion para trazar rutas desde tu posicion",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
             Box(modifier = Modifier.weight(1f)) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraState,
                     properties = MapProperties(
-                        isMyLocationEnabled = locationPermissions.allPermissionsGranted
+                        isMyLocationEnabled = uiState.hasLocationPermission
                     ),
                     uiSettings = MapUiSettings(
-                        myLocationButtonEnabled = locationPermissions.allPermissionsGranted,
+                        myLocationButtonEnabled = uiState.hasLocationPermission,
                         zoomControlsEnabled = true,
                         compassEnabled = !isCompassModeEnabled
                     )
@@ -239,6 +260,38 @@ fun MapScreen(
                     }
                 }
 
+                // Contador de pasos en la esquina inferior izquierda
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.9f)
+                    ),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsWalk,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${uiState.stepCount} pasos",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                }
+
+                // Botón de Brújula / Giroscopio
                 FloatingActionButton(
                     onClick = { isCompassModeEnabled = !isCompassModeEnabled },
                     modifier = Modifier

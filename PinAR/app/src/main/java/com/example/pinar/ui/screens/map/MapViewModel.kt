@@ -2,7 +2,12 @@ package com.example.pinar.ui.screens.map
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,13 +34,17 @@ import java.net.URL
 class MapViewModel @JvmOverloads constructor(
     application: Application,
     private val pinRepository: PinRepository = ExistingBackendPinRepository()
-) : AndroidViewModel(application) {
+) : AndroidViewModel(application), SensorEventListener {
 
     private val context = application.applicationContext
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+
+    private var initialSteps = -1
 
     private val locationRequest = LocationRequest.Builder(4000L)
         .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -79,6 +88,14 @@ class MapViewModel @JvmOverloads constructor(
         }
     }
 
+    fun onActivityPermissionChanged(granted: Boolean) {
+        if (granted) {
+            startStepCounting()
+        } else {
+            stopStepCounting()
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
         if (!_uiState.value.hasLocationPermission) return
@@ -92,6 +109,29 @@ class MapViewModel @JvmOverloads constructor(
     fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
+
+    private fun startStepCounting() {
+        stepSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    private fun stopStepCounting() {
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
+            val totalSteps = event.values[0].toInt()
+            if (initialSteps == -1) {
+                initialSteps = totalSteps
+            }
+            val currentSessionSteps = totalSteps - initialSteps
+            _uiState.update { it.copy(stepCount = currentSessionSteps) }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     fun selectPin(pin: PinMapItem) {
         _uiState.update {
@@ -233,5 +273,6 @@ class MapViewModel @JvmOverloads constructor(
     override fun onCleared() {
         super.onCleared()
         stopLocationUpdates()
+        stopStepCounting()
     }
 }

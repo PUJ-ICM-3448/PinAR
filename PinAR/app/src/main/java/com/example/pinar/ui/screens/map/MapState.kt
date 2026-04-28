@@ -12,5 +12,6 @@ data class MapUiState(
     val isLoadingRoute: Boolean = false,
     val routeError: String? = null,
     val hasLocationPermission: Boolean = false,
-    val unreadCount: Int = 3
+    val unreadCount: Int = 3,
+    val stepCount: Int = 0
 )
