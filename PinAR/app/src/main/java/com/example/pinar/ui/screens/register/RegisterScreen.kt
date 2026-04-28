@@ -1,5 +1,8 @@
 package com.example.pinar.ui.screens.register
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,6 +30,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.pinar.R
 import com.example.pinar.data.AuthState
 import com.example.pinar.ui.theme.Charcoal
@@ -41,11 +46,18 @@ fun RegisterScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
-    onClickRegister: (String, String, String, String) -> Unit = { _, _, _, _ -> },
+    onClickRegister: (String, String, String, String, Uri?, android.content.Context) -> Unit = { _, _, _, _, _, _ -> },
     authState: AuthState = AuthState.noAutenticado,
     viewModel: RegisterViewModel = viewModel()
 ) {
     val state by viewModel.state
+
+    val context = LocalContext.current
+    val onePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.seleccionarFoto(it, context) }
+    }
 
     val textGray = Color(0xFF9E9E9E)
 
@@ -200,6 +212,32 @@ fun RegisterScreen(
                                 unfocusedContainerColor = Color.White
                             )
                         )
+                        
+                        OutlinedButton(
+                            onClick = { onePhotoPickerLauncher.launch("image/*") },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Charcoal)
+                        ) {
+                            Text(text = stringResource(R.string.seleccionar_foto_de_perfil))
+                        }
+
+                        if (state.fotoUri != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .align(Alignment.CenterHorizontally)
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(Color.LightGray)
+                            ) {
+                                AsyncImage(
+                                    model = state.fotoUri,
+                                    contentDescription = "Preview",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
                     }
 
                     // Campo contraseña
@@ -266,20 +304,10 @@ fun RegisterScreen(
                             )
                         )
                     }
-
-                    if (authState is AuthState.Error) {
-                        Text(
-                            text = authState.mensaje,
-                            color = Color.Red,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
-
-                // Botón + link login
+                
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -299,7 +327,9 @@ fun RegisterScreen(
                                     state.nombre,
                                     state.email,
                                     state.password,
-                                    state.biografia
+                                    state.biografia,
+                                    state.fotoUri,
+                                    context
                                 )
                             },
                         contentAlignment = Alignment.Center

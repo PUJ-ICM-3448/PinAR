@@ -32,9 +32,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.SemanticsActions.OnClick
+import coil.compose.AsyncImage
 import com.example.pinar.data.UserData
 import com.example.pinar.ui.screens.home.PinReciente
 
@@ -80,11 +82,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        Image(
-                            painter = painterResource(R.drawable.profile),
-                            contentDescription = null,
-                            modifier = Modifier.size(100.dp)
-                        )
+                        FotoPerfil(userData)
 
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -199,6 +197,16 @@ fun ProfileScreen(
             onProfileClick = onNavigateToProfile
         )
     }
+}
+
+@Composable
+fun FotoPerfil(userData: UserData?) {
+    AsyncImage(
+        model = userData?.fotoUrl,
+        contentDescription = null,
+        error = painterResource(R.drawable.profile),
+        modifier = Modifier.size(100.dp).clip(RoundedCornerShape(50.dp))
+    )
 }
 
 @Composable
