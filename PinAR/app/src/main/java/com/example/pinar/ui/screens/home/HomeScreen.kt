@@ -48,7 +48,6 @@ fun HomeScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToNewPin: () -> Unit,
     onNavigateToNotifications: () -> Unit = {},
     userData: UserData?
 ) {
@@ -186,12 +185,6 @@ fun HomeScreen(
             onNotificationsClick = onNavigateToNotifications,
             onProfileClick = onNavigateToProfile
         )
-        BotonFAB(
-            onClick = onNavigateToNewPin,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 120.dp, end = 10.dp)
-        )
     }
 
 }
@@ -304,18 +297,5 @@ fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
             }
             Text(stringResource(R.string.visitas, visitas))
         }
-    }
-}
-
-@Composable
-fun BotonFAB(onClick: ()-> Unit, modifier: Modifier = Modifier){
-    FloatingActionButton(
-        modifier = modifier,
-        onClick = { onClick() },
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = Color.White,
-        shape = CircleShape
-    ) {
-        Icon(Icons.Filled.Add, "Agregar pin")
     }
 }

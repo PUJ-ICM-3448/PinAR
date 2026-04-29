@@ -23,9 +23,6 @@ import com.example.pinar.ui.screens.sign.SignScreen
 import com.example.pinar.ui.screens.home.HomeScreen
 import com.example.pinar.ui.screens.login.LoginScreen
 import com.example.pinar.ui.screens.map.MapScreen
-import com.example.pinar.ui.screens.newpindetails.NewPinDetailsScreen
-import com.example.pinar.ui.screens.newpinlocation.NewPinLocationScreen
-import com.example.pinar.ui.screens.newpin.NewPinScreen
 import com.example.pinar.ui.screens.profile.ProfileScreen
 import com.example.pinar.ui.screens.notifications.NotificationsScreen
 import com.example.pinar.ui.screens.profile.EditProfileScreen
@@ -101,7 +98,6 @@ fun NavigationStack() {
                 onNavigateToMap = { navController.navigate(Screen.Map.route)},
                 onNavigateToAR = { navController.navigate(Screen.AR.route)},
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route)},
-                onNavigateToNewPin = { navController.navigate(Screen.NewPin.route)},
                 currentScreen = Screen.Home,
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
@@ -140,19 +136,6 @@ fun NavigationStack() {
                 userData = userData
             )
         }
-        composable(route = Screen.NewPin.route) {
-            NewPinScreen(
-                onBackClick = {navController.popBackStack()},
-                onCloseClick = {
-                    navController.navigate(Screen.Home.route){
-                        popUpTo(Screen.Home.route)
-                    }
-                },
-                onTakePhoto = {
-                    navController.navigate(Screen.NewPinDetails.route)
-                }
-            )
-        }
 
         composable(route = Screen.Notifications.route) {
             NotificationsScreen(
@@ -162,35 +145,6 @@ fun NavigationStack() {
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
             )
 
-        }
-
-        composable(route = Screen.NewPinDetails.route){
-            NewPinDetailsScreen(
-                onBackClick = {navController.popBackStack()},
-                onCloseClick = {
-                    navController.navigate(Screen.Home.route){
-                        popUpTo(Screen.Home.route)
-                    }
-                },
-                onContinueClick = {
-                    navController.navigate(Screen.NewPinLocation.route)
-                }
-            )
-        }
-        composable(route = Screen.NewPinLocation.route){
-            NewPinLocationScreen(
-                onBackClick = {navController.popBackStack()},
-                onCloseClick = {
-                    navController.navigate(Screen.Home.route){
-                        popUpTo(Screen.Home.route)
-                    }
-                },
-                onContinue = {
-                    navController.navigate(Screen.Home.route){
-                        popUpTo(Screen.Home.route)
-                    }
-                }
-            )
         }
 
         composable (route = Screen.EditProfile.route){
