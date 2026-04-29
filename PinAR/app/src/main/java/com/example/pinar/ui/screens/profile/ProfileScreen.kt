@@ -57,7 +57,9 @@ fun ProfileScreen(
     userData: UserData?
 ) {
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.background)) {
 
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -90,7 +92,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = userData?.nombre ?: "Usuario",
+                            text = userData?.nombre ?: stringResource(R.string.usuario),
                             color = Color.White,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
@@ -102,7 +104,7 @@ fun ProfileScreen(
                         )
 
                         Text(
-                            userData?.biografia ?: "El usuario no tiene biografia",
+                            userData?.biografia ?: stringResource(R.string.el_usuario_no_tiene_biografia),
                             color = Color.White,
                             fontSize = 14.sp
                         )
@@ -114,9 +116,13 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
 
-                            StatCard("42", "Pines\nCreados")
-                            StatCard("128", "Rutas\nNavegadas")
-                            StatCard("8", "Logros")
+                            StatCard(stringResource(R.string._42),
+                                stringResource(R.string.pines_creados)
+                            )
+                            StatCard(stringResource(R.string._128),
+                                stringResource(R.string.rutas_navegadas)
+                            )
+                            StatCard(stringResource(R.string._8), stringResource(R.string.logros))
 
                         }
 
@@ -124,7 +130,9 @@ fun ProfileScreen(
 
 
                         Card(
-                            modifier = Modifier.fillMaxWidth().clickable { onNavigateToEditProfile() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onNavigateToEditProfile() },
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Box(
@@ -145,7 +153,7 @@ fun ProfileScreen(
             item {
 
                 Text(
-                    "Actividad Reciente",
+                    stringResource(R.string.actividad_reciente),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(16.dp)
@@ -208,7 +216,9 @@ fun FotoPerfil(userData: UserData?) {
         model = userData?.fotoUrl,
         contentDescription = null,
         error = painterResource(R.drawable.profile),
-        modifier = Modifier.size(100.dp).clip(RoundedCornerShape(50.dp))
+        modifier = Modifier
+            .size(100.dp)
+            .clip(RoundedCornerShape(50.dp))
     )
 }
 

@@ -1,11 +1,5 @@
 package com.example.pinar.data
 
-/**
- * Modelo de datos para un Pin con Cloud Anchor.
- * Se persiste en Firestore (colección "cloud_anchor_pins").
- *
- * Ref: https://developers.google.com/ar/develop/java/cloud-anchors/developer-guide
- */
 data class CloudAnchorPin(
     val id: String = "",
     val cloudAnchorId: String = "",

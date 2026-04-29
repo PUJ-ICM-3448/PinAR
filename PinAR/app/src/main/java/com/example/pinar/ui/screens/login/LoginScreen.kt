@@ -16,12 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pinar.R
 import com.example.pinar.data.AuthState
 import com.example.pinar.ui.theme.Charcoal
 import com.example.pinar.ui.theme.MutedGold
@@ -46,8 +48,6 @@ fun LoginScreen(
     val textGray = Color(0xFF9E9E9E)
 
     Box(modifier = modifier.fillMaxSize()) {
-
-        // Header con gradiente RedDark → RedDeep
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -66,7 +66,7 @@ fun LoginScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
+                    contentDescription = stringResource(R.string.volver),
                     tint = MutedGold
                 )
             }
@@ -93,13 +93,13 @@ fun LoginScreen(
                     // Título
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Bienvenido de vuelta",
+                            text = stringResource(R.string.bienvenido_de_vuelta),
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = Charcoal
                         )
                         Text(
-                            text = "Ingresa tus credenciales para continuar",
+                            text = stringResource(R.string.ingresa_tus_credenciales_para_continuar),
                             fontSize = 14.sp,
                             color = textGray
                         )
@@ -108,7 +108,7 @@ fun LoginScreen(
                     // Campo correo
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Correo electrónico",
+                            text = stringResource(R.string.correo_electr_nico),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = Charcoal
@@ -140,7 +140,7 @@ fun LoginScreen(
                     // Campo contraseña
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Contraseña",
+                            text = stringResource(R.string.contrase_a),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = Charcoal
@@ -174,7 +174,7 @@ fun LoginScreen(
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(
-                                text = "¿Olvidaste tu contraseña?",
+                                text = stringResource(R.string.olvidaste_tu_contrase_a),
                                 color = RedPrimary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
@@ -221,7 +221,7 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "¿No tienes cuenta? ",
+                            text = stringResource(R.string.no_tienes_cuenta),
                             color = textGray,
                             fontSize = 14.sp
                         )
@@ -230,7 +230,7 @@ fun LoginScreen(
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(
-                                text = "Regístrate",
+                                text = stringResource(R.string.reg_strate),
                                 color = RedPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold

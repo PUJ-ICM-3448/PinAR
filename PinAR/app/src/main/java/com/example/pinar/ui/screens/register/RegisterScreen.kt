@@ -123,7 +123,7 @@ fun RegisterScreen(
                     // Campo nombre
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Nombre completo",
+                            text = stringResource(R.string.nombre_completo),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = Charcoal
@@ -132,7 +132,7 @@ fun RegisterScreen(
                             value = state.nombre,
                             onValueChange = { viewModel.onNombreChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Tu nombre", color = textGray) },
+                            placeholder = { Text(stringResource(R.string.tu_nombre), color = textGray) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Person,
@@ -215,7 +215,9 @@ fun RegisterScreen(
                         
                         OutlinedButton(
                             onClick = { onePhotoPickerLauncher.launch("image/*") },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Charcoal)
                         ) {
@@ -233,7 +235,7 @@ fun RegisterScreen(
                             ) {
                                 AsyncImage(
                                     model = state.fotoUri,
-                                    contentDescription = "Preview",
+                                    contentDescription = stringResource(R.string.preview),
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }
@@ -275,7 +277,7 @@ fun RegisterScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Confirmar contraseña",
+                            text = stringResource(R.string.confirmar_contrase_a),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = Charcoal
@@ -347,7 +349,7 @@ fun RegisterScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "¿Ya tienes cuenta? ",
+                            text = stringResource(R.string.ya_tienes_cuenta),
                             color = textGray,
                             fontSize = 14.sp
                         )
@@ -356,7 +358,7 @@ fun RegisterScreen(
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(
-                                text = "Inicia sesión",
+                                text = stringResource(R.string.inicia_sesi_n),
                                 color = RedPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold

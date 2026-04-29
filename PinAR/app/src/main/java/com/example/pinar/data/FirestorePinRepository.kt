@@ -8,17 +8,18 @@ class FirestorePinRepository(
 
     override suspend fun getPins(): List<PinMapItem> {
         return cloudAnchorRepository.getAllPins()
-            .filter { it.latitude != 0.0 || it.longitude != 0.0 }
+            .filter { it.latitude != 0.0 || it.longitude != 0.0 } //para los creados antes
             .map { pin ->
                 PinMapItem(
                     id = pin.id.ifBlank { pin.cloudAnchorId },
-                    title = pin.title.ifBlank { "Pin sin titulo" },
+                    title = pin.title.ifBlank { "PinAR" },
                     subtitle = buildSubtitle(pin),
                     position = LatLng(pin.latitude, pin.longitude)
                 )
             }
     }
 
+    //a implementar bien
     private fun buildSubtitle(pin: CloudAnchorPin): String {
         val buildingLabel = pin.buildingId.takeIf { it.isNotBlank() } ?: "Ubicacion"
         val floorLabel = if (pin.floor > 0) "Piso ${pin.floor}" else ""

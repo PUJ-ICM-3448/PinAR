@@ -3,6 +3,7 @@ package com.example.pinar.ui.screens.ar
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -103,7 +104,7 @@ fun ARScreen(
     ) { isGranted ->
         hasCameraPermission = isGranted
         if (!isGranted) {
-            Toast.makeText(context, "Se requiere permiso de cámara para AR", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Active el acceso a cámara para AR", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -135,7 +136,6 @@ fun ARScreen(
         }
     }
 
-    // Gestionar instalación de ARCore
     LaunchedEffect(hasCameraPermission) {
         if (hasCameraPermission && activity != null && !state.sessionState.isInitialized) {
             try {
@@ -149,10 +149,9 @@ fun ARScreen(
         }
     }
 
-    // Mostrar mensaje de éxito
     LaunchedEffect(state.hostingState) {
         if (state.hostingState == HostingState.SUCCESS) {
-            Toast.makeText(context, "✅ Pin guardado exitosamente", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Pin guardado exitosamente", Toast.LENGTH_SHORT).show()
             viewModel.resetHostingState()
         }
     }
@@ -170,7 +169,7 @@ fun ARScreen(
 
             Footer(
                 currentScreen = currentScreen,
-                unreadCount = 3,
+                unreadCount = 3, //cambiar a futuro
                 onHomeClick = onNavigateToHome,
                 onMapClick = onNavigateToMap,
                 onARClick = {},
@@ -179,7 +178,6 @@ fun ARScreen(
             )
         }
 
-        // Diálogo de detalles del pin
         if (state.showPinDialog) {
             PinDetailsDialog(
                 title = state.pendingPinTitle,
@@ -191,7 +189,6 @@ fun ARScreen(
             )
         }
 
-        // Error Snackbar
         state.errorMessage?.let { error ->
             Box(
                 modifier = Modifier
@@ -202,7 +199,7 @@ fun ARScreen(
                 Snackbar(
                     action = {
                         TextButton(onClick = { viewModel.dismissError() }) {
-                            Text("OK")
+                            Text("Ok")
                         }
                     }
                 ) {
@@ -226,11 +223,9 @@ fun ARCameraView(
     var sessionConfigured by remember { mutableStateOf(false) }
     val renderedResolvedPinIds = remember { mutableSetOf<String>() }
 
-    // Guardar referencia mutable al estado actual para que el touch listener lo lea
+    //para touch listener
     var currentHostingMode by remember { mutableStateOf(false) }
     var currentHostingState by remember { mutableStateOf(HostingState.IDLE) }
-
-    // Sincronizar con el state del ViewModel
     LaunchedEffect(state.isHostingMode, state.hostingState) {
         currentHostingMode = state.isHostingMode
         currentHostingState = state.hostingState
@@ -270,27 +265,22 @@ fun ARCameraView(
                         factory = { ctx ->
                             ArSceneView(ctx).also { view ->
                                 arView = view
-
-                                // Listener de frames para actualización constante de calidad e inicialización
                                 view.onArFrame = { frame ->
                                     val arSession = view.arSession
                                     if (arSession != null) {
                                         if (viewModel.state.value.sessionState.session == null) {
                                             viewModel.onSessionCreated(arSession)
                                         }
-
-                                        if (viewModel.state.value.hostingState == HostingState.MAPPING) {
-                                            // Asegurar configuración agresiva de ARCore
+                                        if (viewModel.state.value.hostingState == HostingState.MAPPING) {//en general, evita que se trabe
                                             val config = arSession.config
-                                            if (config.cloudAnchorMode != com.google.ar.core.Config.CloudAnchorMode.ENABLED || 
-                                                config.planeFindingMode == com.google.ar.core.Config.PlaneFindingMode.DISABLED) {
-                                                config.cloudAnchorMode = com.google.ar.core.Config.CloudAnchorMode.ENABLED
-                                                config.planeFindingMode = com.google.ar.core.Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-                                                config.focusMode = com.google.ar.core.Config.FocusMode.AUTO
-                                                config.updateMode = com.google.ar.core.Config.UpdateMode.LATEST_CAMERA_IMAGE
+                                            if (config.cloudAnchorMode != Config.CloudAnchorMode.ENABLED ||
+                                                config.planeFindingMode == Config.PlaneFindingMode.DISABLED) {
+                                                config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
+                                                config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+                                                config.focusMode = Config.FocusMode.AUTO
+                                                config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
                                                 arSession.configure(config)
                                             }
-
                                             frame.camera?.pose?.let { cameraPose ->
                                                 viewModel.updateFeatureMapQuality(cameraPose)
                                             }
@@ -298,7 +288,7 @@ fun ARCameraView(
                                     }
                                 }
 
-                                // Touch listener para hit-test
+                                //Touch listener
                                 @android.annotation.SuppressLint("ClickableViewAccessibility")
                                 view.setOnTouchListener { _, event ->
                                     if (event.action == MotionEvent.ACTION_UP &&
@@ -307,15 +297,13 @@ fun ARCameraView(
                                     ) {
                                         view.arSession?.update()?.let { frame ->
                                             try {
-                                                val hits = frame.hitTest(event)
+                                                val hits = frame.hitTest(event) //hitTest es la posicion, hitResult es confirmada
                                                 hits.firstOrNull { hit ->
                                                     val trackable = hit.trackable
                                                     trackable is Plane &&
                                                         trackable.isPoseInPolygon(hit.hitPose)
                                                 }?.let { hitResult ->
-                                                    // Crear anchor y colocar modelo 3D
                                                     val anchor = hitResult.createAnchor()
-
                                                     val modelNode = ArModelNode(
                                                         engine = view.engine
                                                     ).apply {
@@ -327,12 +315,10 @@ fun ARCameraView(
                                                         this.anchor = anchor
                                                     }
                                                     view.addChild(modelNode)
-
-                                                    // Notificar al ViewModel
                                                     viewModel.onPlaneTapped(hitResult)
                                                 }
                                             } catch (e: Exception) {
-                                                android.util.Log.e("ARScreen", "Hit test error", e)
+                                                Log.e("ARScreen", "error en hitTest", e)
                                             }
                                         }
                                     }
@@ -362,7 +348,6 @@ fun ARCameraView(
                         }
                     }
 
-                    // Overlay UI según estado
                     AROverlay(
                         state = state,
                         onPublishClick = { viewModel.startHostingMode() },
@@ -376,9 +361,6 @@ fun ARCameraView(
     }
 }
 
-/**
- * Overlay de controles AR que cambia según el estado actual.
- */
 @Composable
 fun AROverlay(
     state: ARState,
@@ -389,7 +371,6 @@ fun AROverlay(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            // Modo Normal
             !state.isHostingMode -> {
                 Button(
                     onClick = onViewPinsClick,
@@ -410,13 +391,12 @@ fun AROverlay(
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = "📌 ${state.resolvedPins.size} pines visibles",
+                            text = stringResource(R.string.pines_visibles, state.resolvedPins.size),
                             color = Color.White,
                             fontSize = 14.sp
                         )
                     }
                 }
-
                 Button(
                     onClick = onPublishClick,
                     modifier = Modifier
@@ -426,16 +406,13 @@ fun AROverlay(
                     LogoVertical(icono = R.drawable.camera, text = stringResource(R.string.publicar))
                 }
             }
-
-            // Modo Hosting: PLACING
             state.hostingState == HostingState.PLACING -> {
                 HostingInstructions(
-                    text = "Toca un plano detectado para colocar el pin",
+                    text = stringResource(R.string.toca_un_plano_detectado_puntos_para_colocar_el_pin),
                     onCancel = onCancelHosting
                 )
             }
 
-            // Modo Hosting: MAPPING
             state.hostingState == HostingState.MAPPING -> {
                 Column(
                     modifier = Modifier
@@ -447,14 +424,14 @@ fun AROverlay(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "📍 Pin colocado",
+                        text = stringResource(R.string.pin_colocado),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Mueve el celular alrededor del pin\npara mejorar el mapeo",
+                        text = stringResource(R.string.mueve_el_celular_alrededor_del_pin_para_mejorar_el_mapeo),
                         color = Color.White.copy(alpha = 0.8f),
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center
@@ -462,33 +439,29 @@ fun AROverlay(
                     Spacer(modifier = Modifier.height(12.dp))
                     FeatureQualityIndicator(quality = state.featureMapQuality)
                 }
-
                 IconButton(
                     onClick = onCancelHosting,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(12.dp)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = "Cancelar", tint = Color.White)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancelar), tint = Color.White)
                 }
 
-                val canConfirm = state.featureMapQuality != null &&
-                    state.featureMapQuality != Session.FeatureMapQuality.INSUFFICIENT
+                val habilitarConfrimado = state.featureMapQuality != null && state.featureMapQuality != Session.FeatureMapQuality.INSUFFICIENT
                 Button(
                     onClick = onShowPinDialog,
-                    enabled = canConfirm,
+                    enabled = habilitarConfrimado,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (canConfirm) Color(0xFF4CAF50) else Color.Gray
+                        containerColor = if (habilitarConfrimado) Color(0xFF4CAF50) else Color.Gray
                     )
                 ) {
-                    Text("✅ Confirmar posición")
+                    Text(stringResource(R.string.confirmar_posici_n_pin))
                 }
             }
-
-            // Modo Hosting: UPLOADING
             state.hostingState == HostingState.UPLOADING -> {
                 Box(
                     modifier = Modifier
@@ -502,18 +475,16 @@ fun AROverlay(
                         CircularProgressIndicator(color = Color.White)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Subiendo pin a la nube...",
+                            text = stringResource(R.string.subiendo_pin_a_la_nube),
                             color = Color.White,
                             fontSize = 14.sp
                         )
                     }
                 }
             }
-
-            // Modo Hosting: ERROR
             state.hostingState == HostingState.ERROR -> {
                 HostingInstructions(
-                    text = "Error al subir el pin. Intenta de nuevo.",
+                    text = stringResource(R.string.error_al_subir_el_pin_intente_de_nuevo),
                     onCancel = onCancelHosting
                 )
             }
@@ -527,13 +498,13 @@ fun FeatureQualityIndicator(quality: Session.FeatureMapQuality?) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "Calidad: ", color = Color.White, fontSize = 13.sp)
+        Text(text = stringResource(R.string.calidad), color = Color.White, fontSize = 13.sp)
 
         val (color, label) = when (quality) {
-            Session.FeatureMapQuality.INSUFFICIENT -> Color(0xFFF44336) to "Insuficiente"
-            Session.FeatureMapQuality.SUFFICIENT -> Color(0xFFFF9800) to "Suficiente"
-            Session.FeatureMapQuality.GOOD -> Color(0xFF4CAF50) to "Buena"
-            else -> Color.Gray to "Evaluando..."
+            Session.FeatureMapQuality.INSUFFICIENT -> Color(0xFFF44336) to stringResource(R.string.insuficiente)
+            Session.FeatureMapQuality.SUFFICIENT -> Color(0xFFFF9800) to stringResource(R.string.suficiente)
+            Session.FeatureMapQuality.GOOD -> Color(0xFF4CAF50) to stringResource(R.string.buena)
+            else -> Color.Gray to stringResource(R.string.evaluando)
         }
 
         Box(
@@ -570,7 +541,7 @@ fun HostingInstructions(text: String, onCancel: () -> Unit) {
                 .align(Alignment.TopEnd)
                 .padding(12.dp)
         ) {
-            Icon(Icons.Default.Close, contentDescription = "Cancelar", tint = Color.White)
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancelar), tint = Color.White)
         }
     }
 }
@@ -586,13 +557,13 @@ fun PinDetailsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuevo Pin") },
+        title = { Text(stringResource(R.string.nuevo_pin)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    label = { Text("Título *") },
+                    label = { Text(stringResource(R.string.t_tulo)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -600,7 +571,7 @@ fun PinDetailsDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
-                    label = { Text("Descripción") },
+                    label = { Text(stringResource(R.string.descripci_n)) },
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -608,12 +579,12 @@ fun PinDetailsDialog(
         },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("Publicar Pin")
+                Text(stringResource(R.string.publicar_pin))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.cancelar))
             }
         }
     )

@@ -18,11 +18,6 @@ data class ARState(
     val showPinDialog: Boolean = false
 )
 
-/**
- * Estados del flujo de hosting de un Cloud Anchor.
- *
- * IDLE → PLACING → MAPPING → UPLOADING → SUCCESS/ERROR
- */
 enum class HostingState {
     IDLE,
     PLACING,
@@ -32,9 +27,6 @@ enum class HostingState {
     ERROR
 }
 
-/**
- * Un pin resuelto: anchor posicionado + datos del pin desde Firestore.
- */
 data class ResolvedPin(
     val anchor: Anchor,
     val pinData: CloudAnchorPin

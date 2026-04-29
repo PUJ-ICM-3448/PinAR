@@ -2,10 +2,7 @@ package com.example.pinar.data
 
 import com.google.android.gms.maps.model.LatLng
 
-/**
- * Adapter placeholder for the project's current pin source.
- * Swap this implementation with the real backend client when available.
- */
+//placeholder
 class ExistingBackendPinRepository : PinRepository {
     override suspend fun getPins(): List<PinMapItem> {
         return listOf(

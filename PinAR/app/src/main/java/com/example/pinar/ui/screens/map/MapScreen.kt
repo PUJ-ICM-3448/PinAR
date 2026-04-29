@@ -31,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -44,15 +45,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pinar.R
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.screens.map.MapViewModel
@@ -69,6 +77,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -87,10 +96,39 @@ fun MapScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var searchQuery by remember { mutableStateOf("") }
     val context = LocalContext.current
-    
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+
     var isCompassModeEnabled by remember { mutableStateOf(false) }
 
-    // Permisos de Ubicación y Actividad Física
+    fun focusOnSearchedPin() {
+        val query = searchQuery.trim()
+        if (query.isBlank()) {
+            return
+        }
+
+        val matchedPin = uiState.pins.firstOrNull { pin ->
+            pin.title.equals(query, ignoreCase = true)
+        } ?: uiState.pins.firstOrNull { pin ->
+            pin.title.contains(query, ignoreCase = true)
+        }
+
+        if (matchedPin == null) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("No se encontro un pin con ese nombre")
+            }
+            return
+        }
+
+        keyboardController?.hide()
+        coroutineScope.launch {
+            try {
+                cameraState.animate(CameraUpdateFactory.newLatLngZoom(matchedPin.position, 19f))
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     val permissionsState = rememberMultiplePermissionsState(
         permissions = buildList {
             add(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -100,8 +138,6 @@ fun MapScreen(
             }
         }
     )
-
-    // Notificar al ViewModel sobre los permisos
     LaunchedEffect(permissionsState.allPermissionsGranted) {
         val locationGranted = permissionsState.permissions.any { 
             (it.permission == Manifest.permission.ACCESS_FINE_LOCATION || 
@@ -121,7 +157,6 @@ fun MapScreen(
         }
     }
 
-    // Efecto del sensor de rotación (Giroscopio)
     DisposableEffect(isCompassModeEnabled) {
         if (!isCompassModeEnabled) {
             onDispose {}
@@ -199,15 +234,23 @@ fun MapScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(80.dp))
-
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                placeholder = { Text("Buscar pin en el mapa") },
+                placeholder = { Text(stringResource(R.string.buscar_pin_en_el_mapa)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    IconButton(onClick = ::focusOnSearchedPin) {
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.buscar_pin))
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = { focusOnSearchedPin() }
+                ),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -232,8 +275,7 @@ fun MapScreen(
                     uiState.pins
                         .filter { pin ->
                             searchQuery.isBlank() ||
-                                pin.title.contains(searchQuery, ignoreCase = true) ||
-                                pin.subtitle.contains(searchQuery, ignoreCase = true)
+                                pin.title.contains(searchQuery, ignoreCase = true)
                         }
                         .forEach { pin ->
                             Marker(
@@ -249,7 +291,7 @@ fun MapScreen(
                     uiState.userLocation?.let { position ->
                         Marker(
                             state = MarkerState(position = position),
-                            title = "Mi ubicacion"
+                            title = stringResource(R.string.mi_ubicacion)
                         )
                     }
                     if (uiState.routePolyline.size >= 2) {
@@ -260,7 +302,6 @@ fun MapScreen(
                     }
                 }
 
-                // Contador de pasos en la esquina inferior izquierda
                 Card(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -283,15 +324,13 @@ fun MapScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${uiState.stepCount} pasos",
+                            text = stringResource(R.string.pasos, uiState.stepCount),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
                     }
                 }
-
-                // Botón de Brújula / Giroscopio
                 FloatingActionButton(
                     onClick = { isCompassModeEnabled = !isCompassModeEnabled },
                     modifier = Modifier
@@ -302,12 +341,11 @@ fun MapScreen(
                 ) {
                     Icon(
                         imageVector = if (isCompassModeEnabled) Icons.Default.Explore else Icons.Default.Navigation,
-                        contentDescription = "Modo Brújula",
+                        contentDescription = stringResource(R.string.modo_br_jula),
                         tint = if (isCompassModeEnabled) Color.White else Color.Gray,
                         modifier = Modifier.size(24.dp)
                     )
                 }
-
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier
@@ -332,7 +370,7 @@ fun MapScreen(
                     .align(Alignment.TopEnd)
                     .padding(top = 92.dp, end = 20.dp)
             ) {
-                Text("Limpiar ruta", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.limpiar_ruta), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -341,7 +379,7 @@ fun MapScreen(
         AlertDialog(
             onDismissRequest = viewModel::dismissSelectedPin,
             title = { Text(selectedPin.title) },
-            text = { Text("Quieres trazar una ruta desde tu ubicacion actual?") },
+            text = { Text(stringResource(R.string.quieres_trazar_una_ruta_desde_tu_ubicacion_actual)) },
             confirmButton = {
                 Button(
                     onClick = viewModel::fetchRouteToSelectedPin,
@@ -350,7 +388,7 @@ fun MapScreen(
                     if (uiState.isLoadingRoute) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp))
                     } else {
-                        Text("Trazar ruta")
+                        Text(stringResource(R.string.trazar_ruta))
                     }
                 }
             },

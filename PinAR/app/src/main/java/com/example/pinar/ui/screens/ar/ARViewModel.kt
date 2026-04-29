@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pinar.R
 import com.example.pinar.ar.CloudAnchorManager
 import com.example.pinar.data.ARSessionState
 import com.example.pinar.data.CloudAnchorPin
@@ -85,7 +86,7 @@ class ARViewModel(application: Application) : AndroidViewModel(application) {
         localAnchor?.detach()
         localAnchor = hitResult.createAnchor()
         _state.value = _state.value.copy(hostingState = HostingState.MAPPING)
-        Log.d(TAG, "Anchor local creado. Mapeando entorno...")
+        Log.d(TAG, "Anchor local creado. Mapeando entorno.")
     }
 
     fun updateFeatureMapQuality(cameraPose: Pose) {
@@ -122,15 +123,6 @@ class ARViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        if (!hasConfiguredArCoreApiKey()) {
-            Log.e(TAG, "No se encontro una ARCORE_API_KEY valida en el manifest")
-            _state.value = _state.value.copy(
-                hostingState = HostingState.ERROR,
-                errorMessage = "Falta ARCORE_API_KEY en la configuracion local o en el manifest"
-            )
-            return
-        }
-
         viewModelScope.launch {
             val location = getCurrentPinLocation()
             if (location == null) {
@@ -160,7 +152,7 @@ class ARViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e(TAG, "Error hosting: $state")
                     _state.value = _state.value.copy(
                         hostingState = HostingState.ERROR,
-                        errorMessage = getHostingErrorMessage(state)
+                        errorMessage = "Error hosting: $state"
                     )
                 }
             }
@@ -254,44 +246,12 @@ class ARViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(hostingState = HostingState.IDLE)
     }
 
-    private fun hasConfiguredArCoreApiKey(): Boolean {
-        val apiKey = getArCoreApiKey()
-        return apiKey.isNotBlank() &&
-            !apiKey.contains("\${") &&
-            !apiKey.equals("YOUR_API_KEY", ignoreCase = true)
-    }
-
-    private fun getArCoreApiKey(): String {
-        return try {
-            @Suppress("DEPRECATION")
-            val appInfo = context.packageManager.getApplicationInfo(
-                context.packageName,
-                PackageManager.GET_META_DATA
-            )
-            appInfo.metaData?.getString("com.google.android.ar.API_KEY").orEmpty()
-        } catch (e: Exception) {
-            Log.e(TAG, "No fue posible leer ARCORE_API_KEY del manifest", e)
-            ""
-        }
-    }
-
-    private fun getHostingErrorMessage(state: Anchor.CloudAnchorState): String {
-        return when (state) {
-            Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED ->
-                "Error hosting: ERROR_NOT_AUTHORIZED. Revisa la ARCORE_API_KEY, que ARCore API este habilitada y que las restricciones del package/SHA-1 coincidan con esta app."
-            Anchor.CloudAnchorState.ERROR_RESOURCE_EXHAUSTED ->
-                "Error hosting: ERROR_RESOURCE_EXHAUSTED. Se alcanzo la cuota del servicio de Cloud Anchors."
-            Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE ->
-                "Error hosting: ERROR_SERVICE_UNAVAILABLE. Verifica la conexion o la disponibilidad del servicio."
-            else -> "Error hosting: ${state.name}"
-        }
-    }
 
     private fun getLocationErrorMessage(): String {
         return if (hasLocationPermission()) {
-            "No fue posible obtener tu ubicacion actual. Verifica que el GPS este activo e intenta de nuevo."
+            context.getString(R.string.no_fue_posible_obtener_su_ubicacion_actual_intenta_de_nuevo)
         } else {
-            "Se necesita permiso de ubicacion para guardar el pin con coordenadas."
+            context.getString(R.string.se_necesita_permiso_de_ubicacion_para_guardar_el_pin_con_coordenadas)
         }
     }
 
@@ -335,7 +295,6 @@ class ARViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         task.addOnFailureListener { error ->
-            Log.w(TAG, "Task fallida: ${error.message}")
             if (continuation.isActive) {
                 continuation.resume(null)
             }
