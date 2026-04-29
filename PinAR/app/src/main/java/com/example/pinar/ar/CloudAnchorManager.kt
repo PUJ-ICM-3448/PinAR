@@ -19,7 +19,7 @@ class CloudAnchorManager {
 
     companion object {
         private const val TAG = "CloudAnchorManager"
-        const val DEFAULT_TTL_DAYS = 365
+        const val DEFAULT_TTL_DAYS = 1
     }
 
     /**

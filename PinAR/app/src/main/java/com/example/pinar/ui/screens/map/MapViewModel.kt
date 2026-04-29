@@ -11,7 +11,7 @@ import android.hardware.SensorManager
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pinar.data.ExistingBackendPinRepository
+import com.example.pinar.data.FirestorePinRepository
 import com.example.pinar.data.PinMapItem
 import com.example.pinar.data.PinRepository
 import com.google.android.gms.location.LocationCallback
@@ -33,7 +33,7 @@ import java.net.URL
 
 class MapViewModel @JvmOverloads constructor(
     application: Application,
-    private val pinRepository: PinRepository = ExistingBackendPinRepository()
+    private val pinRepository: PinRepository = FirestorePinRepository()
 ) : AndroidViewModel(application), SensorEventListener {
 
     private val context = application.applicationContext

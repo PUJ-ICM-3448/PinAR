@@ -85,6 +85,18 @@ fun ARScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         )
     }
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -95,9 +107,31 @@ fun ARScreen(
         }
     }
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (!hasLocationPermission) {
+            Toast.makeText(
+                context,
+                "Se requiere permiso de ubicacion para guardar coordenadas precisas",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+        if (!hasLocationPermission) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
@@ -190,6 +224,7 @@ fun ARCameraView(
     val lifecycleOwner = LocalLifecycleOwner.current
     var arView by remember { mutableStateOf<ArSceneView?>(null) }
     var sessionConfigured by remember { mutableStateOf(false) }
+    val renderedResolvedPinIds = remember { mutableSetOf<String>() }
 
     // Guardar referencia mutable al estado actual para que el touch listener lo lea
     var currentHostingMode by remember { mutableStateOf(false) }
@@ -199,6 +234,26 @@ fun ARCameraView(
     LaunchedEffect(state.isHostingMode, state.hostingState) {
         currentHostingMode = state.isHostingMode
         currentHostingState = state.hostingState
+    }
+
+    LaunchedEffect(state.resolvedPins, arView) {
+        val view = arView ?: return@LaunchedEffect
+        state.resolvedPins.forEach { resolvedPin ->
+            val cloudAnchorId = resolvedPin.pinData.cloudAnchorId
+            if (cloudAnchorId.isNotBlank() && renderedResolvedPinIds.add(cloudAnchorId)) {
+                val modelNode = ArModelNode(
+                    engine = view.engine
+                ).apply {
+                    loadModelGlbAsync(
+                        glbFileLocation = "models/map_pin_location_pin.glb",
+                        autoAnimate = true,
+                        scaleToUnits = 0.5f
+                    )
+                    anchor = resolvedPin.anchor
+                }
+                view.addChild(modelNode)
+            }
+        }
     }
 
     Box(
@@ -293,10 +348,11 @@ fun ARCameraView(
                             when (event) {
                                 Lifecycle.Event.ON_RESUME -> arView?.arSession?.resume()
                                 Lifecycle.Event.ON_PAUSE -> arView?.arSession?.pause()
-                                Lifecycle.Event.ON_DESTROY -> {
-                                    arView?.arSession?.destroy()
-                                    arView = null
-                                }
+                                 Lifecycle.Event.ON_DESTROY -> {
+                                    renderedResolvedPinIds.clear()
+                                     arView?.arSession?.destroy()
+                                     arView = null
+                                 }
                                 else -> {}
                             }
                         }
