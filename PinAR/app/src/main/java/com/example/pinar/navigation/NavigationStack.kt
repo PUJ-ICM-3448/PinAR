@@ -135,6 +135,7 @@ fun NavigationStack() {
                 onNavigateToAR = { navController.navigate(Screen.AR.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToEditProfile = { navController.navigate(Screen.EditProfile.route) },
                 onClickLogout = { mainViewModel.cerrar() },
                 userData = userData
             )

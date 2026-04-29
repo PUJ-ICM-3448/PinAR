@@ -4,6 +4,7 @@ package com.example.pinar.ui.screens.profile
 import com.example.pinar.ui.utils.Footer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
@@ -50,11 +52,12 @@ fun ProfileScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
     onClickLogout: () -> Unit = {},
     userData: UserData?
 ) {
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -121,7 +124,7 @@ fun ProfileScreen(
 
 
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().clickable { onNavigateToEditProfile() },
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Box(

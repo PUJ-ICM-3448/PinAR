@@ -170,12 +170,15 @@ class MainViewModel : ViewModel() {
     }
 
     fun modificarDatos(nombre: String, biografia: String, uid: String, uri: Uri?, context: Context) {
-        if (nombre.isNotEmpty() && biografia.isNotEmpty()) {
+        if (nombre.isNotEmpty()) {
             modificarNombre(nombre, uid)
             modificarBiografia(biografia, uid)
             uri?.let {
                 modificarImagen(it, uid, context)
             }
+            Toast.makeText(context, "Guardando datos...", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
         }
     }
 }

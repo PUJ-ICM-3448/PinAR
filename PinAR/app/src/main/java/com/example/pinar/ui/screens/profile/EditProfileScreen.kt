@@ -52,7 +52,7 @@ fun EditProfileScreen(
 
     Scaffold(
         topBar = { Cabecera(onBackClick) },
-        containerColor = SoftCream
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -75,15 +75,9 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.weight(1f))
             
-            BotonGuardar {mainViewModel.modificarDatos(state.nombre, state.biografia, userData?.uid.toString(), state.fotoUri, context)}
-
-            Button(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(stringResource(R.string.regresar))
+            BotonGuardar {
+                mainViewModel.modificarDatos(state.nombre, state.biografia, userData?.uid.toString(), state.fotoUri, context)
+                onBackClick()
             }
         }
     }
@@ -99,7 +93,7 @@ fun Cabecera(onBackClick: () -> Unit) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
             }
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
     )
 }
 
@@ -191,7 +185,7 @@ fun CampoEdicion(
     esLineaUnica: Boolean = true
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(etiqueta, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Charcoal)
+        Text(etiqueta, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         OutlinedTextField(
             value = valor,
             onValueChange = onValueChange,
@@ -201,8 +195,8 @@ fun CampoEdicion(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = RedPrimary,
                 unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         )
     }
