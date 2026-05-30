@@ -17,4 +17,8 @@ sealed class Screen(val route: String) {
     object Notifications : Screen("notifications")
 
     object EditProfile : Screen("edit_profile")
+
+    object PinDetail : Screen("pin_detail/{pinId}") {
+        fun createRoute(pinId: String) = "pin_detail/$pinId"
+    }
 }

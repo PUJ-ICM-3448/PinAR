@@ -1,6 +1,7 @@
 package com.example.pinar.ui.screens.home
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +54,7 @@ fun HomeScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToPinDetail: (String) -> Unit = {},
     userData: UserData?,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -133,7 +135,8 @@ fun HomeScreen(
                     nombre = it.title,
                     sitio = it.description,
                     tiempo = fechaLegible,
-                    personas = it.visitas
+                    personas = it.visitas,
+                    onClick = { onNavigateToPinDetail(it.id) }
                 )
             }
             item {
@@ -151,7 +154,8 @@ fun HomeScreen(
                 Trending(
                     modifier = Modifier.fillMaxWidth(),
                     sitio = it.title,
-                    visitas = it.visitas.toString()
+                    visitas = it.visitas.toString(),
+                    onClick = { onNavigateToPinDetail(it.id) }
                 )
             }
         }
@@ -227,9 +231,9 @@ fun PinDetallesInferiores(tiempo: String, personas: Int) {
 
 
 @Composable
-fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, personas: Int) {
+fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, personas: Int, onClick: () -> Unit = {}) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable { onClick() },
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
@@ -248,9 +252,9 @@ fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, ti
 }
 
 @Composable
-fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String) {
+fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String, onClick: () -> Unit = {}) {
     Card(
-        modifier = modifier,
+        modifier = modifier.clickable { onClick() },
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(

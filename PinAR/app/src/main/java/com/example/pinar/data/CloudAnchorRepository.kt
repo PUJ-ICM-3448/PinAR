@@ -28,6 +28,44 @@ class CloudAnchorRepository {
         collection.document(pin.id).update("likes", FieldValue.increment(1))
     }
 
+    suspend fun getPin(pinId: String): CloudAnchorPin? {
+        return try {
+            collection.document(pinId).get().await().toObject(CloudAnchorPin::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun addComment(comentario: Comentario): String {
+        val docRef = db.collection("comentarios").document()
+        val commentWithId = comentario.copy(id = docRef.id)
+        docRef.set(commentWithId).await()
+        return docRef.id
+    }
+
+    suspend fun verificarLikeUser(pinId: String, userId: String): Boolean {
+        return try {
+            collection.document(pinId).collection("likes").document(userId).get().await().exists()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun toggleLike(pinId: String, userId: String, increment: Boolean) {
+        val value = if (increment) 1L else -1L
+        val pinRef = collection.document(pinId)
+        val likeRef = pinRef.collection("likes").document(userId)
+
+        db.runTransaction { transaction ->
+            if (increment) {
+                transaction.set(likeRef, mapOf("fecha" to FieldValue.serverTimestamp()))
+            } else {
+                transaction.delete(likeRef)
+            }
+            transaction.update(pinRef, "likes", FieldValue.increment(value))
+        }.await()
+    }
+
     //Usar para futuro. Pines en mismo edificio en un solo pin en mapa
     suspend fun getPinsForBuilding(buildingId: String): List<CloudAnchorPin> {
         return collection

@@ -27,6 +27,10 @@ import com.example.pinar.ui.screens.profile.ProfileScreen
 import com.example.pinar.ui.screens.notifications.NotificationsScreen
 import com.example.pinar.ui.screens.profile.EditProfileScreen
 import com.example.pinar.ui.screens.profile.EditProfileViewModel
+import com.example.pinar.ui.screens.pindetail.PinDetailScreen
+import com.example.pinar.ui.screens.home.HomeViewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 @Composable
 fun NavigationStack() {
@@ -101,6 +105,9 @@ fun NavigationStack() {
                 currentScreen = Screen.Home,
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToPinDetail = { pinId ->
+                    navController.navigate(Screen.PinDetail.createRoute(pinId))
+                },
                 userData = userData
             )
         }
@@ -154,6 +161,19 @@ fun NavigationStack() {
                viewModel = editViewModel,
                mainViewModel = mainViewModel
            )
+        }
+
+        composable(
+            route = Screen.PinDetail.route,
+            arguments = listOf(
+                navArgument("pinId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val pinId = backStackEntry.arguments?.getString("pinId") ?: ""
+            PinDetailScreen(
+                pinId = pinId,
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

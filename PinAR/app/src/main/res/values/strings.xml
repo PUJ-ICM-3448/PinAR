@@ -105,4 +105,21 @@
     <string name="confirmar_contrase_a">Confirmar contraseña</string>
     <string name="ya_tienes_cuenta">"¿Ya tienes cuenta? "</string>
     <string name="inicia_sesi_n">Inicia sesión</string>
+    <string name="pin_detail_sin_titulo">Sin título</string>
+    <string name="pin_detail_sin_descripcion">Sin descripción</string>
+    <string name="pin_detail_fecha_desconocida">Fecha desconocida</string>
+    <string name="pin_detail_usuario_anonimo">Usuario anónimo</string>
+    <string name="pin_detail_creador">Creador del pin</string>
+    <string name="pin_detail_me_gusta">Me gusta</string>
+    <string name="pin_detail_visitas">Visitas</string>
+    <string name="pin_detail_detalles">Detalles</string>
+    <string name="pin_detail_edificio">Edificio</string>
+    <string name="pin_detail_piso">Piso</string>
+    <string name="pin_detail_ubicacion">Ubicación</string>
+    <string name="pin_detail_comentarios">Comentarios</string>
+    <string name="pin_detail_comentarios_count">%1$d comentarios</string>
+    <string name="pin_detail_escribir_comentario">Escribe un comentario…</string>
+    <string name="pin_detail_enviar">Enviar</string>
+    <string name="pin_detail_responder">Responder</string>
+    <string name="pin_no_encontrado">Pin no encontrado</string>
 </resources>
