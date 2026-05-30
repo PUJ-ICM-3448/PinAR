@@ -38,7 +38,11 @@ import com.example.pinar.navigation.Screen
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.data.UserData
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun HomeScreen(
@@ -49,8 +53,11 @@ fun HomeScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit = {},
-    userData: UserData?
+    userData: UserData?,
+    viewModel: HomeViewModel = viewModel()
 ) {
+    val state by viewModel.state
+
     Box(modifier = modifier) {
         LazyColumn(
             modifier = Modifier
@@ -114,32 +121,19 @@ fun HomeScreen(
                     )
                 }
             }
-            item {
-                //Tambien cambiar esto en el futuro para que sea variable
+
+            items (
+                state.lista.sortedByDescending { it.fecha }.take(3)
+            ) {
+                val fechaLegible = it.fecha?.toDate()?.let { d ->
+                    java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(d)
+                } ?: "Reciente"
+
                 PinReciente(
-                    nombre = stringResource(R.string.sala_de_conferencias_a),
-                    sitio = stringResource(R.string.edificio_principal_piso_3),
-                    tiempo = "5 min",
-                    distancia = "12m",
-                    personas = 3
-                )
-            }
-            item {
-                PinReciente(
-                    nombre = stringResource(R.string.cafeter_a),
-                    sitio = stringResource(R.string.edificio_principal_piso_1),
-                    tiempo = "15 min",
-                    distancia = "45m",
-                    personas = 8
-                )
-            }
-            item {
-                PinReciente(
-                    nombre = stringResource(R.string.laboratorio_204),
-                    sitio = stringResource(R.string.edificio_de_investigaci_n_piso_2),
-                    tiempo = "1 hora",
-                    distancia = "120m",
-                    personas = 5
+                    nombre = it.title,
+                    sitio = it.description,
+                    tiempo = fechaLegible,
+                    personas = it.visitas
                 )
             }
             item {
@@ -151,29 +145,15 @@ fun HomeScreen(
                 )
             }
 
-            //Y estos tambien
-            item {
+            items (
+                state.lista.sortedByDescending { it.visitas }.take(3)
+            ) {
                 Trending(
                     modifier = Modifier.fillMaxWidth(),
-                    sitio = stringResource(R.string.auditorio_principal),
-                    visitas = "234"
+                    sitio = it.title,
+                    visitas = it.visitas.toString()
                 )
             }
-            item {
-                Trending(
-                    modifier = Modifier.fillMaxWidth(),
-                    sitio = stringResource(R.string.biblioteca),
-                    visitas = "189"
-                )
-            }
-            item {
-                Trending(
-                    modifier = Modifier.fillMaxWidth(),
-                    sitio = "Gimnasio",
-                    visitas = "156"
-                )
-            }
-
         }
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -231,18 +211,13 @@ fun PinInfoPrincipal(titulo: String, subtitulo: String) {
 }
 
 @Composable
-fun PinDetallesInferiores(tiempo: String, distancia: String, personas: Int) {
+fun PinDetallesInferiores(tiempo: String, personas: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconoConTexto(
             R.drawable.clock,
             stringResource(R.string.hace, tiempo)
         )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = distancia,
-            style = MaterialTheme.typography.bodySmall,
-        )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         IconoConTexto(
             R.drawable.user,
             personas.toString()
@@ -252,7 +227,7 @@ fun PinDetallesInferiores(tiempo: String, distancia: String, personas: Int) {
 
 
 @Composable
-fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, distancia: String, personas: Int) {
+fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, personas: Int) {
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp)
@@ -266,7 +241,7 @@ fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, ti
             Column {
                 PinInfoPrincipal(titulo = nombre, subtitulo = sitio)
                 Spacer(modifier = Modifier.height(8.dp))
-                PinDetallesInferiores(tiempo, distancia, personas)
+                PinDetallesInferiores(tiempo, personas)
             }
         }
     }

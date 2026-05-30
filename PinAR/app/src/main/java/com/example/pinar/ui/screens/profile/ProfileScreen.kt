@@ -166,7 +166,6 @@ fun ProfileScreen(
                     nombre = "Sala A",
                     sitio = "Edificio 1",
                     tiempo = "5 min",
-                    distancia = "12m",
                     personas = 3
                 )
             }
@@ -176,7 +175,6 @@ fun ProfileScreen(
                     nombre = "Biblioteca",
                     sitio = "Piso 2",
                     tiempo = "10 min",
-                    distancia = "30m",
                     personas = 5
                 )
             }

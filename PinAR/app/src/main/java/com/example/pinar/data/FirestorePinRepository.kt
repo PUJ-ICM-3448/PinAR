@@ -8,7 +8,7 @@ class FirestorePinRepository(
 
     override suspend fun getPins(): List<PinMapItem> {
         return cloudAnchorRepository.getAllPins()
-            .filter { it.latitude != 0.0 || it.longitude != 0.0 } //para los creados antes
+            .filter { it.latitude != 0.0 || it.longitude != 0.0 }
             .map { pin ->
                 PinMapItem(
                     id = pin.id.ifBlank { pin.cloudAnchorId },

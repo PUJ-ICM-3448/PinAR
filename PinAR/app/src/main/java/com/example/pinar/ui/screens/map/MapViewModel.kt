@@ -11,6 +11,7 @@ import android.hardware.SensorManager
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pinar.data.CloudAnchorRepository
 import com.example.pinar.data.FirestorePinRepository
 import com.example.pinar.data.PinMapItem
 import com.example.pinar.data.PinRepository
@@ -40,6 +41,7 @@ class MapViewModel @JvmOverloads constructor(
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+    private val cloudAnchorRepository = CloudAnchorRepository()
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
@@ -141,6 +143,7 @@ class MapViewModel @JvmOverloads constructor(
                 routeError = null
             )
         }
+        cloudAnchorRepository.actualizarVisita(pin.id)
     }
 
     fun dismissSelectedPin() {

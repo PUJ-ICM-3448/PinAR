@@ -25,6 +25,7 @@ import com.google.ar.core.HitResult
 import com.google.ar.core.Plane
 import com.google.ar.core.Pose
 import com.google.ar.core.Session
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -169,9 +170,12 @@ class ARViewModel(application: Application) : AndroidViewModel(application) {
             buildingId = "default",
             floor = 1,
             createdBy = currentUser?.uid ?: "anonymous",
+            fecha = Timestamp.now(),
             latitude = location.latitude,
             longitude = location.longitude,
-            ttlDays = CloudAnchorManager.DEFAULT_TTL_DAYS
+            ttlDays = CloudAnchorManager.DEFAULT_TTL_DAYS,
+            likes = 0,
+            visitas = 0
         )
 
         viewModelScope.launch {

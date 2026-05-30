@@ -181,4 +181,6 @@ class MainViewModel : ViewModel() {
             Toast.makeText(context, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
         }
     }
+
+
 }

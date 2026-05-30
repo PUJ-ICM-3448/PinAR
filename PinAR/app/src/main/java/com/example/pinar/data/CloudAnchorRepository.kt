@@ -1,5 +1,6 @@
 package com.example.pinar.data
 
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -19,6 +20,14 @@ class CloudAnchorRepository {
         return docRef.id
     }
 
+    fun actualizarVisita(pinId: String) {
+        collection.document(pinId).update("visitas", FieldValue.increment(1))
+    }
+
+    fun actualizarLikes(pin: CloudAnchorPin) {
+        collection.document(pin.id).update("likes", FieldValue.increment(1))
+    }
+
     //Usar para futuro. Pines en mismo edificio en un solo pin en mapa
     suspend fun getPinsForBuilding(buildingId: String): List<CloudAnchorPin> {
         return collection
@@ -36,7 +45,6 @@ class CloudAnchorRepository {
             .toObjects(CloudAnchorPin::class.java)
     }
 
-    //a implementar
     suspend fun deletePin(pinId: String) {
         collection.document(pinId).delete().await()
     }
