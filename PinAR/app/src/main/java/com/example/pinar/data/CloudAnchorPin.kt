@@ -10,10 +10,12 @@ data class CloudAnchorPin(
     val buildingId: String = "",
     val floor: Int = 0,
     val createdBy: String = "",
+    val createdAt: Long = 0L,
     val fecha: Timestamp? = null,
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val ttlDays: Int = 365,
     val likes: Int = 0,
-    val visitas: Int = 0
+    val visitas: Int = 0,
+    val comunidades: List<String> = emptyList()
 )
