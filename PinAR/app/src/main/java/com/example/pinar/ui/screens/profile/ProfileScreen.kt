@@ -2,6 +2,7 @@ package com.example.pinar.ui.screens.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -81,18 +83,35 @@ fun ProfileScreen(
                 )
             }
 
-            items(state.lista.sortedByDescending { it.fecha }.take(3)) { pin ->
-                val fechaLegible = pin.fecha?.toDate()?.let { d ->
-                    SimpleDateFormat("dd MMM", Locale.getDefault()).format(d)
-                } ?: "Reciente"
+            if (state.lista.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 40.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Sin actividad reciente",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                items(state.lista.sortedByDescending { it.fecha }.take(3)) { pin ->
+                    val fechaLegible = pin.fecha?.toDate()?.let { d ->
+                        SimpleDateFormat("dd MMM", Locale.getDefault()).format(d)
+                    } ?: "Reciente"
 
-                PinReciente(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    nombre = pin.title,
-                    sitio = pin.description,
-                    tiempo = fechaLegible,
-                    personas = pin.visitas
-                )
+                    PinReciente(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        nombre = pin.title,
+                        sitio = pin.description,
+                        tiempo = fechaLegible,
+                        personas = pin.visitas
+                    )
+                }
             }
 
             // --- Botón cerrar sesión ---
@@ -147,15 +166,24 @@ private fun ProfileHeader(
             .padding(top = 56.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Foto de perfil
-        AsyncImage(
-            model = userData?.fotoUrl,
-            contentDescription = null,
-            error = painterResource(R.drawable.profile),
+        // Foto de perfil con marco
+        Box(
             modifier = Modifier
-                .size(88.dp)
-                .clip(CircleShape)
-        )
+                .size(94.dp)
+                .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape)
+                .padding(3.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = userData?.fotoUrl,
+                contentDescription = null,
+                error = painterResource(R.drawable.profile),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -169,7 +197,7 @@ private fun ProfileHeader(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Fecha de creación — maneja null correctamente
+        // Fecha de creación
         val fechaCreacion = userData?.creacion?.toDate()?.let { d ->
             SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(d)
         }
@@ -183,7 +211,7 @@ private fun ProfileHeader(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Biografía — solo si existe
+        // Biografía
         val bio = userData?.biografia?.takeIf { it.isNotBlank() }
         Text(
             text = bio ?: stringResource(R.string.el_usuario_no_tiene_biografia),
@@ -197,23 +225,25 @@ private fun ProfileHeader(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Stats — sin width fijo para que el texto nunca se parta
+        // Stats — Uso de IntrinsicSize.Min para que todas tengan la misma altura
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             StatCard(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 numero = pinCount.toString(),
                 texto = stringResource(R.string.pines_creados)
             )
             StatCard(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 numero = comentariosCount.toString(),
                 texto = stringResource(R.string.comentarios_realizados)
             )
             StatCard(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 numero = stringResource(R.string._8),
                 texto = stringResource(R.string.logros)
             )
@@ -266,7 +296,8 @@ fun StatCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 14.dp, horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = numero,
