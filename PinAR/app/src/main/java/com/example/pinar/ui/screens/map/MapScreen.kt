@@ -91,6 +91,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -255,15 +256,46 @@ fun MapScreen(
                     uiState.otherUsers.forEach { user ->
                         val lat = user.latitud ?: return@forEach
                         val lng = user.longitud ?: return@forEach
-                        Marker(
+                        MarkerComposable(
                             state = MarkerState(LatLng(lat, lng)),
                             title = user.nombre.ifBlank { "Usuario" },
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
                             onClick = {
                                 viewModel.selectUser(user)
                                 true
                             }
-                        )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(Color.White, CircleShape)
+                                    .padding(2.dp)
+                                    .clip(CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (user.fotoUrl.isNotBlank()) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(user.fotoUrl),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 

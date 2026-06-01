@@ -1,5 +1,6 @@
 package com.example.pinar.ui.screens.profile
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -29,7 +30,6 @@ import com.example.pinar.data.UserData
 import com.example.pinar.ui.MainViewModel
 import com.example.pinar.ui.theme.Charcoal
 import com.example.pinar.ui.theme.RedPrimary
-import com.example.pinar.ui.theme.SoftCream
 
 @Composable
 fun EditProfileScreen(
@@ -38,7 +38,6 @@ fun EditProfileScreen(
     viewModel: EditProfileViewModel = viewModel(),
     mainViewModel: MainViewModel = viewModel()
 ) {
-
     val state by viewModel.state
     val context = LocalContext.current
     val onePhotoPickerLauncher = rememberLauncherForActivityResult(
@@ -65,6 +64,7 @@ fun EditProfileScreen(
         ) {
             SeccionAvatar(
                 url = state.fotoUrl,
+                uri = state.fotoUri,
                 nombre = state.nombre,
                 onImageClick = { onePhotoPickerLauncher.launch("image/*") }
             )
@@ -83,7 +83,6 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.weight(1f))
             
             BotonGuardar {
-                // ✅ Firma correcta: (nombre, biografia, compartirUbicacion, uid, uri, context)
                 mainViewModel.modificarDatos(
                     state.nombre,
                     state.biografia,
@@ -113,13 +112,15 @@ fun Cabecera(onBackClick: () -> Unit) {
 }
 
 @Composable
-fun SeccionAvatar(url: String, nombre: String, onImageClick: () -> Unit) {
+fun SeccionAvatar(url: String, uri: Uri?, nombre: String, onImageClick: () -> Unit) {
     Box(
         contentAlignment = Alignment.BottomEnd,
-        modifier = Modifier.clickable { onImageClick() }
+        modifier = Modifier
+            .clip(CircleShape)
+            .clickable { onImageClick() }
     ) {
         AsyncImage(
-            model = url.ifEmpty { "https://ui-avatars.com/api/?name=$nombre&background=D32F2F&color=fff" },
+            model = uri ?: url.ifEmpty { "https://ui-avatars.com/api/?name=$nombre&background=D32F2F&color=fff" },
             contentDescription = null,
             modifier = Modifier
                 .size(100.dp)
@@ -171,7 +172,6 @@ fun SeccionCampos(
             esLineaUnica = false
         )
 
-        // Switch de compartir ubicación
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -206,21 +206,6 @@ fun SeccionCampos(
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Charcoal)
         ) {
             Text(text = stringResource(R.string.seleccionar_foto_de_perfil))
-        }
-        if (state.fotoUri != null) {
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(Color.LightGray)
-            ) {
-                AsyncImage(
-                    model = state.fotoUri,
-                    contentDescription = "Preview",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
         }
     }
 }
