@@ -13,5 +13,6 @@ data class UserData(
     val memberOf: List<CommunityBasicInfo> = emptyList(),
     var compartirUbicacion: Boolean = false,
     var latitud: Double? = null,
-    var longitud: Double? = null
+    var longitud: Double? = null,
+    val FCMToken: String = "",
 )

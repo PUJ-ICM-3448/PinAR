@@ -1,5 +1,12 @@
 package com.example.pinar.ui.screens.home
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +33,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
 import com.example.pinar.data.UserData
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.google.firebase.messaging.FirebaseMessaging
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import java.text.SimpleDateFormat
@@ -46,6 +58,30 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val state by viewModel.state
+
+
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            if (granted) {
+                Log.d("Notificaciones", "Permiso concedido")
+            }else{
+                Log.d("Notificaciones", "Permiso denegado")
+            }
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            if(ContextCompat.checkSelfPermission(
+                context,
+                    Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED){
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(

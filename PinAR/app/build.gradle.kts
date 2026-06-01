@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     id("com.google.gms.google-services")
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -79,6 +80,8 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation("com.google.firebase:firebase-storage")
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
