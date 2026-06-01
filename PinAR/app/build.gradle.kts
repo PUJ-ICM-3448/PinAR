@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     id("com.google.gms.google-services")
@@ -7,11 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.pinar"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.pinar"
@@ -21,6 +18,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Default values for placeholders to prevent manifest merger failure if keys are missing
+        manifestPlaceholders["MAPS_API_KEY"] = "YOUR_API_KEY"
+        manifestPlaceholders["ARCORE_API_KEY"] = "YOUR_API_KEY"
     }
 
     buildTypes {
@@ -36,10 +37,20 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
         viewBinding = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+}
+
+kotlin {
+    jvmToolchain(11)
 }
 
 dependencies {
@@ -52,20 +63,19 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.navigation:navigation-compose:2.9.7")
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.10.4")
-    implementation("com.google.ar:core:1.45.0")
-    implementation("io.github.sceneview:arsceneview:0.10.0")
-    implementation("com.google.android.gms:play-services-base:18.2.0")
+    implementation(libs.androidx.navigation.compose)
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.7.5")
+    implementation("com.google.ar:core:1.54.0")
+    implementation("com.google.android.gms:play-services-base:18.5.0")
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore.ktx)
     implementation("com.google.firebase:firebase-storage")
     implementation("io.coil-kt:coil-compose:2.7.0")
     testImplementation(libs.junit)
