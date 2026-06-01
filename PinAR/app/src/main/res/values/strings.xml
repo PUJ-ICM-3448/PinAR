@@ -122,4 +122,6 @@
     <string name="pin_detail_enviar">Enviar</string>
     <string name="pin_detail_responder">Responder</string>
     <string name="pin_no_encontrado">Pin no encontrado</string>
+    <string name="compartir_ubicacion">Compartir ubicación</string>
+    <string name="compartir_ubicacion_desc">Otros usuarios podrán ver tu posición en el mapa</string>
 </resources>

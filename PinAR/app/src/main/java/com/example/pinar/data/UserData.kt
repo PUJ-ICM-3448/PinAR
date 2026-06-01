@@ -9,5 +9,8 @@ data class UserData(
     var biografia: String = "",
     var fotoUrl: String = "",
     val creacion: Timestamp? = null,
-    val esAdmin: Boolean = false
+    val esAdmin: Boolean = false,
+    var compartirUbicacion: Boolean = false,
+    var latitud: Double? = null,
+    var longitud: Double? = null
 )

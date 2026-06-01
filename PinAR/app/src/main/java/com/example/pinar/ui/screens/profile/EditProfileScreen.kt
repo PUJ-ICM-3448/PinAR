@@ -3,6 +3,7 @@ package com.example.pinar.ui.screens.profile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,13 +63,19 @@ fun EditProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            SeccionAvatar(state.fotoUrl, state.nombre)
+            SeccionAvatar(
+                url = state.fotoUrl,
+                nombre = state.nombre,
+                onImageClick = { onePhotoPickerLauncher.launch("image/*") }
+            )
             
             SeccionCampos(
                 nombre = state.nombre,
                 biografia = state.biografia,
+                compartirUbicacion = state.compartirUbicacion,
                 onNombreChange = { viewModel.modificarNombre(it) },
                 onBioChange = { viewModel.modificarBiografia(it) },
+                onCompartirUbicacionChange = { viewModel.modificarCompartirUbicacion(it) },
                 onImageClick = { onePhotoPickerLauncher.launch("image/*") },
                 state = state
             )
@@ -76,7 +83,15 @@ fun EditProfileScreen(
             Spacer(modifier = Modifier.weight(1f))
             
             BotonGuardar {
-                mainViewModel.modificarDatos(state.nombre, state.biografia, userData?.uid.toString(), state.fotoUri, context)
+                // ✅ Firma correcta: (nombre, biografia, compartirUbicacion, uid, uri, context)
+                mainViewModel.modificarDatos(
+                    state.nombre,
+                    state.biografia,
+                    state.compartirUbicacion,
+                    state.uid.ifBlank { userData?.uid.orEmpty() },
+                    state.fotoUri,
+                    context
+                )
                 onBackClick()
             }
         }
@@ -98,8 +113,11 @@ fun Cabecera(onBackClick: () -> Unit) {
 }
 
 @Composable
-fun SeccionAvatar(url: String, nombre: String) {
-    Box(contentAlignment = Alignment.BottomEnd) {
+fun SeccionAvatar(url: String, nombre: String, onImageClick: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.BottomEnd,
+        modifier = Modifier.clickable { onImageClick() }
+    ) {
         AsyncImage(
             model = url.ifEmpty { "https://ui-avatars.com/api/?name=$nombre&background=D32F2F&color=fff" },
             contentDescription = null,
@@ -128,8 +146,10 @@ fun SeccionAvatar(url: String, nombre: String) {
 fun SeccionCampos(
     nombre: String,
     biografia: String,
+    compartirUbicacion: Boolean,
     onNombreChange: (String) -> Unit,
     onBioChange: (String) -> Unit,
+    onCompartirUbicacionChange: (Boolean) -> Unit,
     onImageClick: () -> Unit,
     state: EditProfileState
 ) {
@@ -150,6 +170,34 @@ fun SeccionCampos(
             onValueChange = onBioChange, 
             esLineaUnica = false
         )
+
+        // Switch de compartir ubicación
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.compartir_ubicacion),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = stringResource(R.string.compartir_ubicacion_desc),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = compartirUbicacion,
+                onCheckedChange = onCompartirUbicacionChange
+            )
+        }
 
         OutlinedButton(
             onClick = { onImageClick() },

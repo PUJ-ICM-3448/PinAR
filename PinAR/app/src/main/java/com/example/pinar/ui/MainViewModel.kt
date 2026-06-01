@@ -156,6 +156,39 @@ class MainViewModel : ViewModel() {
             }
     }
 
+    fun modificarCompartirUbicacion(compartir: Boolean, uid: String) {
+        if (compartir == _userData.value?.compartirUbicacion) {
+            return
+        }
+        db.collection("usuarios").document(uid).update("compartirUbicacion", compartir)
+            .addOnSuccessListener {
+                _userData.value = _userData.value?.copy(compartirUbicacion = compartir)
+                if (!compartir) {
+                    // Si apaga compartir, borramos su ubicacion para no dejar rastros
+                    db.collection("usuarios").document(uid).update(
+                        mapOf(
+                            "latitud" to null,
+                            "longitud" to null
+                        )
+                    )
+                }
+            }
+    }
+
+    fun actualizarUbicacionActual(latitud: Double, longitud: Double) {
+        val uid = _userData.value?.uid ?: return
+        if (_userData.value?.compartirUbicacion == true) {
+            db.collection("usuarios").document(uid).update(
+                mapOf(
+                    "latitud" to latitud,
+                    "longitud" to longitud
+                )
+            ).addOnSuccessListener {
+                _userData.value = _userData.value?.copy(latitud = latitud, longitud = longitud)
+            }
+        }
+    }
+
     fun modificarImagen(uri: Uri, uid: String, context: Context) {
         val storageRef = FirebaseStorage.getInstance().reference
         val fotoRef = storageRef.child("imagenes/perfil/foto_${uid}.jpg")
@@ -169,10 +202,11 @@ class MainViewModel : ViewModel() {
             }
     }
 
-    fun modificarDatos(nombre: String, biografia: String, uid: String, uri: Uri?, context: Context) {
+    fun modificarDatos(nombre: String, biografia: String, compartirUbicacion: Boolean, uid: String, uri: Uri?, context: Context) {
         if (nombre.isNotEmpty()) {
             modificarNombre(nombre, uid)
             modificarBiografia(biografia, uid)
+            modificarCompartirUbicacion(compartirUbicacion, uid)
             uri?.let {
                 modificarImagen(it, uid, context)
             }

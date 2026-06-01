@@ -7,5 +7,6 @@ data class EditProfileState(
     val biografia: String = "",
     val fotoUrl: String = "",
     val uid: String = "",
-    val fotoUri: Uri? = null
+    val fotoUri: Uri? = null,
+    val compartirUbicacion: Boolean = false
 )

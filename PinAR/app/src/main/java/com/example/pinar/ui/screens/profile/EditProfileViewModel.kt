@@ -18,7 +18,8 @@ class EditProfileViewModel : ViewModel() {
                 nombre = it.nombre,
                 biografia = it.biografia,
                 fotoUrl = it.fotoUrl,
-                uid = it.uid
+                uid = it.uid,
+                compartirUbicacion = it.compartirUbicacion
             )
         }
     }
@@ -34,6 +35,10 @@ class EditProfileViewModel : ViewModel() {
 
     fun modificarBiografia(biografia: String) {
         _state.value = _state.value.copy(biografia = biografia)
+    }
+
+    fun modificarCompartirUbicacion(compartir: Boolean) {
+        _state.value = _state.value.copy(compartirUbicacion = compartir)
     }
 
 

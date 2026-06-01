@@ -64,8 +64,6 @@ import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
 import com.google.ar.core.Plane
 import com.google.ar.core.Session
-import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.ar.node.ArModelNode
 
 @Composable
 fun ARScreen(
@@ -219,36 +217,12 @@ fun ARCameraView(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    var arView by remember { mutableStateOf<ArSceneView?>(null) }
-    var sessionConfigured by remember { mutableStateOf(false) }
-    val renderedResolvedPinIds = remember { mutableSetOf<String>() }
-
     //para touch listener
     var currentHostingMode by remember { mutableStateOf(false) }
     var currentHostingState by remember { mutableStateOf(HostingState.IDLE) }
     LaunchedEffect(state.isHostingMode, state.hostingState) {
         currentHostingMode = state.isHostingMode
         currentHostingState = state.hostingState
-    }
-
-    LaunchedEffect(state.resolvedPins, arView) {
-        val view = arView ?: return@LaunchedEffect
-        state.resolvedPins.forEach { resolvedPin ->
-            val cloudAnchorId = resolvedPin.pinData.cloudAnchorId
-            if (cloudAnchorId.isNotBlank() && renderedResolvedPinIds.add(cloudAnchorId)) {
-                val modelNode = ArModelNode(
-                    engine = view.engine
-                ).apply {
-                    loadModelGlbAsync(
-                        glbFileLocation = "models/map_pin_location_pin.glb",
-                        autoAnimate = true,
-                        scaleToUnits = 0.5f
-                    )
-                    anchor = resolvedPin.anchor
-                }
-                view.addChild(modelNode)
-            }
-        }
     }
 
     Box(
@@ -260,92 +234,17 @@ fun ARCameraView(
             !state.sessionState.isInitialized -> Text(stringResource(R.string.inicializando_ar))
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = { ctx ->
-                            ArSceneView(ctx).also { view ->
-                                arView = view
-                                view.onArFrame = { frame ->
-                                    val arSession = view.arSession
-                                    if (arSession != null) {
-                                        if (viewModel.state.value.sessionState.session == null) {
-                                            viewModel.onSessionCreated(arSession)
-                                        }
-                                        if (viewModel.state.value.hostingState == HostingState.MAPPING) {//en general, evita que se trabe
-                                            val config = arSession.config
-                                            if (config.cloudAnchorMode != Config.CloudAnchorMode.ENABLED ||
-                                                config.planeFindingMode == Config.PlaneFindingMode.DISABLED) {
-                                                config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
-                                                config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-                                                config.focusMode = Config.FocusMode.AUTO
-                                                config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-                                                arSession.configure(config)
-                                            }
-                                            frame.camera?.pose?.let { cameraPose ->
-                                                viewModel.updateFeatureMapQuality(cameraPose)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                //Touch listener
-                                @android.annotation.SuppressLint("ClickableViewAccessibility")
-                                view.setOnTouchListener { _, event ->
-                                    if (event.action == MotionEvent.ACTION_UP &&
-                                        viewModel.state.value.isHostingMode &&
-                                        viewModel.state.value.hostingState == HostingState.PLACING
-                                    ) {
-                                        view.arSession?.update()?.let { frame ->
-                                            try {
-                                                val hits = frame.hitTest(event) //hitTest es la posicion, hitResult es confirmada
-                                                hits.firstOrNull { hit ->
-                                                    val trackable = hit.trackable
-                                                    trackable is Plane &&
-                                                        trackable.isPoseInPolygon(hit.hitPose)
-                                                }?.let { hitResult ->
-                                                    val anchor = hitResult.createAnchor()
-                                                    val modelNode = ArModelNode(
-                                                        engine = view.engine
-                                                    ).apply {
-                                                        loadModelGlbAsync(
-                                                            glbFileLocation = "models/map_pin_location_pin.glb",
-                                                            autoAnimate = true,
-                                                            scaleToUnits = 0.5f
-                                                        )
-                                                        this.anchor = anchor
-                                                    }
-                                                    view.addChild(modelNode)
-                                                    viewModel.onPlaneTapped(hitResult)
-                                                }
-                                            } catch (e: Exception) {
-                                                Log.e("ARScreen", "error en hitTest", e)
-                                            }
-                                        }
-                                    }
-                                    false
-                                }
-                            }
-                        },
-                        update = { _ -> }
-                    )
-
-                    DisposableEffect(lifecycleOwner) {
-                        val observer = LifecycleEventObserver { _, event ->
-                            when (event) {
-                                Lifecycle.Event.ON_RESUME -> arView?.arSession?.resume()
-                                Lifecycle.Event.ON_PAUSE -> arView?.arSession?.pause()
-                                 Lifecycle.Event.ON_DESTROY -> {
-                                    renderedResolvedPinIds.clear()
-                                     arView?.arSession?.destroy()
-                                     arView = null
-                                 }
-                                else -> {}
-                            }
-                        }
-                        lifecycleOwner.lifecycle.addObserver(observer)
-                        onDispose {
-                            lifecycleOwner.lifecycle.removeObserver(observer)
-                        }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.DarkGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "AR Camera Placeholder\n(Librería removida por lineamientos)",
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
                     }
 
                     AROverlay(

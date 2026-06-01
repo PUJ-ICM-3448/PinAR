@@ -8,6 +8,10 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,11 +22,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,16 +59,22 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.rememberAsyncImagePainter
 import com.example.pinar.R
+import com.example.pinar.data.UserData
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.screens.map.MapViewModel
@@ -68,8 +82,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -103,29 +120,27 @@ fun MapScreen(
 
     fun focusOnSearchedPin() {
         val query = searchQuery.trim()
-        if (query.isBlank()) {
-            return
-        }
+        if (query.isBlank()) return
 
-        val matchedPin = uiState.pins.firstOrNull { pin ->
-            pin.title.equals(query, ignoreCase = true)
-        } ?: uiState.pins.firstOrNull { pin ->
-            pin.title.contains(query, ignoreCase = true)
-        }
+        val matchedPin = uiState.pins.firstOrNull { it.title.contains(query, ignoreCase = true) }
 
         if (matchedPin == null) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("No se encontro un pin con ese nombre")
-            }
+            coroutineScope.launch { snackbarHostState.showSnackbar("No se encontró el pin") }
             return
         }
 
         keyboardController?.hide()
+        viewModel.setFollowingUser(false)
         coroutineScope.launch {
             try {
                 cameraState.animate(CameraUpdateFactory.newLatLngZoom(matchedPin.position, 19f))
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) {}
+        }
+    }
+
+    LaunchedEffect(cameraState.isMoving) {
+        if (cameraState.isMoving && cameraState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
+            viewModel.setFollowingUser(false)
         }
     }
 
@@ -138,6 +153,7 @@ fun MapScreen(
             }
         }
     )
+
     LaunchedEffect(permissionsState.allPermissionsGranted) {
         val locationGranted = permissionsState.permissions.any { 
             (it.permission == Manifest.permission.ACCESS_FINE_LOCATION || 
@@ -146,9 +162,7 @@ fun MapScreen(
         viewModel.onLocationPermissionChanged(locationGranted)
 
         val activityGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            permissionsState.permissions.any { 
-                it.permission == Manifest.permission.ACTIVITY_RECOGNITION && it.status.isGranted 
-            }
+            permissionsState.permissions.any { it.permission == Manifest.permission.ACTIVITY_RECOGNITION && it.status.isGranted }
         } else true
         viewModel.onActivityPermissionChanged(activityGranted)
 
@@ -158,12 +172,9 @@ fun MapScreen(
     }
 
     DisposableEffect(isCompassModeEnabled) {
-        if (!isCompassModeEnabled) {
-            onDispose {}
-        } else {
+        if (!isCompassModeEnabled) onDispose {} else {
             val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
             val rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-
             val listener = object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent) {
                     if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
@@ -172,62 +183,39 @@ fun MapScreen(
                             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
                             val orientation = FloatArray(3)
                             SensorManager.getOrientation(rotationMatrix, orientation)
-                            
                             val bearing = Math.toDegrees(orientation[0].toDouble()).toFloat()
                             val pitch = Math.toDegrees(orientation[1].toDouble()).toFloat()
                             val tilt = (-pitch).coerceIn(0f, 67.5f)
 
                             if (!cameraState.isMoving) {
-                                cameraState.move(
-                                    CameraUpdateFactory.newCameraPosition(
-                                        CameraPosition.builder(cameraState.position)
-                                            .bearing(bearing)
-                                            .tilt(tilt)
-                                            .build()
-                                    )
-                                )
+                                cameraState.move(CameraUpdateFactory.newCameraPosition(
+                                    CameraPosition.builder(cameraState.position).bearing(bearing).tilt(tilt).build()
+                                ))
                             }
-                        } catch (e: Exception) {
-                            Log.e("MapScreen", "Error actualizando orientación: ${e.message}")
-                        }
+                        } catch (e: Exception) { Log.e("MapScreen", "Error sensor: ${e.message}") }
                     }
                 }
                 override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
             }
-
-            if (rotationSensor != null) {
-                sensorManager.registerListener(listener, rotationSensor, SensorManager.SENSOR_DELAY_UI)
-            }
-
-            onDispose {
-                sensorManager.unregisterListener(listener)
-            }
+            rotationSensor?.let { sensorManager.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
+            onDispose { sensorManager.unregisterListener(listener) }
         }
     }
 
-    LaunchedEffect(uiState.routeError) {
-        uiState.routeError?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearRouteError()
-        }
-    }
-
-    LaunchedEffect(uiState.userLocation) {
-        uiState.userLocation?.let { location ->
-            try {
-                cameraState.animate(CameraUpdateFactory.newLatLngZoom(location, 18f))
-            } catch (_: Exception) {}
+    LaunchedEffect(uiState.userLocation, uiState.isFollowingUser) {
+        if (uiState.isFollowingUser) {
+            uiState.userLocation?.let { location ->
+                try {
+                    cameraState.animate(CameraUpdateFactory.newLatLngZoom(location, 18f))
+                } catch (_: Exception) {}
+            }
         }
     }
 
     LaunchedEffect(uiState.routePolyline) {
         if (uiState.routePolyline.isNotEmpty()) {
-            val bounds = LatLngBounds.Builder().apply {
-                uiState.routePolyline.forEach { include(it) }
-            }.build()
-            try {
-                cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 120))
-            } catch (_: Exception) {}
+            val bounds = LatLngBounds.Builder().apply { uiState.routePolyline.forEach { include(it) } }.build()
+            try { cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 120)) } catch (_: Exception) {}
         }
     }
 
@@ -237,121 +225,81 @@ fun MapScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 placeholder = { Text(stringResource(R.string.buscar_pin_en_el_mapa)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    IconButton(onClick = ::focusOnSearchedPin) {
-                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.buscar_pin))
-                    }
-                },
+                trailingIcon = { IconButton(onClick = ::focusOnSearchedPin) { Icon(Icons.Default.Search, null) } },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = { focusOnSearchedPin() }
-                ),
+                keyboardActions = KeyboardActions(onSearch = { focusOnSearchedPin() }),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.White, unfocusedContainerColor = Color.White)
             )
 
             Box(modifier = Modifier.weight(1f)) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraState,
-                    properties = MapProperties(
-                        isMyLocationEnabled = uiState.hasLocationPermission
-                    ),
-                    uiSettings = MapUiSettings(
-                        myLocationButtonEnabled = uiState.hasLocationPermission,
-                        zoomControlsEnabled = true,
-                        compassEnabled = !isCompassModeEnabled
-                    )
+                    properties = MapProperties(isMyLocationEnabled = uiState.hasLocationPermission),
+                    uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = true, compassEnabled = !isCompassModeEnabled)
                 ) {
-                    uiState.pins
-                        .filter { pin ->
-                            searchQuery.isBlank() ||
-                                pin.title.contains(searchQuery, ignoreCase = true)
-                        }
+                    // Marcadores de pines
+                    uiState.pins.filter { searchQuery.isBlank() || it.title.contains(searchQuery, true) }
                         .forEach { pin ->
-                            Marker(
-                                state = MarkerState(position = pin.position),
-                                title = pin.title,
-                                snippet = pin.subtitle,
-                                onClick = {
-                                    viewModel.selectPin(pin)
-                                    true
-                                }
-                            )
+                            Marker(state = MarkerState(pin.position), title = pin.title, snippet = pin.subtitle, onClick = { viewModel.selectPin(pin); true })
                         }
-                    uiState.userLocation?.let { position ->
+                    uiState.userLocation?.let { Marker(state = MarkerState(it), title = stringResource(R.string.mi_ubicacion)) }
+                    if (uiState.routePolyline.size >= 2) Polyline(points = uiState.routePolyline, width = 14f)
+
+                    // Marcadores de otros usuarios
+                    uiState.otherUsers.forEach { user ->
+                        val lat = user.latitud ?: return@forEach
+                        val lng = user.longitud ?: return@forEach
                         Marker(
-                            state = MarkerState(position = position),
-                            title = stringResource(R.string.mi_ubicacion)
-                        )
-                    }
-                    if (uiState.routePolyline.size >= 2) {
-                        Polyline(
-                            points = uiState.routePolyline,
-                            width = 14f
+                            state = MarkerState(LatLng(lat, lng)),
+                            title = user.nombre.ifBlank { "Usuario" },
+                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
+                            onClick = {
+                                viewModel.selectUser(user)
+                                true
+                            }
                         )
                     }
                 }
 
                 Card(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp),
+                    modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White.copy(alpha = 0.9f)
-                    ),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DirectionsWalk,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.pasos, uiState.stepCount),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.DirectionsWalk, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.pasos, uiState.stepCount), fontWeight = FontWeight.Bold, color = Color.Black)
                     }
                 }
-                FloatingActionButton(
-                    onClick = { isCompassModeEnabled = !isCompassModeEnabled },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp),
-                    containerColor = if (isCompassModeEnabled) MaterialTheme.colorScheme.primary else Color.White,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isCompassModeEnabled) Icons.Default.Explore else Icons.Default.Navigation,
-                        contentDescription = stringResource(R.string.modo_br_jula),
-                        tint = if (isCompassModeEnabled) Color.White else Color.Gray,
-                        modifier = Modifier.size(24.dp)
-                    )
+
+                Column(modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
+                    FloatingActionButton(
+                        onClick = { isCompassModeEnabled = !isCompassModeEnabled },
+                        containerColor = if (isCompassModeEnabled) MaterialTheme.colorScheme.primary else Color.White,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        Icon(if (isCompassModeEnabled) Icons.Default.Explore else Icons.Default.Navigation, null, tint = if (isCompassModeEnabled) Color.White else Color.Gray)
+                    }
+                    
+                    FloatingActionButton(
+                        onClick = { viewModel.setFollowingUser(true) },
+                        containerColor = if (uiState.isFollowingUser) MaterialTheme.colorScheme.primary else Color.White,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.MyLocation, null, tint = if (uiState.isFollowingUser) Color.White else Color.Gray)
+                    }
                 }
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 90.dp)
-                )
+
+                SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp))
             }
             Footer(
                 currentScreen = currentScreen,
@@ -363,40 +311,115 @@ fun MapScreen(
                 onProfileClick = onNavigateToProfile
             )
         }
-        if (uiState.routePolyline.isNotEmpty()) {
-            TextButton(
-                onClick = viewModel::clearRoute,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 92.dp, end = 20.dp)
-            ) {
-                Text(stringResource(R.string.limpiar_ruta), fontWeight = FontWeight.SemiBold)
-            }
-        }
     }
 
+    // Diálogo de pin seleccionado
     uiState.selectedPin?.let { selectedPin ->
         AlertDialog(
             onDismissRequest = viewModel::dismissSelectedPin,
             title = { Text(selectedPin.title) },
             text = { Text(stringResource(R.string.quieres_trazar_una_ruta_desde_tu_ubicacion_actual)) },
-            confirmButton = {
-                Button(
-                    onClick = viewModel::fetchRouteToSelectedPin,
-                    enabled = !uiState.isLoadingRoute
+            confirmButton = { Button(onClick = viewModel::fetchRouteToSelectedPin, enabled = !uiState.isLoadingRoute) {
+                if (uiState.isLoadingRoute) CircularProgressIndicator(Modifier.size(18.dp)) else Text(stringResource(R.string.trazar_ruta))
+            }},
+            dismissButton = { TextButton(onClick = viewModel::dismissSelectedPin) { Text("Cancelar") } }
+        )
+    }
+
+    // Tarjeta flotante de usuario seleccionado
+    uiState.selectedUser?.let { user ->
+        UserLocationCard(
+            user = user,
+            onDismiss = viewModel::dismissSelectedUser,
+            onNavigate = { viewModel.navigateToUser(user) }
+        )
+    }
+}
+
+@Composable
+private fun UserLocationCard(
+    user: UserData,
+    onDismiss: () -> Unit,
+    onNavigate: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (uiState.isLoadingRoute) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp))
-                    } else {
-                        Text(stringResource(R.string.trazar_ruta))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Avatar del usuario
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (user.fotoUrl.isNotBlank()) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(user.fotoUrl),
+                                    contentDescription = "Foto de ${user.nombre}",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = user.nombre.ifBlank { "Usuario" },
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (user.biografia.isNotBlank()) {
+                                Text(
+                                    text = user.biografia,
+                                    fontSize = 13.sp,
+                                    color = Color.Gray,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.Gray)
                     }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::dismissSelectedPin) {
-                    Text("Cancelar")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onNavigate,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.DirectionsWalk, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Trazar ruta hacia este usuario")
                 }
             }
-        )
+        }
     }
 }
