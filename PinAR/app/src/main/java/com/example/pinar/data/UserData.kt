@@ -9,5 +9,6 @@ data class UserData(
     var biografia: String = "",
     var fotoUrl: String = "",
     val creacion: Timestamp? = null,
-    val esAdmin: Boolean = false
+    val esAdmin: Boolean = false,
+    val memberOf: List<CommunityBasicInfo> = emptyList()
 )

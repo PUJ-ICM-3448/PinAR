@@ -75,6 +75,15 @@ class CloudAnchorRepository {
             .toObjects(CloudAnchorPin::class.java)
     }
 
+    suspend fun getPinsForCommunity(communityId: String): List<CloudAnchorPin> {
+        return collection
+            .whereArrayContains("comunidades", communityId)
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .get()
+            .await()
+            .toObjects(CloudAnchorPin::class.java)
+    }
+
     //a futuro no usar
     suspend fun getAllPins(): List<CloudAnchorPin> {
         return collection
