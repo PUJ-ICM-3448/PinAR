@@ -1,55 +1,33 @@
 package com.example.pinar.ui.screens.pins
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
 import com.example.pinar.data.CloudAnchorPin
 import com.example.pinar.navigation.Screen
-import com.example.pinar.ui.theme.RedDark
-import com.example.pinar.ui.theme.RedPrimary
+import com.example.pinar.ui.screens.home.MetaChip
 import com.example.pinar.ui.utils.Footer
-import com.example.pinar.ui.utils.PinMiniLogo
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -94,7 +72,9 @@ fun PinListScreen(
                                 .height(360.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = RedPrimary)
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -103,7 +83,8 @@ fun PinListScreen(
                     item {
                         PinListMessageCard(
                             title = stringResource(R.string.pin_list_error),
-                            description = state.error ?: stringResource(R.string.pin_list_error),
+                            description = state.error
+                                ?: stringResource(R.string.pin_list_error),
                             actionText = stringResource(R.string.pin_list_reintentar),
                             onActionClick = { viewModel.loadPins() }
                         )
@@ -148,66 +129,72 @@ private fun PinListHeader(
     count: Int,
     onBackClick: () -> Unit
 ) {
-    Box(
+    // Sin degradado — fondo plano con surface, coherente con el tema
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        RedPrimary,
-                        RedDark
-                    )
-                )
-            )
-            .padding(horizontal = 16.dp)
-            .padding(top = 48.dp, bottom = 28.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 20.dp)
+            .padding(top = 52.dp, bottom = 24.dp)
     ) {
-        Column {
+        // Botón volver con fondo surfaceVariant
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { onBackClick() },
+            contentAlignment = Alignment.Center
+        ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.volver),
-                tint = Color.White,
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable { onBackClick() }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(
-                        color = Color.White.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.location),
-                    contentDescription = null,
-                    modifier = Modifier.size(36.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = stringResource(R.string.pin_list_titulo),
-                color = Color.White,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = stringResource(R.string.pin_list_total, count),
-                color = Color.White.copy(alpha = 0.75f),
-                fontSize = 15.sp
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
             )
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Ícono del pin — círculo con acento rojo, igual que las cards
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.location),
+                contentDescription = null,
+                modifier = Modifier.size(26.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = stringResource(R.string.pin_list_titulo),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = stringResource(R.string.pin_list_total, count),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
+
+    // Separador sutil entre header y lista
+    HorizontalDivider(
+        color = MaterialTheme.colorScheme.outlineVariant,
+        thickness = 1.dp
+    )
 }
 
 @Composable
@@ -218,101 +205,87 @@ private fun PinListItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(22.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Cabecera: ícono circular + título + descripción
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                PinMiniLogo()
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.location),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = pin.title.ifBlank { stringResource(R.string.pin_detail_sin_titulo) },
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp,
+                        text = pin.title.ifBlank {
+                            stringResource(R.string.pin_detail_sin_titulo)
+                        },
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = pin.description.ifBlank { stringResource(R.string.pin_detail_sin_descripcion) },
+                        text = pin.description.ifBlank {
+                            stringResource(R.string.pin_detail_sin_descripcion)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                PinInfoChip(
-                    iconRes = R.drawable.clock,
-                    text = formatPinDate(pin.fecha),
-                    modifier = Modifier.weight(1f)
-                )
-                PinInfoChip(
-                    iconRes = R.drawable.user,
-                    text = stringResource(R.string.visitas, pin.visitas.toString()),
-                    modifier = Modifier.weight(1f)
-                )
+            // Chips de fecha y visitas — mismo MetaChip del HomeScreen
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MetaChip(texto = "Hace ${formatPinDate(pin.fecha)}")
+                MetaChip(texto = "${pin.visitas} visitas")
             }
 
+            // Botón ver detalle
             Button(
                 onClick = onDetailClick,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Text(stringResource(R.string.pin_list_ver_detalle))
+                Text(
+                    text = stringResource(R.string.pin_list_ver_detalle),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun PinInfoChip(
-    iconRes: Int,
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-                shape = RoundedCornerShape(14.dp)
-            )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -327,30 +300,35 @@ private fun PinListMessageCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
                 text = title,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 14.sp
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             actionText?.let {
                 OutlinedButton(
                     onClick = onActionClick,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(it)
+                    Text(it, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
