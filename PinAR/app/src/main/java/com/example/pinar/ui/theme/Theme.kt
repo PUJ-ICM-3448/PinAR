@@ -13,13 +13,13 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 // ─────────────────────────────────────────
-// Dark scheme — Slate profundo + rojo señal
+// Dark — Slate profundo + rojo señal
 // ─────────────────────────────────────────
 private val DarkColorScheme = darkColorScheme(
     primary              = RedPrimary,
     onPrimary            = Color.White,
     primaryContainer     = RedContainerDark,
-    onPrimaryContainer   = OnRedContainer,
+    onPrimaryContainer   = OnRedContainerD,
 
     secondary            = TextSecondaryDark,
     onSecondary          = SlateBackground,
@@ -40,12 +40,12 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant     = TextSecondaryDark,
 
     outline              = SlateOutline,
-    outlineVariant       = SlateSurfaceVar,
+    outlineVariant       = SlateOutlineVar,
 
-    error                = ErrorColor,
-    onError              = OnErrorColor,
-    errorContainer       = ErrorContainer,
-    onErrorContainer     = OnErrorContainer,
+    error                = ErrorDark,
+    onError              = OnError,
+    errorContainer       = ErrorContainerDark,
+    onErrorContainer     = OnErrorContainerD,
 
     inverseSurface       = LightSurface,
     inverseOnSurface     = TextPrimaryLight,
@@ -53,7 +53,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 // ─────────────────────────────────────────
-// Light scheme — limpio con rojo preciso
+// Light — Slate invertido + rojo señal
 // ─────────────────────────────────────────
 private val LightColorScheme = lightColorScheme(
     primary              = RedPrimary,
@@ -69,7 +69,7 @@ private val LightColorScheme = lightColorScheme(
     tertiary             = RedBright,
     onTertiary           = Color.White,
     tertiaryContainer    = RedContainerLight,
-    onTertiaryContainer  = RedPrimary,
+    onTertiaryContainer  = OnRedContainerL,
 
     background           = LightBackground,
     onBackground         = TextPrimaryLight,
@@ -80,12 +80,12 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant     = TextSecondaryLight,
 
     outline              = LightOutline,
-    outlineVariant       = LightSurfaceVar,
+    outlineVariant       = LightOutlineVar,
 
-    error                = RedPrimary,
-    onError              = Color.White,
-    errorContainer       = RedContainerLight,
-    onErrorContainer     = OnRedContainerL,
+    error                = ErrorLight,
+    onError              = OnError,
+    errorContainer       = ErrorContainerLight,
+    onErrorContainer     = OnErrorContainerL,
 
     inverseSurface       = SlateSurface,
     inverseOnSurface     = TextPrimaryDark,
@@ -102,7 +102,6 @@ fun PinARTheme(
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    // Colorea la status bar acorde al tema
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,54 +65,9 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-<<<<<<< HEAD
                         text = stringResource(R.string.explora_y_navega_por_espacios_interiores),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-=======
-                        stringResource(R.string.explora_y_navega_por_espacios_interiores),
-                        fontSize = 20.sp
-                    )
-                }
-            }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CardPin(
-                        modifier = Modifier.weight(1f),
-                        texto = stringResource(R.string.crear_pin),
-                        textoMini = stringResource(R.string.vista_ar),
-                        onNavigate = { onNavigateToAR() }
-                    )
-                    CardPin(
-                        modifier = Modifier.weight(1f),
-                        texto = stringResource(R.string.ver_mapa),
-                        textoMini = stringResource(R.string.navegaci_n),
-                        onNavigate = { onNavigateToMap() }
-                    )
-                }
-            }
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.pines_recientes),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 30.sp,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.ver_todos),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable { onNavigateToPins() }
->>>>>>> b62022736fffe7e66bf47d8e253746a4780406bc
                     )
                 }
             }
@@ -144,7 +99,8 @@ fun HomeScreen(
             item {
                 SeccionHeader(
                     titulo = stringResource(R.string.pines_recientes),
-                    accion = stringResource(R.string.ver_todos)
+                    accion = stringResource(R.string.ver_todos),
+                    onAccionClick = onNavigateToPins
                 )
             }
 
@@ -192,24 +148,10 @@ fun HomeScreen(
     }
 }
 
-<<<<<<< HEAD
 // --- Componentes ---
-=======
-@Composable
-fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String, onNavigate: () -> Unit) {
-    Card(
-        modifier = modifier.clickable { onNavigate() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(24.dp)
-    ) {
->>>>>>> b62022736fffe7e66bf47d8e253746a4780406bc
 
 @Composable
-fun SeccionHeader(titulo: String, accion: String? = null) {
+fun SeccionHeader(titulo: String, accion: String? = null, onAccionClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -228,7 +170,7 @@ fun SeccionHeader(titulo: String, accion: String? = null) {
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { /* Acción ver todos */ }
+                modifier = Modifier.clickable { onAccionClick() }
             )
         }
     }
@@ -372,7 +314,7 @@ fun Trending(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = Icons.Default.TrendingUp,
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary
