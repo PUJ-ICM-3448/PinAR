@@ -28,6 +28,7 @@ import com.example.pinar.ui.screens.notifications.NotificationsScreen
 import com.example.pinar.ui.screens.profile.EditProfileScreen
 import com.example.pinar.ui.screens.profile.EditProfileViewModel
 import com.example.pinar.ui.screens.pindetail.PinDetailScreen
+import com.example.pinar.ui.screens.pins.PinListScreen
 import com.example.pinar.ui.screens.home.HomeViewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -105,6 +106,7 @@ fun NavigationStack() {
                 currentScreen = Screen.Home,
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToPins = { navController.navigate(Screen.Pins.route) },
                 onNavigateToPinDetail = { pinId ->
                     navController.navigate(Screen.PinDetail.createRoute(pinId))
                 },
@@ -127,7 +129,8 @@ fun NavigationStack() {
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToMap = { navController.navigate(Screen.Map.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
-                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) }
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToPins = { navController.navigate(Screen.Pins.route) }
             )
         }
         composable(route = Screen.Profile.route) {
@@ -152,6 +155,20 @@ fun NavigationStack() {
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
             )
 
+        }
+
+        composable(route = Screen.Pins.route) {
+            PinListScreen(
+                onBackClick = { navController.popBackStack() },
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToMap = { navController.navigate(Screen.Map.route) },
+                onNavigateToAR = { navController.navigate(Screen.AR.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToPinDetail = { pinId ->
+                    navController.navigate(Screen.PinDetail.createRoute(pinId))
+                }
+            )
         }
 
         composable (route = Screen.EditProfile.route){

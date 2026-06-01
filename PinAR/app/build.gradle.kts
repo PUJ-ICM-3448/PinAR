@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.compose.ui:ui-text-google-fonts:1.7.5")
     implementation("com.google.ar:core:1.54.0")
+    implementation("io.github.sceneview:arsceneview:0.10.0")
     implementation("com.google.android.gms:play-services-base:18.5.0")
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)

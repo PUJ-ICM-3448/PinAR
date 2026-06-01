@@ -58,6 +58,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.google.firebase.Timestamp
 
 @Composable
@@ -236,10 +237,11 @@ fun PinDetailScreen(
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.profile),
+                                    AsyncImage(
+                                        model = state.fotoUrlCreador,
                                         contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(24.dp),
+                                        error = painterResource(R.drawable.profile)
                                     )
                                 }
 

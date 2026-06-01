@@ -29,18 +29,23 @@ import com.example.pinar.R
 import com.example.pinar.navigation.Screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.SemanticsActions.OnClick
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.pinar.data.UserData
 import com.example.pinar.ui.screens.home.PinReciente
+import com.google.maps.android.compose.CameraMoveStartedReason
 
 
 @Composable
@@ -54,8 +59,14 @@ fun ProfileScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onClickLogout: () -> Unit = {},
-    userData: UserData?
+    userData: UserData?,
+    viewModel: ProfileViewModel = viewModel()
 ) {
+    val state by viewModel.state
+
+    LaunchedEffect(Unit) {
+        viewModel.inicializar(userData)
+    }
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -116,12 +127,13 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
 
-                            StatCard(stringResource(R.string._42),
+                            StatCard(state.lista.size.toString(),
                                 stringResource(R.string.pines_creados)
                             )
-                            StatCard(stringResource(R.string._128),
-                                stringResource(R.string.rutas_navegadas)
+                            StatCard(state.comentarios.toString(),
+                                stringResource(R.string.comentarios_realizados)
                             )
+                            //Cambiar cuando este terminado lo de comunidades
                             StatCard(stringResource(R.string._8), stringResource(R.string.logros))
 
                         }
@@ -161,21 +173,18 @@ fun ProfileScreen(
 
             }
 
-            item {
-                PinReciente(
-                    nombre = "Sala A",
-                    sitio = "Edificio 1",
-                    tiempo = "5 min",
-                    personas = 3
-                )
-            }
+            items (
+                state.lista.sortedByDescending { it.fecha }.take(3)
+            ) {
+                val fechaLegible = it.fecha?.toDate()?.let { d ->
+                    java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(d)
+                } ?: "Reciente"
 
-            item {
                 PinReciente(
-                    nombre = "Biblioteca",
-                    sitio = "Piso 2",
-                    tiempo = "10 min",
-                    personas = 5
+                    nombre = it.title,
+                    sitio = it.description,
+                    tiempo = fechaLegible,
+                    personas = it.visitas
                 )
             }
 

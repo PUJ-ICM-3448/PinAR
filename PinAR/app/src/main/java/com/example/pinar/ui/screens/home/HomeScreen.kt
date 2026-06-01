@@ -39,6 +39,7 @@ fun HomeScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToPins: () -> Unit = {},
     onNavigateToPinDetail: (String) -> Unit = {},
     userData: UserData?,
     viewModel: HomeViewModel = viewModel()
@@ -64,9 +65,54 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
+<<<<<<< HEAD
                         text = stringResource(R.string.explora_y_navega_por_espacios_interiores),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+=======
+                        stringResource(R.string.explora_y_navega_por_espacios_interiores),
+                        fontSize = 20.sp
+                    )
+                }
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CardPin(
+                        modifier = Modifier.weight(1f),
+                        texto = stringResource(R.string.crear_pin),
+                        textoMini = stringResource(R.string.vista_ar),
+                        onNavigate = { onNavigateToAR() }
+                    )
+                    CardPin(
+                        modifier = Modifier.weight(1f),
+                        texto = stringResource(R.string.ver_mapa),
+                        textoMini = stringResource(R.string.navegaci_n),
+                        onNavigate = { onNavigateToMap() }
+                    )
+                }
+            }
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.pines_recientes),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.ver_todos),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { onNavigateToPins() }
+>>>>>>> b62022736fffe7e66bf47d8e253746a4780406bc
                     )
                 }
             }
@@ -146,7 +192,21 @@ fun HomeScreen(
     }
 }
 
+<<<<<<< HEAD
 // --- Componentes ---
+=======
+@Composable
+fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String, onNavigate: () -> Unit) {
+    Card(
+        modifier = modifier.clickable { onNavigate() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(4.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+>>>>>>> b62022736fffe7e66bf47d8e253746a4780406bc
 
 @Composable
 fun SeccionHeader(titulo: String, accion: String? = null) {
