@@ -1,49 +1,34 @@
 package com.example.pinar.ui.screens.home
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pinar.R
-import com.example.pinar.ui.utils.PinMiniLogo
-import com.example.pinar.ui.utils.IconoConTexto
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import com.example.pinar.ui.utils.Footer
-import com.example.pinar.navigation.Screen
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pinar.R
 import com.example.pinar.data.UserData
-import androidx.compose.foundation.lazy.items
+import com.example.pinar.navigation.Screen
+import com.example.pinar.ui.utils.Footer
+import com.example.pinar.ui.utils.IconoConTexto
+import com.example.pinar.ui.utils.PinMiniLogo
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -60,105 +45,94 @@ fun HomeScreen(
 ) {
     val state by viewModel.state
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(
-                top = 40.dp,
-                bottom = 160.dp
-            )
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(top = 56.dp, bottom = 160.dp)
         ) {
+
+            // --- Saludo ---
             item {
-                Column(
-                    modifier = Modifier.padding(top = 40.dp),
-                ) {
+                Column(modifier = Modifier.padding(bottom = 16.dp)) {
                     Text(
                         text = stringResource(R.string.hola2, userData?.nombre ?: "Usuario"),
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 40.sp
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        stringResource(R.string.explora_y_navega_por_espacios_interiores),
-                        fontSize = 20.sp
-                    )
-                }
-            }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CardPin(
-                        modifier = Modifier.weight(1f),
-                        texto = stringResource(R.string.crear_pin),
-                        textoMini = stringResource(R.string.vista_ar)
-                    )
-                    CardPin(
-                        modifier = Modifier.weight(1f),
-                        texto = stringResource(R.string.ver_mapa),
-                        textoMini = stringResource(R.string.navegaci_n)
-                    )
-                }
-            }
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.pines_recientes),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 30.sp,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.ver_todos),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
+                        text = stringResource(R.string.explora_y_navega_por_espacios_interiores),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            items (
-                state.lista.sortedByDescending { it.fecha }.take(3)
-            ) {
-                val fechaLegible = it.fecha?.toDate()?.let { d ->
-                    java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(d)
+            // --- Cards de acción rápida ---
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    CardAccion(
+                        modifier = Modifier.weight(1f).clickable { onNavigateToAR() },
+                        texto = stringResource(R.string.crear_pin),
+                        textoMini = stringResource(R.string.vista_ar),
+                        iconRes = R.drawable.location
+                    )
+                    CardAccion(
+                        modifier = Modifier.weight(1f).clickable { onNavigateToMap() },
+                        texto = stringResource(R.string.ver_mapa),
+                        textoMini = stringResource(R.string.navegaci_n),
+                        iconRes = R.drawable.map
+                    )
+                }
+            }
+
+            // --- Sección: Pines Recientes ---
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                SeccionHeader(
+                    titulo = stringResource(R.string.pines_recientes),
+                    accion = stringResource(R.string.ver_todos)
+                )
+            }
+
+            items(state.lista.sortedByDescending { it.fecha }.take(3)) { pin ->
+                val fechaLegible = pin.fecha?.toDate()?.let { d ->
+                    SimpleDateFormat("dd MMM", Locale.getDefault()).format(d)
                 } ?: "Reciente"
 
                 PinReciente(
-                    nombre = it.title,
-                    sitio = it.description,
+                    nombre = pin.title,
+                    sitio = pin.description,
                     tiempo = fechaLegible,
-                    personas = it.visitas,
-                    onClick = { onNavigateToPinDetail(it.id) }
-                )
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.lugares_populares),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    personas = pin.visitas,
+                    onClick = { onNavigateToPinDetail(pin.id) }
                 )
             }
 
-            items (
-                state.lista.sortedByDescending { it.visitas }.take(3)
-            ) {
+            // --- Sección: Lugares Populares ---
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                SeccionHeader(titulo = stringResource(R.string.lugares_populares))
+            }
+
+            items(state.lista.sortedByDescending { it.visitas }.take(3)) { pin ->
                 Trending(
                     modifier = Modifier.fillMaxWidth(),
-                    sitio = it.title,
-                    visitas = it.visitas.toString(),
-                    onClick = { onNavigateToPinDetail(it.id) }
+                    sitio = pin.title,
+                    visitas = pin.visitas.toString(),
+                    onClick = { onNavigateToPinDetail(pin.id) }
                 )
             }
         }
+
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
             currentScreen = currentScreen,
@@ -170,95 +144,166 @@ fun HomeScreen(
             onProfileClick = onNavigateToProfile
         )
     }
-
 }
 
-@Composable
-fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(24.dp)
-    ) {
+// --- Componentes ---
 
-        Column(modifier = Modifier.padding(12.dp)) {
-            PinMiniLogo()
-            Text(texto)
+@Composable
+fun SeccionHeader(titulo: String, accion: String? = null) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        if (accion != null) {
             Text(
-                textoMini,
-                color= MaterialTheme.colorScheme.onPrimary,
-                fontSize = 10.sp
+                text = accion,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { /* Acción ver todos */ }
             )
         }
     }
-
 }
 
 @Composable
-fun PinInfoPrincipal(titulo: String, subtitulo: String) {
-    Column {
-        Text(
-            titulo,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            subtitulo,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun PinDetallesInferiores(tiempo: String, personas: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        IconoConTexto(
-            R.drawable.clock,
-            stringResource(R.string.hace, tiempo)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        IconoConTexto(
-            R.drawable.user,
-            personas.toString()
-        )
-    }
-}
-
-
-@Composable
-fun PinReciente(modifier: Modifier = Modifier, nombre: String, sitio: String, tiempo: String, personas: Int, onClick: () -> Unit = {}) {
+fun CardAccion(
+    modifier: Modifier = Modifier,
+    texto: String,
+    textoMini: String,
+    iconRes: Int
+) {
     Card(
-        modifier = modifier.fillMaxWidth().clickable { onClick() },
-        elevation = CardDefaults.cardElevation(2.dp)
+        modifier = modifier.height(110.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            PinMiniLogo()
-            Spacer(modifier = Modifier.width(12.dp))
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
             Column {
-                PinInfoPrincipal(titulo = nombre, subtitulo = sitio)
-                Spacer(modifier = Modifier.height(8.dp))
-                PinDetallesInferiores(tiempo, personas)
+                Text(
+                    text = texto,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = textoMini,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
             }
         }
     }
 }
 
 @Composable
-fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String, onClick: () -> Unit = {}) {
+fun PinReciente(
+    modifier: Modifier = Modifier,
+    nombre: String,
+    sitio: String,
+    tiempo: String,
+    personas: Int,
+    onClick: () -> Unit = {}
+) {
     Card(
-        modifier = modifier.clickable { onClick() },
-        elevation = CardDefaults.cardElevation(2.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant
+        )
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                PinMiniLogo()
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = nombre,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = sitio,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconoConTexto(R.drawable.clock, stringResource(R.string.hace, tiempo))
+                    Spacer(modifier = Modifier.width(12.dp))
+                    IconoConTexto(R.drawable.user, personas.toString())
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Trending(
+    modifier: Modifier = Modifier,
+    sitio: String,
+    visitas: String,
+    onClick: () -> Unit = {}
+) {
+    Card(
+        modifier = modifier
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -266,15 +311,31 @@ fun Trending(modifier: Modifier = Modifier, sitio: String, visitas: String, onCl
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.trend),
+                Icon(
+                    imageVector = Icons.Default.TrendingUp,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(sitio)
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = sitio,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Text(stringResource(R.string.visitas, visitas))
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Text(
+                    text = stringResource(R.string.visitas, visitas),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
         }
     }
 }

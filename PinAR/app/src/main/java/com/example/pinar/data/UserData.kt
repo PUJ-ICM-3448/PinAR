@@ -10,7 +10,7 @@ data class UserData(
     var fotoUrl: String = "",
     val creacion: Timestamp? = null,
     val esAdmin: Boolean = false,
-    val memberOf: List<CommunityBasicInfo> = emptyList()
+    val memberOf: List<CommunityBasicInfo> = emptyList(),
     var compartirUbicacion: Boolean = false,
     var latitud: Double? = null,
     var longitud: Double? = null
