@@ -6,12 +6,17 @@ import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.pinar.data.AuthState
 import com.example.pinar.data.UserData
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+
 class MainViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     
@@ -38,6 +43,7 @@ class MainViewModel : ViewModel() {
                         val data = document.toObject(UserData::class.java)
                         _userData.value = data
                         _authState.value = AuthState.autenticado
+                        actualizarTokenFCM(uid)
                     }
             }
         } else {
@@ -51,23 +57,20 @@ class MainViewModel : ViewModel() {
             return
         }
         _authState.value = AuthState.cargando
-        auth.signInWithEmailAndPassword(mail, contrasena)
-            .addOnCompleteListener { tarea ->
-                if (tarea.isSuccessful) {
-                    val user = auth.currentUser
-                    user?.uid?.let { uid ->
-                        db.collection("usuarios").document(uid).get()
-                            .addOnSuccessListener { document ->
-                                val data = document.toObject(UserData::class.java)
-                                _userData.value = data
-                                _authState.value = AuthState.autenticado
-                            }
-                    }
-                } else {
-                    _authState.value =
-                        AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
-                }
+        viewModelScope.launch {
+            try{
+                val res = auth.signInWithEmailAndPassword(mail, contrasena).await()
+                val uid = res.user?.uid ?: ""
+                val documento = db.collection("usuarios").document(uid).get().await()
+                val data = documento.toObject(UserData::class.java)
+
+                _userData.value = data
+                _authState.value = AuthState.autenticado
+                actualizarTokenFCM(uid)
+            }catch (e: Exception){
+                _authState.value = AuthState.Error(e.message ?: "Algo salio mal😧")
             }
+        }
     }
 
     fun registrar(nombre: String, mail: String, contrasena: String, biografia: String, fotoUri: Uri?, context: Context) {
@@ -76,31 +79,35 @@ class MainViewModel : ViewModel() {
             return
         }
         _authState.value = AuthState.cargando
-        auth.createUserWithEmailAndPassword(mail, contrasena)
-            .addOnCompleteListener { tarea ->
-                if (tarea.isSuccessful) {
-                    val uid = auth.currentUser?.uid ?: ""
-                    val nuevoUsuario = UserData(
-                        uid = uid,
-                        correo = mail,
-                        nombre = nombre,
-                        biografia = biografia,
-                        creacion = Timestamp.now()
-                    )
-                    
-                    db.collection("usuarios").document(uid).set(nuevoUsuario)
-                        .addOnSuccessListener {
-                            _userData.value = nuevoUsuario
-                            _authState.value = AuthState.autenticado
-                            fotoUri?.let { uri -> subirFotoPerfil(uri, context) }
-                        }
-                        .addOnFailureListener {
-                            _authState.value = AuthState.Error("Error al guardar en base de datos")
-                        }
-                } else {
-                    _authState.value = AuthState.Error(tarea.exception?.message ?: "Algo salio mal😧")
+
+        viewModelScope.launch {
+            try{
+                val fcmToken = try{
+                    FirebaseMessaging.getInstance().token.await()
+                }catch (e: Exception){
+                    null
                 }
+
+                val res = auth.createUserWithEmailAndPassword(mail, contrasena).await()
+                val uid = res.user?.uid ?: ""
+                val nuevoUsuario = UserData(
+                    uid = uid,
+                    correo = mail,
+                    nombre = nombre,
+                    biografia = biografia,
+                    creacion = Timestamp.now(),
+                    FCMToken = fcmToken ?: ""
+                )
+
+                db.collection("usuarios").document(uid).set(nuevoUsuario).await()
+
+                _userData.value = nuevoUsuario
+                _authState.value = AuthState.autenticado
+                fotoUri?.let { uri -> subirFotoPerfil(uri, context) }
+            }catch (e: Exception){
+                _authState.value = AuthState.Error(e.message ?: "Algo salio mal😧")
             }
+        }
     }
 
     fun subirFotoPerfil(fotoUri: Uri, context: Context) {
@@ -136,6 +143,19 @@ class MainViewModel : ViewModel() {
         _userData.value = null
         _authState.value = AuthState.noAutenticado
     }
+
+    private fun actualizarTokenFCM(uid: String) {
+        viewModelScope.launch {
+            try {
+                val token = FirebaseMessaging.getInstance().token.await()
+                db.collection("usuarios").document(uid).update("FCMToken", token).await()
+                _userData.value = _userData.value?.copy(FCMToken = token)
+            } catch (_: Exception) {
+                //Se puede no tener token
+            }
+        }
+    }
+
     fun modificarNombre(nombre: String, uid: String) {
         if (nombre == _userData.value?.nombre) {
             return
