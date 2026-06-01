@@ -124,4 +124,12 @@
     <string name="pin_no_encontrado">Pin no encontrado</string>
     <string name="compartir_ubicacion">Compartir ubicación</string>
     <string name="compartir_ubicacion_desc">Otros usuarios podrán ver tu posición en el mapa</string>
+    <string name="pin_list_titulo">Todos los pines</string>
+    <string name="pin_list_total">%1$d pines disponibles</string>
+    <string name="pin_list_ver_detalle">Ver detalle</string>
+    <string name="pin_list_vacia">No hay pines</string>
+    <string name="pin_list_vacia_desc">Los pines publicados apareceran aqui</string>
+    <string name="pin_list_error">No fue posible cargar los pines</string>
+    <string name="pin_list_reintentar">Reintentar</string>
+    <string name="comentarios_realizados">Comentarios realizados</string>
 </resources>

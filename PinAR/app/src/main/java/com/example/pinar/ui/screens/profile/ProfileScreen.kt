@@ -1,47 +1,37 @@
 package com.example.pinar.ui.screens.profile
 
-
-import com.example.pinar.ui.utils.Footer
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.pinar.R
-import com.example.pinar.navigation.Screen
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.SemanticsActions.OnClick
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.pinar.R
 import com.example.pinar.data.UserData
+import com.example.pinar.navigation.Screen
+import com.example.pinar.ui.screens.home.MetaChip
 import com.example.pinar.ui.screens.home.PinReciente
-
+import com.example.pinar.ui.utils.Footer
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -54,147 +44,100 @@ fun ProfileScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onClickLogout: () -> Unit = {},
-    userData: UserData?
+    userData: UserData?,
+    viewModel: ProfileViewModel = viewModel()
 ) {
+    val state by viewModel.state
 
-    Box(modifier = modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colorScheme.background)) {
+    LaunchedEffect(Unit) {
+        viewModel.inicializar(userData)
+    }
 
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 120.dp)
         ) {
+
+            // --- Header de perfil ---
             item {
+                ProfileHeader(
+                    userData = userData,
+                    pinCount = state.lista.size,
+                    comentariosCount = state.comentarios,
+                    onEditClick = onNavigateToEditProfile
+                )
+            }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFF7B1FA2),
-                                    Color(0xFFD81B60)
-                                )
-                            )
-                        )
-                        .padding(24.dp)
-                ) {
+            // --- Actividad reciente ---
+            item {
+                Text(
+                    text = stringResource(R.string.actividad_reciente),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                )
+            }
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
+            if (state.lista.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 40.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        FotoPerfil(userData)
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
                         Text(
-                            text = userData?.nombre ?: stringResource(R.string.usuario),
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "Sin actividad reciente",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text(
-                            "Perfil creado el ${userData?.creacion?.toDate()}",
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-
-                        Text(
-                            userData?.biografia ?: stringResource(R.string.el_usuario_no_tiene_biografia),
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-
-                            StatCard(stringResource(R.string._42),
-                                stringResource(R.string.pines_creados)
-                            )
-                            StatCard(stringResource(R.string._128),
-                                stringResource(R.string.rutas_navegadas)
-                            )
-                            StatCard(stringResource(R.string._8), stringResource(R.string.logros))
-
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onNavigateToEditProfile() },
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(stringResource(R.string.editar_perfil))
-                            }
-                        }
-
                     }
                 }
+            } else {
+                items(state.lista.sortedByDescending { it.fecha }.take(3)) { pin ->
+                    val fechaLegible = pin.fecha?.toDate()?.let { d ->
+                        SimpleDateFormat("dd MMM", Locale.getDefault()).format(d)
+                    } ?: "Reciente"
 
+                    PinReciente(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        nombre = pin.title,
+                        sitio = pin.description,
+                        tiempo = fechaLegible,
+                        personas = pin.visitas
+                    )
+                }
             }
 
+            // --- Botón cerrar sesión ---
             item {
-
-                Text(
-                    stringResource(R.string.actividad_reciente),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp)
-                )
-
-            }
-
-            item {
-                PinReciente(
-                    nombre = "Sala A",
-                    sitio = "Edificio 1",
-                    tiempo = "5 min",
-                    personas = 3
-                )
-            }
-
-            item {
-                PinReciente(
-                    nombre = "Biblioteca",
-                    sitio = "Piso 2",
-                    tiempo = "10 min",
-                    personas = 5
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(50.dp))
-                Button(
+                Spacer(modifier = Modifier.height(24.dp))
+                OutlinedButton(
                     onClick = onClickLogout,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .height(55.dp),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                {
-                    Text(stringResource(R.string.cerrar_sesi_n), fontWeight = FontWeight.Bold)
+                        .padding(horizontal = 20.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                ) {
+                    Text(
+                        text = stringResource(R.string.cerrar_sesi_n),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
-                Spacer(modifier = Modifier.height(150.dp))
             }
         }
+
         Footer(
             modifier = Modifier.align(Alignment.BottomCenter),
             currentScreen = currentScreen,
@@ -209,47 +152,166 @@ fun ProfileScreen(
 }
 
 @Composable
-fun FotoPerfil(userData: UserData?) {
-    AsyncImage(
-        model = userData?.fotoUrl,
-        contentDescription = null,
-        error = painterResource(R.drawable.profile),
+private fun ProfileHeader(
+    userData: UserData?,
+    pinCount: Int,
+    comentariosCount: Int,
+    onEditClick: () -> Unit
+) {
+    Column(
         modifier = Modifier
-            .size(100.dp)
-            .clip(RoundedCornerShape(50.dp))
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 20.dp)
+            .padding(top = 56.dp, bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Foto de perfil con marco
+        Box(
+            modifier = Modifier
+                .size(94.dp)
+                .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape)
+                .padding(3.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = userData?.fotoUrl,
+                contentDescription = null,
+                error = painterResource(R.drawable.profile),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Nombre
+        Text(
+            text = userData?.nombre ?: stringResource(R.string.usuario),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Fecha de creación
+        val fechaCreacion = userData?.creacion?.toDate()?.let { d ->
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(d)
+        }
+        if (fechaCreacion != null) {
+            Text(
+                text = "Miembro desde $fechaCreacion",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Biografía
+        val bio = userData?.biografia?.takeIf { it.isNotBlank() }
+        Text(
+            text = bio ?: stringResource(R.string.el_usuario_no_tiene_biografia),
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (bio != null)
+                MaterialTheme.colorScheme.onSurface
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Stats — Uso de IntrinsicSize.Min para que todas tengan la misma altura
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            StatCard(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                numero = pinCount.toString(),
+                texto = stringResource(R.string.pines_creados)
+            )
+            StatCard(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                numero = comentariosCount.toString(),
+                texto = stringResource(R.string.comentarios_realizados)
+            )
+            StatCard(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                numero = stringResource(R.string._8),
+                texto = stringResource(R.string.logros)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón editar perfil
+        OutlinedButton(
+            onClick = onEditClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(46.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            Text(
+                text = stringResource(R.string.editar_perfil),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+
+    HorizontalDivider(
+        color = MaterialTheme.colorScheme.outlineVariant,
+        thickness = 1.dp
     )
 }
 
 @Composable
-fun StatCard(numero: String, texto: String) {
-
+fun StatCard(
+    modifier: Modifier = Modifier,
+    numero: String,
+    texto: String
+) {
     Card(
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .width(80.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-
             Text(
-                numero,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                text = numero,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
-
             Spacer(modifier = Modifier.height(4.dp))
-
             Text(
-                texto,
-                fontSize = 12.sp
+                text = texto,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
-
         }
-
     }
-
 }

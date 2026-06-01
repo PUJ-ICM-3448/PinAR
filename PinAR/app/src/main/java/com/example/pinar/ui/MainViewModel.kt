@@ -236,5 +236,13 @@ class MainViewModel : ViewModel() {
         }
     }
 
-
+    suspend fun numComentarios(uid: String): Int {
+        return try {
+            val querySnapshot = db.collection("comentarios")
+                .whereEqualTo("autorId", uid).get().await()
+            querySnapshot.size()
+        }catch (e: Exception) {
+            0
+        }
+    }
 }
