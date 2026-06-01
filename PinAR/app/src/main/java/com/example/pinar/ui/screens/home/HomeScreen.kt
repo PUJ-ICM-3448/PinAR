@@ -54,6 +54,7 @@ fun HomeScreen(
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToPins: () -> Unit = {},
     onNavigateToPinDetail: (String) -> Unit = {},
     userData: UserData?,
     viewModel: HomeViewModel = viewModel()
@@ -94,12 +95,14 @@ fun HomeScreen(
                     CardPin(
                         modifier = Modifier.weight(1f),
                         texto = stringResource(R.string.crear_pin),
-                        textoMini = stringResource(R.string.vista_ar)
+                        textoMini = stringResource(R.string.vista_ar),
+                        onNavigate = { onNavigateToAR() }
                     )
                     CardPin(
                         modifier = Modifier.weight(1f),
                         texto = stringResource(R.string.ver_mapa),
-                        textoMini = stringResource(R.string.navegaci_n)
+                        textoMini = stringResource(R.string.navegaci_n),
+                        onNavigate = { onNavigateToMap() }
                     )
                 }
             }
@@ -119,7 +122,8 @@ fun HomeScreen(
                         text = stringResource(R.string.ver_todos),
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { onNavigateToPins() }
                     )
                 }
             }
@@ -174,9 +178,9 @@ fun HomeScreen(
 }
 
 @Composable
-fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String) {
+fun CardPin(modifier: Modifier = Modifier, texto: String, textoMini: String, onNavigate: () -> Unit) {
     Card(
-        modifier = modifier,
+        modifier = modifier.clickable { onNavigate() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = Color.White

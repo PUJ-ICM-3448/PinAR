@@ -84,6 +84,7 @@ class PinDetailViewModel : ViewModel() {
                                 )
                             }
                         }
+                    getFoto(pin.createdBy)
 
                 } else {
                     _state.update {
@@ -152,6 +153,17 @@ class PinDetailViewModel : ViewModel() {
                         pin = pin
                     )
                 }
+            }
+        }
+    }
+
+    fun getFoto(uid: String) {
+        db.collection("usuarios").document(uid).get().addOnSuccessListener {
+            val foto = it.getString("fotoUrl")
+            _state.update {
+                it.copy(
+                    fotoUrlCreador = foto
+                )
             }
         }
     }

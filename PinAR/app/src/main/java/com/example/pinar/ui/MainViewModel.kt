@@ -12,6 +12,8 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+
 class MainViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     
@@ -216,5 +218,13 @@ class MainViewModel : ViewModel() {
         }
     }
 
-
+    suspend fun numComentarios(uid: String): Int {
+        return try {
+            val querySnapshot = db.collection("comentarios")
+                .whereEqualTo("autorId", uid).get().await()
+            querySnapshot.size()
+        }catch (e: Exception) {
+            0
+        }
+    }
 }
