@@ -1,36 +1,31 @@
 package com.example.pinar.ui.screens.login
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
 import com.example.pinar.data.AuthState
-import com.example.pinar.ui.theme.Charcoal
-import com.example.pinar.ui.theme.MutedGold
-import com.example.pinar.ui.theme.RedDark
-import com.example.pinar.ui.theme.RedDeep
-import com.example.pinar.ui.theme.RedPrimary
-import com.example.pinar.ui.theme.SoftCream
 
 @Composable
 fun LoginScreen(
@@ -44,198 +39,248 @@ fun LoginScreen(
     viewModel: LoginViewModel = viewModel()
 ) {
     val state by viewModel.state
+    var passwordVisible by remember { mutableStateOf(false) }
 
-    val textGray = Color(0xFF9E9E9E)
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Box(
+    // Mismo fondo que HomeScreen — Box con background directo, sin Scaffold
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)  // #F0F3F9 light / #0E1117 dark
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(RedDark, RedDeep)
-                    )
-                )
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),  // mismo padding horizontal que HomeScreen
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = stringResource(R.string.volver),
-                    tint = MutedGold
-                )
-            }
-        }
 
-        // Card crema con esquinas redondeadas
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(top = 80.dp),
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            colors = CardDefaults.cardColors(containerColor = SoftCream),
-            elevation = CardDefaults.cardElevation(8.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 28.dp, vertical = 36.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column {
 
-                    // Título
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = stringResource(R.string.bienvenido_de_vuelta),
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Charcoal
-                        )
-                        Text(
-                            text = stringResource(R.string.ingresa_tus_credenciales_para_continuar),
-                            fontSize = 14.sp,
-                            color = textGray
-                        )
+                // --- TopBar manual — igual que HomeScreen (sin Scaffold) ---
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 52.dp, bottom = 8.dp)  // mismo top que HomeScreen
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)  // igual al header de PinListScreen
+                            .align(Alignment.CenterStart),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.volver),
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
+                }
 
-                    // Campo correo
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // --- Encabezado — mismos estilos que el saludo del HomeScreen ---
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(bottom = 32.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.bienvenido_de_vuelta),
+                        style = MaterialTheme.typography.headlineMedium,  // igual que "Hola, Usuario"
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = stringResource(R.string.ingresa_tus_credenciales_para_continuar),
+                        style = MaterialTheme.typography.bodyMedium,  // igual que subtítulo del Home
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // --- Campos sobre surface — mismo color que las cards del Home ---
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+
+                    // Correo
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = stringResource(R.string.correo_electr_nico),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = { viewModel.onEmailChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("tu@email.com", color = textGray) },
+                            placeholder = {
+                                Text(
+                                    "tu@email.com",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Email,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(14.dp),  // mismo radio que las cards
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                cursorColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
 
-                    // Campo contraseña
+                    // Contraseña
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = stringResource(R.string.contrase_a),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.password,
                             onValueChange = { viewModel.onPasswordChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("••••••••", color = textGray) },
+                            placeholder = {
+                                Text(
+                                    "••••••••",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
-                            visualTransformation = PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible)
+                                            Icons.Default.VisibilityOff
+                                        else
+                                            Icons.Default.Visibility,
+                                        contentDescription = if (passwordVisible)
+                                            "Ocultar contraseña"
+                                        else
+                                            "Mostrar contraseña",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisible)
+                                VisualTransformation.None
+                            else
+                                PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                cursorColor = MaterialTheme.colorScheme.primary
                             )
                         )
 
                         TextButton(
                             onClick = onForgotPassword,
-                            contentPadding = PaddingValues(0.dp)
+                            contentPadding = PaddingValues(0.dp),
+                            modifier = Modifier.align(Alignment.End)
                         ) {
                             Text(
                                 text = stringResource(R.string.olvidaste_tu_contrase_a),
-                                color = RedPrimary,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                     }
 
+                    // Error — Surface con errorContainer, igual que en PinListScreen
                     if (authState is AuthState.Error) {
-                        Text(
-                            text = authState.mensaje,
-                            color = Color.Red,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                            .clip(RoundedCornerShape(28.dp))
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(RedDark, RedPrimary)
-                                )
-                            )
-                            .clickable { onClickLogin(state.email, state.password) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Iniciar Sesión",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_tienes_cuenta),
-                            color = textGray,
-                            fontSize = 14.sp
-                        )
-                        TextButton(
-                            onClick = onNavigateToRegister,
-                            contentPadding = PaddingValues(0.dp)
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = stringResource(R.string.reg_strate),
-                                color = RedPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
+                                text = authState.mensaje,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(
+                                    horizontal = 14.dp,
+                                    vertical = 10.dp
+                                )
                             )
                         }
+                    }
+                }
+            }
+
+            // --- Acciones inferiores ---
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(bottom = 40.dp)
+            ) {
+                // Botón principal — igual que los Button de PinListScreen
+                Button(
+                    onClick = { onClickLogin(state.email, state.password) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.iniciar_sesi_n),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // Registro
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_tienes_cuenta),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    TextButton(
+                        onClick = onNavigateToRegister,
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.reg_strate),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
