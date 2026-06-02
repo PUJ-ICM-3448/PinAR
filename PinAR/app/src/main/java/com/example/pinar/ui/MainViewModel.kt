@@ -2,6 +2,7 @@ package com.example.pinar.ui
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -87,6 +88,7 @@ class MainViewModel : ViewModel() {
                 }catch (e: Exception){
                     null
                 }
+                Log.d("FCM", "Token: $fcmToken")
 
                 val res = auth.createUserWithEmailAndPassword(mail, contrasena).await()
                 val uid = res.user?.uid ?: ""
@@ -150,6 +152,7 @@ class MainViewModel : ViewModel() {
                 val token = FirebaseMessaging.getInstance().token.await()
                 db.collection("usuarios").document(uid).update("FCMToken", token).await()
                 _userData.value = _userData.value?.copy(FCMToken = token)
+                Log.d("FCM", "Token actualizado: $token")
             } catch (_: Exception) {
                 //Se puede no tener token
             }
