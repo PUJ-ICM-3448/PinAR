@@ -2,10 +2,12 @@ package com.example.pinar.ui.screens.pindetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pinar.data.AuthState
 import com.example.pinar.data.CloudAnchorRepository
 import com.example.pinar.data.Comentario
+import com.example.pinar.data.CommunityRepository
 import com.example.pinar.data.UserData
+import retrofit2.HttpException
+import java.io.IOException
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,6 +20,7 @@ import kotlinx.coroutines.tasks.await
 
 class PinDetailViewModel : ViewModel() {
     private val repo = CloudAnchorRepository()
+    private val communityRepository = CommunityRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -36,6 +39,19 @@ class PinDetailViewModel : ViewModel() {
             try {
                 val doc = db.collection("usuarios").document(uid).get().await()
                 currentUserData = doc.toObject(UserData::class.java)
+                _state.update {
+                    it.copy(communities = currentUserData?.memberOf.orEmpty())
+                }
+                val pin = _state.value.pin
+                if (pin != null) {
+                    val uid = auth.currentUser?.uid
+                    _state.update {
+                        it.copy(
+                            canManageCommunities = uid == pin.createdBy &&
+                                currentUserData?.memberOf.orEmpty().isNotEmpty()
+                        )
+                    }
+                }
             } catch (_: Exception) {
             }
         }
@@ -72,7 +88,11 @@ class PinDetailViewModel : ViewModel() {
                         it.copy(
                             isLoading = false,
                             pin = pin.copy(visitas = pin.visitas),
-                            userLiked = liked
+                            userLiked = liked,
+                            sharedCommunityIds = pin.comunidades.toSet(),
+                            communities = currentUserData?.memberOf.orEmpty(),
+                            canManageCommunities = uid == pin.createdBy &&
+                                currentUserData?.memberOf.orEmpty().isNotEmpty()
                         )
                     }
                     db.collection("usuarios").document(pin.createdBy).get()
@@ -166,5 +186,66 @@ class PinDetailViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    fun toggleCommunityAssignment(communityId: String) {
+        val pin = _state.value.pin ?: return
+        if (_state.value.isUpdatingCommunity) return
+
+        val isCurrentlyShared = communityId in _state.value.sharedCommunityIds
+        val previousSharedIds = _state.value.sharedCommunityIds
+        val previousComunidades = pin.comunidades
+
+        _state.update {
+            it.copy(
+                isUpdatingCommunity = true,
+                communityMessage = null,
+                sharedCommunityIds = if (isCurrentlyShared) {
+                    it.sharedCommunityIds - communityId
+                } else {
+                    it.sharedCommunityIds + communityId
+                },
+                pin = pin.copy(
+                    comunidades = if (isCurrentlyShared) {
+                        pin.comunidades - communityId
+                    } else {
+                        pin.comunidades + communityId
+                    }
+                )
+            )
+        }
+
+        viewModelScope.launch {
+            try {
+                if (isCurrentlyShared) {
+                    communityRepository.unsharePinFromCommunity(communityId, pin.id)
+                } else {
+                    communityRepository.sharePinWithCommunity(communityId, pin.id)
+                }
+                _state.update { it.copy(isUpdatingCommunity = false) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isUpdatingCommunity = false,
+                        sharedCommunityIds = previousSharedIds,
+                        pin = pin.copy(comunidades = previousComunidades),
+                        communityMessage = toCommunityErrorMessage(e)
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearCommunityMessage() {
+        _state.update { it.copy(communityMessage = null) }
+    }
+
+    private fun toCommunityErrorMessage(error: Throwable): String = when (error) {
+        is IOException -> "No se alcanza el microservicio."
+        is HttpException -> when (error.code()) {
+            403 -> "No tienes permiso para modificar la asignación."
+            else -> "Error del servidor: HTTP ${error.code()}"
+        }
+        else -> error.message ?: "Error desconocido"
     }
 }

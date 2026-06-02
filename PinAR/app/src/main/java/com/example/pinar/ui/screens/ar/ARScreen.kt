@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -62,7 +61,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
-import com.example.pinar.data.CommunityBasicInfo
 import com.example.pinar.data.UserData
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
@@ -192,11 +190,8 @@ fun ARScreen(
             PinDetailsDialog(
                 title = state.pendingPinTitle,
                 description = state.pendingPinDescription,
-                communities = userData?.memberOf.orEmpty(),
-                selectedCommunityIds = state.selectedCommunityIds,
                 onTitleChange = { viewModel.onPinTitleChange(it) },
                 onDescriptionChange = { viewModel.onPinDescriptionChange(it) },
-                onCommunityToggle = { viewModel.toggleCommunitySelection(it) },
                 onConfirm = { viewModel.confirmAndHostPin() },
                 onDismiss = { viewModel.cancelHosting() }
             )
@@ -564,11 +559,8 @@ fun HostingInstructions(text: String, onCancel: () -> Unit) {
 fun PinDetailsDialog(
     title: String,
     description: String,
-    communities: List<CommunityBasicInfo> = emptyList(),
-    selectedCommunityIds: Set<String> = emptySet(),
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
-    onCommunityToggle: (String) -> Unit = {},
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -596,32 +588,6 @@ fun PinDetailsDialog(
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (communities.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.pin_crear_compartir_comunidades),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    communities.forEach { community ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onCommunityToggle(community.id) },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = community.id in selectedCommunityIds,
-                                onCheckedChange = { onCommunityToggle(community.id) }
-                            )
-                            Text(
-                                text = community.name,
-                                modifier = Modifier.padding(start = 4.dp)
-                            )
-                        }
-                    }
-                }
             }
         },
         confirmButton = {

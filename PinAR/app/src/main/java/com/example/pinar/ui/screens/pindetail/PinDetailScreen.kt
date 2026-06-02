@@ -56,7 +56,10 @@ import com.example.pinar.ui.theme.RedDark
 import com.example.pinar.ui.theme.RedPrimary
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.google.firebase.Timestamp
@@ -70,9 +73,17 @@ fun PinDetailScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var commentText by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(pinId) {
         viewModel.cargarDetalles(pinId)
+    }
+
+    LaunchedEffect(state.communityMessage) {
+        state.communityMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearCommunityMessage()
+        }
     }
 
     Box(
@@ -80,6 +91,13 @@ fun PinDetailScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+
         if (state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -372,6 +390,54 @@ fun PinDetailScreen(
                                         "%.4f, %.4f".format(pin.latitude, pin.longitude)
                                     else "—"
                                 )
+                            }
+                        }
+                    }
+
+                    if (state.canManageCommunities) {
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.pin_crear_compartir_comunidades),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    state.communities.forEach { community ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable(enabled = !state.isUpdatingCommunity) {
+                                                    viewModel.toggleCommunityAssignment(community.id)
+                                                },
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Checkbox(
+                                                checked = community.id in state.sharedCommunityIds,
+                                                onCheckedChange = {
+                                                    viewModel.toggleCommunityAssignment(community.id)
+                                                },
+                                                enabled = !state.isUpdatingCommunity
+                                            )
+                                            Text(
+                                                text = community.name,
+                                                modifier = Modifier.padding(start = 4.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

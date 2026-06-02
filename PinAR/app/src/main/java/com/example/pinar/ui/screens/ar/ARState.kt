@@ -15,7 +15,6 @@ data class ARState(
     val isHostingMode: Boolean = false,
     val pendingPinTitle: String = "",
     val pendingPinDescription: String = "",
-    val selectedCommunityIds: Set<String> = emptySet(),
     val showPinDialog: Boolean = false
 )
 

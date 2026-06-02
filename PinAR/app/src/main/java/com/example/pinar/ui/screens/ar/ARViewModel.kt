@@ -16,7 +16,6 @@ import com.example.pinar.ar.CloudAnchorManager
 import com.example.pinar.data.ARSessionState
 import com.example.pinar.data.CloudAnchorPin
 import com.example.pinar.data.CloudAnchorRepository
-import com.example.pinar.data.CommunityRepository
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -34,8 +33,7 @@ import kotlin.coroutines.resume
 
 class ARViewModel @JvmOverloads constructor(
     application: Application,
-    private val repository: CloudAnchorRepository = CloudAnchorRepository(),
-    private val communityRepository: CommunityRepository = CommunityRepository()
+    private val repository: CloudAnchorRepository = CloudAnchorRepository()
 ) : AndroidViewModel(application) {
     private val _state = mutableStateOf(ARState())
     val state: State<ARState> = _state
@@ -78,7 +76,6 @@ class ARViewModel @JvmOverloads constructor(
             hostingState = HostingState.IDLE,
             featureMapQuality = null,
             showPinDialog = false,
-            selectedCommunityIds = emptySet(),
             errorMessage = null
         )
     }
@@ -117,17 +114,6 @@ class ARViewModel @JvmOverloads constructor(
 
     fun onPinDescriptionChange(description: String) {
         _state.value = _state.value.copy(pendingPinDescription = description)
-    }
-
-    fun toggleCommunitySelection(communityId: String) {
-        val current = _state.value.selectedCommunityIds
-        _state.value = _state.value.copy(
-            selectedCommunityIds = if (communityId in current) {
-                current - communityId
-            } else {
-                current + communityId
-            }
-        )
     }
 
     fun confirmAndHostPin() {
@@ -194,18 +180,14 @@ class ARViewModel @JvmOverloads constructor(
             visitas = 0
         )
 
-        val selectedCommunities = _state.value.selectedCommunityIds
-
         viewModelScope.launch {
             try {
-                val pinId = repository.savePin(pin)
-                sharePinWithCommunities(pinId, selectedCommunities)
+                repository.savePin(pin)
                 _state.value = _state.value.copy(
                     hostingState = HostingState.SUCCESS,
                     isHostingMode = false,
                     pendingPinTitle = "",
                     pendingPinDescription = "",
-                    selectedCommunityIds = emptySet(),
                     featureMapQuality = null
                 )
                 localAnchor = null
@@ -217,23 +199,6 @@ class ARViewModel @JvmOverloads constructor(
                     errorMessage = "Error guardando: ${e.message}"
                 )
             }
-        }
-    }
-
-    private suspend fun sharePinWithCommunities(pinId: String, communityIds: Set<String>) {
-        if (communityIds.isEmpty()) return
-        val failures = mutableListOf<String>()
-        for (communityId in communityIds) {
-            runCatching { communityRepository.sharePinWithCommunity(communityId, pinId) }
-                .onFailure { e ->
-                    Log.w(TAG, "No se pudo compartir pin en comunidad $communityId", e)
-                    failures.add(communityId)
-                }
-        }
-        if (failures.isNotEmpty()) {
-            _state.value = _state.value.copy(
-                errorMessage = "Pin publicado, pero no se pudo compartir en ${failures.size} comunidad(es)"
-            )
         }
     }
 
