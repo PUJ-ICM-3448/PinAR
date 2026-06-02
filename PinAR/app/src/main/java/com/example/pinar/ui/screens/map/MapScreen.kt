@@ -8,7 +8,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.util.Log
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,13 +32,18 @@ import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +52,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -61,6 +69,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -72,17 +81,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.rememberAsyncImagePainter
 import com.example.pinar.R
+import com.example.pinar.data.CommunityBasicInfo
 import com.example.pinar.data.UserData
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.screens.map.MapViewModel
+import com.example.pinar.ui.screens.map.util.CustomMapMarker
+import com.example.pinar.ui.screens.map.util.GOOGLE_MAP_CLOUD_ID
+import com.example.pinar.ui.screens.map.util.PinMapMarker
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -90,9 +102,6 @@ import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerComposable
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
@@ -102,25 +111,33 @@ import kotlinx.coroutines.launch
 fun MapScreen(
     modifier: Modifier = Modifier,
     currentScreen: Screen = Screen.Map,
+    userData: UserData? = null,
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCommunities: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToPinDetail: (String) -> Unit = {},
     viewModel: MapViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val cameraState = rememberCameraPositionState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var searchQuery by remember { mutableStateOf("") }
+    val memberCommunities = userData?.memberOf.orEmpty()
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
 
     var isCompassModeEnabled by remember { mutableStateOf(false) }
 
+    LaunchedEffect(userData?.uid, memberCommunities) {
+        val uid = userData?.uid ?: return@LaunchedEffect
+        viewModel.setUserContext(uid, memberCommunities)
+    }
+
     fun focusOnSearchedPin() {
-        val query = searchQuery.trim()
+        val query = uiState.searchQuery.trim()
         if (query.isBlank()) return
 
         val matchedPin = uiState.pins.firstOrNull { it.title.contains(query, ignoreCase = true) }
@@ -220,12 +237,125 @@ fun MapScreen(
         }
     }
 
+    LaunchedEffect(uiState.routeError) {
+        uiState.routeError?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearRouteError()
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(80.dp))
+            val hasCommunityFilter = uiState.communityFilter != MapCommunityFilter.ALL
+            val hasSearchFilter = uiState.searchQuery.isNotBlank()
+            val activeCommunityFilterLabel = when (uiState.communityFilter) {
+                MapCommunityFilter.ALL -> null
+                MapCommunityFilter.OWN_PINS -> stringResource(R.string.map_filtro_mis_pines)
+                MapCommunityFilter.COMMUNITY -> memberCommunities
+                    .find { it.id == uiState.selectedCommunityId }
+                    ?.name
+            }
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                tonalElevation = 1.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.map_filtros_titulo),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            MapFilterChip(
+                                label = stringResource(R.string.map_filtro_todos),
+                                icon = Icons.Outlined.FilterList,
+                                selected = uiState.communityFilter == MapCommunityFilter.ALL,
+                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
+                            )
+                        }
+                        item {
+                            MapFilterChip(
+                                label = stringResource(R.string.map_filtro_mis_pines),
+                                icon = Icons.Outlined.Person,
+                                selected = uiState.communityFilter == MapCommunityFilter.OWN_PINS,
+                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.OWN_PINS) }
+                            )
+                        }
+                        items(memberCommunities, key = { it.id }) { community ->
+                            MapFilterChip(
+                                label = community.name,
+                                icon = Icons.Outlined.Groups,
+                                selected = uiState.communityFilter == MapCommunityFilter.COMMUNITY
+                                    && uiState.selectedCommunityId == community.id,
+                                onClick = {
+                                    viewModel.setCommunityFilter(MapCommunityFilter.COMMUNITY, community.id)
+                                }
+                            )
+                        }
+                    }
+
+                    if (hasCommunityFilter || hasSearchFilter) {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            activeCommunityFilterLabel?.let { label ->
+                                item {
+                                    ActiveFilterPill(
+                                        text = stringResource(R.string.map_filtro_activo, label),
+                                        onClear = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
+                                    )
+                                }
+                            }
+                            if (hasSearchFilter) {
+                                item {
+                                    ActiveFilterPill(
+                                        text = stringResource(R.string.map_busqueda_activa, uiState.searchQuery),
+                                        onClear = { viewModel.setSearchQuery("") }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+                value = uiState.searchQuery,
+                onValueChange = viewModel::setSearchQuery,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 placeholder = { Text(stringResource(R.string.buscar_pin_en_el_mapa)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
@@ -241,62 +371,36 @@ fun MapScreen(
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraState,
-                    properties = MapProperties(isMyLocationEnabled = uiState.hasLocationPermission),
+                    googleMapOptionsFactory = {
+                        GoogleMapOptions().mapId(GOOGLE_MAP_CLOUD_ID)
+                    },
+                    properties = MapProperties(
+                        isMyLocationEnabled = uiState.hasLocationPermission && uiState.userLocation == null
+                    ),
                     uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = true, compassEnabled = !isCompassModeEnabled)
                 ) {
-                    // Marcadores de pines
-                    uiState.pins.filter { searchQuery.isBlank() || it.title.contains(searchQuery, true) }
-                        .forEach { pin ->
-                            Marker(state = MarkerState(pin.position), title = pin.title, snippet = pin.subtitle, onClick = { viewModel.selectPin(pin); true })
-                        }
-                    uiState.userLocation?.let { Marker(state = MarkerState(it), title = stringResource(R.string.mi_ubicacion)) }
-                    if (uiState.routePolyline.size >= 2) Polyline(points = uiState.routePolyline, width = 14f)
-
-                    // Marcadores de otros usuarios
-                    uiState.otherUsers.forEach { user ->
-                        val lat = user.latitud ?: return@forEach
-                        val lng = user.longitud ?: return@forEach
-                        MarkerComposable(
-                            state = MarkerState(LatLng(lat, lng)),
-                            title = user.nombre.ifBlank { "Usuario" },
-                            onClick = {
-                                viewModel.selectUser(user)
-                                true
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(Color.White, CircleShape)
-                                    .padding(2.dp)
-                                    .clip(CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (user.fotoUrl.isNotBlank()) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(user.fotoUrl),
-                                        contentDescription = null,
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.primaryContainer),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    uiState.pins.forEach { pin ->
+                        PinMapMarker(
+                            title = pin.title,
+                            snippet = buildPinSnippet(pin),
+                            location = pin.position,
+                            onClick = { viewModel.selectPin(pin) }
+                        )
                     }
+                    
+                    uiState.userLocation?.let { location ->
+                        CustomMapMarker(
+                            imageUrl = userData?.fotoUrl?.ifBlank { null },
+                            fullName = userData?.nombre?.ifBlank { stringResource(R.string.mi_ubicacion) }
+                                ?: stringResource(R.string.mi_ubicacion),
+                            location = location,
+                            markerColor = MaterialTheme.colorScheme.tertiary,
+                            placeholderResId = R.drawable.profile,
+                            onClick = { }
+                        )
+                    }
+
+                    if (uiState.routePolyline.size >= 2) Polyline(points = uiState.routePolyline, width = 14f)
                 }
 
                 Card(
@@ -335,123 +439,148 @@ fun MapScreen(
             }
             Footer(
                 currentScreen = currentScreen,
-                unreadCount = 3,
                 onHomeClick = onNavigateToHome,
                 onMapClick = onNavigateToMap,
                 onARClick = onNavigateToAR,
-                onNotificationsClick = onNavigateToNotifications,
-                onProfileClick = onNavigateToProfile
+                onCommunitiesClick = onNavigateToCommunities,
+                onProfileClick = onNavigateToProfile,
+                onNotificationsClick = onNavigateToNotifications
             )
         }
     }
 
-    // Diálogo de pin seleccionado
     uiState.selectedPin?.let { selectedPin ->
         AlertDialog(
             onDismissRequest = viewModel::dismissSelectedPin,
             title = { Text(selectedPin.title) },
-            text = { Text(stringResource(R.string.quieres_trazar_una_ruta_desde_tu_ubicacion_actual)) },
-            confirmButton = { Button(onClick = viewModel::fetchRouteToSelectedPin, enabled = !uiState.isLoadingRoute) {
-                if (uiState.isLoadingRoute) CircularProgressIndicator(Modifier.size(18.dp)) else Text(stringResource(R.string.trazar_ruta))
-            }},
-            dismissButton = { TextButton(onClick = viewModel::dismissSelectedPin) { Text("Cancelar") } }
-        )
-    }
-
-    // Tarjeta flotante de usuario seleccionado
-    uiState.selectedUser?.let { user ->
-        UserLocationCard(
-            user = user,
-            onDismiss = viewModel::dismissSelectedUser,
-            onNavigate = { viewModel.navigateToUser(user) }
+            text = {
+                Column {
+                    Text(selectedPin.subtitle)
+                    if (selectedPin.visibleCommunityNames.isNotEmpty()) {
+                        Text(
+                            text = selectedPin.visibleCommunityNames.joinToString(", "),
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    if (uiState.userLocation == null) {
+                        Text(
+                            text = stringResource(R.string.quieres_trazar_una_ruta_desde_tu_ubicacion_actual),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = viewModel::fetchRouteToSelectedPin,
+                    enabled = !uiState.isLoadingRoute && uiState.userLocation != null
+                ) {
+                    if (uiState.isLoadingRoute) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(stringResource(R.string.trazar_ruta))
+                    }
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { onNavigateToPinDetail(selectedPin.id) }) {
+                        Text(stringResource(R.string.ver_detalle))
+                    }
+                    TextButton(onClick = viewModel::dismissSelectedPin) {
+                        Text(stringResource(R.string.cancelar))
+                    }
+                }
+            }
         )
     }
 }
 
 @Composable
-private fun UserLocationCard(
-    user: UserData,
-    onDismiss: () -> Unit,
-    onNavigate: () -> Unit
+private fun MapFilterChip(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(FilterChipDefaults.IconSize),
+                tint = if (selected) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            labelColor = MaterialTheme.colorScheme.onSurface,
+            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outlineVariant
+        ),
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
+@Composable
+private fun ActiveFilterPill(
+    text: String,
+    onClear: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+        Row(
+            modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Avatar del usuario
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (user.fotoUrl.isNotBlank()) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(user.fotoUrl),
-                                    contentDescription = "Foto de ${user.nombre}",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape)
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = user.nombre.ifBlank { "Usuario" },
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            if (user.biografia.isNotBlank()) {
-                                Text(
-                                    text = user.biografia,
-                                    fontSize = 13.sp,
-                                    color = Color.Gray,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.Gray)
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = onNavigate,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.DirectionsWalk, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Trazar ruta hacia este usuario")
-                }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            IconButton(onClick = onClear, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
         }
     }
+}
+
+private fun buildPinSnippet(pin: com.example.pinar.data.PinMapItem): String {
+    val communities = pin.visibleCommunityNames.joinToString(", ")
+    return if (communities.isNotBlank()) "$communities · ${pin.subtitle}" else pin.subtitle
 }

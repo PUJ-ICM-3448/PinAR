@@ -4,7 +4,10 @@ import com.google.android.gms.maps.model.LatLng
 
 //placeholder
 class ExistingBackendPinRepository : PinRepository {
-    override suspend fun getPins(): List<PinMapItem> {
+    override suspend fun getVisiblePinsForUser(
+        uid: String,
+        communities: List<CommunityBasicInfo>
+    ): List<PinMapItem> {
         return listOf(
             PinMapItem(
                 id = "conf-a",

@@ -1,4 +1,5 @@
 const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 
@@ -41,6 +42,100 @@ exports.notifyCommunityMembersOnPinCreate = onDocumentCreated(
     await notifyAddedCommunities(event.params.pinId, pin, communityIds);
   },
 );
+
+exports.notifyCommunityMembersOnEventCreated = onDocumentCreated(
+  "comunidades/{communityId}/eventos/{eventId}",
+  async (event) => {
+    const communityId = event.params.communityId;
+    const eventId = event.params.eventId;
+    const eventData = event.data.data() || {};
+    const createdBy = typeof eventData.createdBy === "string" ? eventData.createdBy : "";
+
+    const communitySnap = await db.collection("comunidades").doc(communityId).get();
+    if (!communitySnap.exists) {
+      logger.warn("Comunidad no encontrada para evento creado.", {communityId, eventId});
+      return;
+    }
+
+    const community = communitySnap.data() || {};
+    const memberIds = toStringArray(community.members).filter((uid) => uid !== createdBy);
+
+    if (memberIds.length === 0) {
+      logger.info("Comunidad sin miembros para notificar evento.", {communityId, eventId});
+      return;
+    }
+
+    const tokens = await getMemberTokens(memberIds);
+    if (tokens.length === 0) {
+      logger.info("Miembros sin tokens FCM para evento.", {communityId, eventId});
+      return;
+    }
+
+    const communityName = stringOrEmpty(community.name);
+    const eventName = stringOrEmpty(eventData.name);
+    const title = communityName
+      ? `Nuevo evento en ${communityName}`
+      : "Nuevo evento en tu comunidad";
+    const body = eventName || "Se creo un nuevo evento en tu comunidad.";
+
+    await sendTokenBatches(tokens, {
+      notification: {title, body},
+      data: {
+        type: "community_event_created",
+        communityId,
+        eventId,
+        communityName,
+        eventName,
+      },
+      android: {priority: "high"},
+    });
+
+    logger.info("Notificacion de evento enviada.", {
+      communityId,
+      eventId,
+      recipients: tokens.length,
+    });
+  },
+);
+
+exports.cleanupExpiredEventsAndLocations = onSchedule("0 3 * * *", async () => {
+  const now = admin.firestore.Timestamp.now();
+  let eventsClosed = 0;
+  let locationsDeleted = 0;
+
+  const expiredEvents = await db.collectionGroup("eventos")
+      .where("expiresAt", "<", now)
+      .where("isActive", "==", true)
+      .get();
+
+  for (const doc of expiredEvents.docs) {
+    await doc.ref.update({isActive: false});
+    eventsClosed++;
+  }
+
+  const expiredLocations = await db.collectionGroup("live_locations")
+      .where("expiresAt", "<", now)
+      .get();
+
+  const batchSize = 400;
+  let batch = db.batch();
+  let ops = 0;
+  for (const doc of expiredLocations.docs) {
+    batch.delete(doc.ref);
+    ops++;
+    locationsDeleted++;
+    if (ops >= batchSize) {
+      await batch.commit();
+      batch = db.batch();
+      ops = 0;
+    }
+  }
+  if (ops > 0) {
+    await batch.commit();
+  }
+
+  logger.info("Limpieza programada ejecutada.", {eventsClosed, locationsDeleted});
+});
 
 async function notifyAddedCommunities(pinId, pin, communityIds) {
   const createdBy = typeof pin.createdBy === "string" ? pin.createdBy : "";

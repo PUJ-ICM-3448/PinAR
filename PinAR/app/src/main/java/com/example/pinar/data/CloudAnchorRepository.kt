@@ -2,6 +2,9 @@ package com.example.pinar.data
 
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
 class CloudAnchorRepository {
@@ -82,6 +85,37 @@ class CloudAnchorRepository {
             .get()
             .await()
             .toObjects(CloudAnchorPin::class.java)
+    }
+
+    suspend fun getOwnPins(uid: String): List<CloudAnchorPin> {
+        return collection
+            .whereEqualTo("createdBy", uid)
+            .get()
+            .await()
+            .toObjects(CloudAnchorPin::class.java)
+    }
+
+    suspend fun getPinsForCommunities(communityIds: List<String>): List<CloudAnchorPin> {
+        if (communityIds.isEmpty()) return emptyList()
+        return coroutineScope {
+            communityIds.distinct().map { id ->
+                async {
+                    try {
+                        getPinsForCommunity(id)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+                }
+            }.awaitAll().flatten()
+        }
+    }
+
+    suspend fun getVisiblePinsForUser(uid: String, communityIds: List<String>): List<CloudAnchorPin> {
+        val own = getOwnPins(uid)
+        val communityPins = getPinsForCommunities(communityIds)
+        return (own + communityPins)
+            .filter { it.latitude != 0.0 || it.longitude != 0.0 }
+            .distinctBy { it.id.ifBlank { it.cloudAnchorId } }
     }
 
     //a futuro no usar

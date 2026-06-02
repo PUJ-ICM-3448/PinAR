@@ -31,12 +31,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class ARViewModel(application: Application) : AndroidViewModel(application) {
+class ARViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repository: CloudAnchorRepository = CloudAnchorRepository()
+) : AndroidViewModel(application) {
     private val _state = mutableStateOf(ARState())
     val state: State<ARState> = _state
 
     private val cloudAnchorManager = CloudAnchorManager()
-    private val repository = CloudAnchorRepository()
     private val context = application.applicationContext
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 

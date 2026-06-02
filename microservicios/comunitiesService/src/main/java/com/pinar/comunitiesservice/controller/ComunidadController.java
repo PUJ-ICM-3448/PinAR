@@ -1,6 +1,7 @@
 package com.pinar.comunitiesservice.controller;
 
 import com.pinar.comunitiesservice.entities.Comunidad;
+import com.pinar.comunitiesservice.entities.CreateComunidadRequest;
 import com.pinar.comunitiesservice.services.ComunidadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +19,15 @@ public class ComunidadController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createComunidad(@RequestBody Comunidad nueva) {
+    public ResponseEntity<?> createComunidad(@RequestBody CreateComunidadRequest request) {
         try{
             String uid = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Comunidad comunidadCreada = comunidadService.createComunidad(nueva, uid, nueva.getImageUrl());
+            Comunidad nueva = new Comunidad();
+            nueva.setName(request.getName());
+            nueva.setDescription(request.getDescription());
+            nueva.setPublic(request.isPublic());
+            nueva.setImageUrl(request.getImageUrl());
+            Comunidad comunidadCreada = comunidadService.createComunidad(nueva, uid, request.getImageUrl());
             return new ResponseEntity<>(comunidadCreada, HttpStatus.CREATED);
         }catch (Exception e){
             return new ResponseEntity<>("No se ha podido crear la nueva comunidad: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

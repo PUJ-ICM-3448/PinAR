@@ -10,9 +10,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pinar.data.AuthState
 import com.example.pinar.data.UserData
+import com.example.pinar.data.sanitized
+import com.example.pinar.navigation.DeepLink
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
@@ -26,6 +29,9 @@ class MainViewModel : ViewModel() {
 
     private val _userData = mutableStateOf<UserData?>(null)
     val userData: State<UserData?> = _userData
+
+    private val _pendingDeepLink = mutableStateOf<DeepLink?>(null)
+    val pendingDeepLink: State<DeepLink?> = _pendingDeepLink
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -41,7 +47,7 @@ class MainViewModel : ViewModel() {
             user?.uid?.let { uid ->
                 db.collection("usuarios").document(uid).get()
                     .addOnSuccessListener { document ->
-                        val data = document.toObject(UserData::class.java)
+                        val data = document.toObject(UserData::class.java)?.sanitized()
                         _userData.value = data
                         _authState.value = AuthState.autenticado
                         actualizarTokenFCM(uid)
@@ -63,7 +69,7 @@ class MainViewModel : ViewModel() {
                 val res = auth.signInWithEmailAndPassword(mail, contrasena).await()
                 val uid = res.user?.uid ?: ""
                 val documento = db.collection("usuarios").document(uid).get().await()
-                val data = documento.toObject(UserData::class.java)
+                val data = documento.toObject(UserData::class.java)?.sanitized()
 
                 _userData.value = data
                 _authState.value = AuthState.autenticado
@@ -225,11 +231,10 @@ class MainViewModel : ViewModel() {
             }
     }
 
-    fun modificarDatos(nombre: String, biografia: String, compartirUbicacion: Boolean, uid: String, uri: Uri?, context: Context) {
+    fun modificarDatos(nombre: String, biografia: String, uid: String, uri: Uri?, context: Context) {
         if (nombre.isNotEmpty()) {
             modificarNombre(nombre, uid)
             modificarBiografia(biografia, uid)
-            modificarCompartirUbicacion(compartirUbicacion, uid)
             uri?.let {
                 modificarImagen(it, uid, context)
             }
@@ -237,6 +242,45 @@ class MainViewModel : ViewModel() {
         } else {
             Toast.makeText(context, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    fun setPendingDeepLink(link: DeepLink?) {
+        _pendingDeepLink.value = link
+    }
+
+    fun consumePendingDeepLink(): DeepLink? {
+        val link = _pendingDeepLink.value
+        _pendingDeepLink.value = null
+        return link
+    }
+
+    suspend fun refreshUserData(fromServer: Boolean = false) {
+        val uid = auth.currentUser?.uid ?: return
+        try {
+            val source = if (fromServer) Source.SERVER else Source.DEFAULT
+            val document = db.collection("usuarios").document(uid).get(source).await()
+            _userData.value = document.toObject(UserData::class.java)?.sanitized()
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "No se pudo refrescar el usuario", e)
+        }
+    }
+
+    fun updateCommunityInMemberOf(
+        communityId: String,
+        name: String,
+        description: String,
+        imgUrl: String
+    ) {
+        val current = _userData.value ?: return
+        _userData.value = current.copy(
+            memberOf = current.memberOf.map { info ->
+                if (info.id == communityId) {
+                    info.copy(name = name, description = description, imgUrl = imgUrl)
+                } else {
+                    info
+                }
+            }
+        )
     }
 
     suspend fun numComentarios(uid: String): Int {

@@ -33,6 +33,7 @@ public class SecurityConfig {
                 ))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/public/**").permitAll()
+                        .requestMatchers("/test/redis/**").permitAll()
                         .requestMatchers("/api/v1/comunidades/**").authenticated()
                         .anyRequest().authenticated()
                 )

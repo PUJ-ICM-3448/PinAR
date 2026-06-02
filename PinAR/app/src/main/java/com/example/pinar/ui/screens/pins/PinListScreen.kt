@@ -41,7 +41,7 @@ fun PinListScreen(
     onNavigateToMap: () -> Unit = {},
     onNavigateToAR: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToCommunities: () -> Unit = {},
     onNavigateToPinDetail: (String) -> Unit = {},
     viewModel: PinListViewModel = viewModel()
 ) {
@@ -118,7 +118,7 @@ fun PinListScreen(
             onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
             onARClick = onNavigateToAR,
-            onNotificationsClick = onNavigateToNotifications,
+            onCommunitiesClick = onNavigateToCommunities,
             onProfileClick = onNavigateToProfile
         )
     }

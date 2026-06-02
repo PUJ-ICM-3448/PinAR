@@ -1,0 +1,18 @@
+# Redis local para el microservicio de comunidades.
+# Requiere Docker Desktop: docker compose -f docker-compose.redis.yml up -d
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - pinar_redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pinar_redis_data:

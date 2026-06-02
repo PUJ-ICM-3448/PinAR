@@ -72,10 +72,8 @@ fun EditProfileScreen(
             SeccionCampos(
                 nombre = state.nombre,
                 biografia = state.biografia,
-                compartirUbicacion = state.compartirUbicacion,
                 onNombreChange = { viewModel.modificarNombre(it) },
                 onBioChange = { viewModel.modificarBiografia(it) },
-                onCompartirUbicacionChange = { viewModel.modificarCompartirUbicacion(it) },
                 onImageClick = { onePhotoPickerLauncher.launch("image/*") },
                 state = state
             )
@@ -86,7 +84,6 @@ fun EditProfileScreen(
                 mainViewModel.modificarDatos(
                     state.nombre,
                     state.biografia,
-                    state.compartirUbicacion,
                     state.uid.ifBlank { userData?.uid.orEmpty() },
                     state.fotoUri,
                     context
@@ -147,10 +144,8 @@ fun SeccionAvatar(url: String, uri: Uri?, nombre: String, onImageClick: () -> Un
 fun SeccionCampos(
     nombre: String,
     biografia: String,
-    compartirUbicacion: Boolean,
     onNombreChange: (String) -> Unit,
     onBioChange: (String) -> Unit,
-    onCompartirUbicacionChange: (Boolean) -> Unit,
     onImageClick: () -> Unit,
     state: EditProfileState
 ) {
@@ -171,33 +166,6 @@ fun SeccionCampos(
             onValueChange = onBioChange, 
             esLineaUnica = false
         )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.compartir_ubicacion),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = stringResource(R.string.compartir_ubicacion_desc),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(
-                checked = compartirUbicacion,
-                onCheckedChange = onCompartirUbicacionChange
-            )
-        }
 
         OutlinedButton(
             onClick = { onImageClick() },

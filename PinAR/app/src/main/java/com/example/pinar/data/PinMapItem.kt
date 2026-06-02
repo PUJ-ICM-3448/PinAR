@@ -6,5 +6,8 @@ data class PinMapItem(
     val id: String,
     val title: String,
     val subtitle: String,
-    val position: LatLng
+    val position: LatLng,
+    val createdBy: String = "",
+    val communityIds: List<String> = emptyList(),
+    val visibleCommunityNames: List<String> = emptyList()
 )

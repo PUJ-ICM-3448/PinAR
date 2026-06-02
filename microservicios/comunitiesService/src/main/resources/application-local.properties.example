@@ -1,0 +1,15 @@
+# Copia este archivo como application-local.properties (misma carpeta).
+# Ese archivo está en .gitignore y no se sube al repositorio.
+#
+# Valores del connection wizard de Redis Cloud (Lettuce, sin TLS en puerto 10585):
+
+spring.data.redis.host=ambitious-fact-fawn-81352.db.redis.io
+spring.data.redis.port=10585
+spring.data.redis.username=default
+spring.data.redis.password=PEGA_AQUI_LA_CONTRASENA_DEL_PANEL
+spring.data.redis.ssl.enabled=false
+
+# Opcional: ruta al JSON de cuenta de servicio de Firebase (Admin SDK)
+# Descárgalo en Firebase Console → Configuración del proyecto → Cuentas de servicio
+# firebase.credentials.path=/ruta/absoluta/a/tu-firebase-adminsdk.json
+# Alternativa: export GOOGLE_APPLICATION_CREDENTIALS=/ruta/absoluta/a/tu-firebase-adminsdk.json

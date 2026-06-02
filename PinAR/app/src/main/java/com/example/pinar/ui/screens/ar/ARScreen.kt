@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -57,6 +61,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pinar.R
+import com.example.pinar.data.UserData
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.utils.LogoVertical
@@ -71,10 +76,11 @@ import io.github.sceneview.ar.node.ArModelNode
 fun ARScreen(
     modifier: Modifier = Modifier,
     currentScreen: Screen = Screen.AR,
+    userData: UserData? = null,
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToCommunities: () -> Unit = {},
     onNavigateToPins: () -> Unit = {},
     viewModel: ARViewModel = viewModel()
 ) {
@@ -175,7 +181,7 @@ fun ARScreen(
                 onHomeClick = onNavigateToHome,
                 onMapClick = onNavigateToMap,
                 onARClick = {},
-                onNotificationsClick = onNavigateToNotifications,
+                onCommunitiesClick = onNavigateToCommunities,
                 onProfileClick = onNavigateToProfile
             )
         }
@@ -562,7 +568,11 @@ fun PinDetailsDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.nuevo_pin)) },
         text = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 400.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
