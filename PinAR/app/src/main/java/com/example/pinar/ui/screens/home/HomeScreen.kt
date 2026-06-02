@@ -62,6 +62,7 @@ import com.example.pinar.data.Community
 import com.example.pinar.data.CommunityBasicInfo
 import com.example.pinar.data.FeedItem
 import com.example.pinar.data.UserData
+import com.example.pinar.data.displayImageUrl
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import java.text.SimpleDateFormat
@@ -463,9 +464,9 @@ private fun MyCommunityChip(community: CommunityBasicInfo, onClick: () -> Unit) 
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (!community.imgUrl.isNullOrBlank()) {
+            if (community.displayImageUrl().isNotBlank()) {
                 AsyncImage(
-                    model = community.imgUrl,
+                    model = community.displayImageUrl(),
                     contentDescription = null,
                     modifier = Modifier
                         .size(48.dp)

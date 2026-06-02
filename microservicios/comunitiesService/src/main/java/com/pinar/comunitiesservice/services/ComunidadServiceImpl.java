@@ -90,17 +90,22 @@ public class ComunidadServiceImpl implements ComunidadService {
             DocumentReference userRef = db.collection(COLECCION_USUARIOS).document(memberUid);
             DocumentSnapshot userSnap = userRef.get().get();
             List<Map<String, Object>> updatedMemberOf = new ArrayList<>();
+            boolean communityUpdated = false;
             Object rawMemberOf = userSnap.get("memberOf");
             if (rawMemberOf instanceof List<?> rawList) {
                 for (Object item : rawList) {
                     if (item instanceof Map<?, ?> rawMap) {
                         if (Objects.equals(rawMap.get("id"), comunidad.getId())) {
                             updatedMemberOf.add(basicInfo);
+                            communityUpdated = true;
                         } else {
                             updatedMemberOf.add(toStringObjectMap(rawMap));
                         }
                     }
                 }
+            }
+            if (!communityUpdated) {
+                updatedMemberOf.add(basicInfo);
             }
             userRef.set(Map.of("memberOf", updatedMemberOf), SetOptions.merge()).get();
         }

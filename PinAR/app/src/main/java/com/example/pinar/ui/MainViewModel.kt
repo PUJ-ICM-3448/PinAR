@@ -15,6 +15,7 @@ import com.example.pinar.navigation.DeepLink
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
@@ -253,14 +254,33 @@ class MainViewModel : ViewModel() {
         return link
     }
 
-    suspend fun refreshUserData() {
+    suspend fun refreshUserData(fromServer: Boolean = false) {
         val uid = auth.currentUser?.uid ?: return
         try {
-            val document = db.collection("usuarios").document(uid).get().await()
+            val source = if (fromServer) Source.SERVER else Source.DEFAULT
+            val document = db.collection("usuarios").document(uid).get(source).await()
             _userData.value = document.toObject(UserData::class.java)?.sanitized()
         } catch (e: Exception) {
             Log.e("MainViewModel", "No se pudo refrescar el usuario", e)
         }
+    }
+
+    fun updateCommunityInMemberOf(
+        communityId: String,
+        name: String,
+        description: String,
+        imgUrl: String
+    ) {
+        val current = _userData.value ?: return
+        _userData.value = current.copy(
+            memberOf = current.memberOf.map { info ->
+                if (info.id == communityId) {
+                    info.copy(name = name, description = description, imgUrl = imgUrl)
+                } else {
+                    info
+                }
+            }
+        )
     }
 
     suspend fun numComentarios(uid: String): Int {

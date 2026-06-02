@@ -84,7 +84,13 @@ class CommunitiesViewModel(
                         )
                     )
                 }
-                mainViewModel.refreshUserData()
+                mainViewModel.updateCommunityInMemberOf(
+                    communityId = created.id,
+                    name = created.name,
+                    description = created.description,
+                    imgUrl = created.imageUrl
+                )
+                mainViewModel.refreshUserData(fromServer = true)
                 created.id
             }
                 .onSuccess { communityId ->

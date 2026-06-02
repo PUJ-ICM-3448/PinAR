@@ -83,11 +83,11 @@ import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.screens.map.MapViewModel
 import com.example.pinar.ui.screens.map.util.CustomMapMarker
+import com.example.pinar.ui.screens.map.util.PinMapMarker
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -230,6 +230,13 @@ fun MapScreen(
         }
     }
 
+    LaunchedEffect(uiState.routeError) {
+        uiState.routeError?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearRouteError()
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(80.dp))
@@ -287,17 +294,10 @@ fun MapScreen(
                     uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = true, compassEnabled = !isCompassModeEnabled)
                 ) {
                     uiState.pins.forEach { pin ->
-                        val isOwn = pin.createdBy == userData?.uid
-                        CustomMapMarker(
-                            imageUrl = null,
-                            fullName = pin.title,
+                        PinMapMarker(
+                            title = pin.title,
                             snippet = buildPinSnippet(pin),
                             location = pin.position,
-                            markerColor = if (isOwn) {
-                                MaterialTheme.colorScheme.secondary
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
                             onClick = { viewModel.selectPin(pin) }
                         )
                     }
@@ -375,15 +375,27 @@ fun MapScreen(
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
+                    if (uiState.userLocation == null) {
+                        Text(
+                            text = stringResource(R.string.quieres_trazar_una_ruta_desde_tu_ubicacion_actual),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = viewModel::fetchRouteToSelectedPin,
-                    enabled = !uiState.isLoadingRoute
+                    enabled = !uiState.isLoadingRoute && uiState.userLocation != null
                 ) {
                     if (uiState.isLoadingRoute) {
-                        CircularProgressIndicator(Modifier.size(18.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
                     } else {
                         Text(stringResource(R.string.trazar_ruta))
                     }

@@ -7,7 +7,9 @@ data class CommunityBasicInfo(
     val id: String = "",
     val name: String = "",
     val imgUrl: String = "",
-    val description: String = ""
+    val description: String = "",
+    @get:PropertyName("imageUrl")
+    val imageUrl: String = "",
 )
 
 data class Community(
@@ -78,12 +80,19 @@ fun Community.sanitized(): Community = copy(
     members = members ?: emptyList(),
 )
 
-fun CommunityBasicInfo.sanitized(): CommunityBasicInfo = copy(
-    id = (id as String?).orEmptyIfNull(),
-    name = (name as String?).orEmptyIfNull(),
-    imgUrl = (imgUrl as String?).orEmptyIfNull(),
-    description = (description as String?).orEmptyIfNull(),
-)
+fun CommunityBasicInfo.sanitized(): CommunityBasicInfo {
+    val resolvedImgUrl = (imgUrl as String?).orEmptyIfNull()
+        .ifBlank { (imageUrl as String?).orEmptyIfNull() }
+    return copy(
+        id = (id as String?).orEmptyIfNull(),
+        name = (name as String?).orEmptyIfNull(),
+        imgUrl = resolvedImgUrl,
+        imageUrl = resolvedImgUrl,
+        description = (description as String?).orEmptyIfNull(),
+    )
+}
+
+fun CommunityBasicInfo.displayImageUrl(): String = imgUrl.ifBlank { imageUrl }
 
 fun FeedItem.sanitized(): FeedItem = copy(
     pinId = (pinId as String?).orEmptyIfNull(),

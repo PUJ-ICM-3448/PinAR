@@ -82,7 +82,7 @@ class CommunityDetailViewModel(
             _state.value = _state.value.copy(isJoinLeaveInProgress = true, actionMessage = null)
             runCatching { communityRepository.joinCommunity(communityId) }
                 .onSuccess {
-                    mainViewModel.refreshUserData()
+                    mainViewModel.refreshUserData(fromServer = true)
                     val ids = mainViewModel.userData.value?.memberOf.orEmpty()
                         .map { it.id }.toSet() + communityId
                     load(communityId, ids)
@@ -102,7 +102,7 @@ class CommunityDetailViewModel(
             runCatching { communityRepository.leaveCommunity(communityId) }
                 .onSuccess {
                     eventsJob?.cancel()
-                    mainViewModel.refreshUserData()
+                    mainViewModel.refreshUserData(fromServer = true)
                     val ids = mainViewModel.userData.value?.memberOf.orEmpty()
                         .map { it.id }.toSet() - communityId
                     load(communityId, ids)
@@ -149,7 +149,13 @@ class CommunityDetailViewModel(
                         imageUrl = imageUrl
                     )
                 )
-                mainViewModel.refreshUserData()
+                mainViewModel.updateCommunityInMemberOf(
+                    communityId = updated.id,
+                    name = updated.name,
+                    description = updated.description,
+                    imgUrl = updated.imageUrl
+                )
+                mainViewModel.refreshUserData(fromServer = true)
                 val ids = mainViewModel.userData.value?.memberOf.orEmpty()
                     .map { it.id }.toSet()
                 load(updated.id, ids)

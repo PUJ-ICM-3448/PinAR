@@ -34,9 +34,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.pinar.R
-import com.example.pinar.data.CloudAnchorPin
 import com.example.pinar.data.Community
 import com.example.pinar.data.CommunityBasicInfo
+import com.example.pinar.data.CloudAnchorPin
+import com.example.pinar.data.displayImageUrl
 
 @Composable
 fun CommunityListCard(
@@ -126,7 +127,7 @@ fun CommunityBasicInfo.toListCard(onClick: () -> Unit) {
     CommunityListCard(
         name = name,
         description = description,
-        imageUrl = imgUrl,
+        imageUrl = displayImageUrl(),
         memberCount = null,
         onClick = onClick
     )

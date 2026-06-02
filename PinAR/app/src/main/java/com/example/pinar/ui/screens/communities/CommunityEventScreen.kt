@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,7 +40,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,12 +56,16 @@ import com.example.pinar.ui.screens.map.util.CustomMapMarker
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -105,6 +115,24 @@ fun CommunityEventScreen(
         uiState.error?.let { msg ->
             snackbarHostState.showSnackbar(msg)
             viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(uiState.routeError) {
+        uiState.routeError?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearRouteError()
+        }
+    }
+
+    LaunchedEffect(uiState.routePolyline) {
+        if (uiState.routePolyline.size >= 2) {
+            val bounds = uiState.routePolyline.fold(LatLngBounds.builder()) { builder, point ->
+                builder.include(point)
+            }.build()
+            try {
+                cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 80))
+            } catch (_: Exception) {}
         }
     }
 
@@ -229,6 +257,7 @@ fun CommunityEventScreen(
                                         snippet = stringResource(R.string.evento_compartiendo),
                                         location = myLoc,
                                         markerColor = MaterialTheme.colorScheme.tertiary,
+                                        placeholderResId = R.drawable.profile,
                                         onClick = { }
                                     )
                                 }
@@ -240,8 +269,12 @@ fun CommunityEventScreen(
                                     snippet = stringResource(R.string.evento_en_vivo),
                                     location = LatLng(loc.latitude, loc.longitude),
                                     markerColor = MaterialTheme.colorScheme.primary,
+                                    placeholderResId = R.drawable.profile,
                                     onClick = { viewModel.selectParticipant(loc) }
                                 )
+                            }
+                            if (uiState.routePolyline.size >= 2) {
+                                Polyline(points = uiState.routePolyline, width = 14f)
                             }
                         }
                     }
@@ -286,13 +319,23 @@ fun CommunityEventScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Button(
-                                    onClick = { /* route handled in v2 */ },
+                                    onClick = viewModel::fetchRouteToParticipant,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(top = 8.dp),
-                                    enabled = false
+                                    enabled = !uiState.isLoadingRoute &&
+                                        uiState.userLocation != null &&
+                                        uiState.selectedParticipant != null
                                 ) {
-                                    Text(stringResource(R.string.evento_trazar_ruta))
+                                    if (uiState.isLoadingRoute) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text(stringResource(R.string.evento_trazar_ruta))
+                                    }
                                 }
                                 OutlinedButton(
                                     onClick = viewModel::dismissParticipant,
@@ -317,9 +360,22 @@ private fun ParticipantRow(location: LiveLocation, onClick: () -> Unit) {
             .padding(vertical = 4.dp)
             .clickable(onClick = onClick)
     ) {
-        Text(
-            text = location.name.ifBlank { "Participante" },
-            modifier = Modifier.padding(12.dp)
-        )
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = location.photoUrl.ifBlank { null },
+                contentDescription = location.name,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.profile),
+                error = painterResource(R.drawable.profile)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(text = location.name.ifBlank { "Participante" })
+        }
     }
 }

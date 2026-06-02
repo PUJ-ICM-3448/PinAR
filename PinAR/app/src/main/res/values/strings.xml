@@ -179,6 +179,7 @@
     <string name="pin_share_boton">Compartir</string>
     <string name="pin_share_ya_compartido">Ya compartido en esta comunidad</string>
     <string name="pin_share_sin_comunidades">Únete a una comunidad para compartir pines.</string>
+    <string name="pin_crear_compartir_comunidades">Compartir con comunidades (opcional)</string>
     <string name="evento_crear_titulo">Crear evento</string>
     <string name="evento_crear_desc">Duración máxima: 7 días. Cualquier miembro puede crear eventos.</string>
     <string name="evento_nombre">Nombre del evento</string>

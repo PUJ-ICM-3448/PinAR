@@ -9,6 +9,7 @@ import com.example.pinar.data.CommunityEvent
 import com.example.pinar.data.CommunityEventRepository
 import com.example.pinar.data.LiveLocation
 import com.example.pinar.data.UserData
+import com.example.pinar.ui.screens.map.util.DirectionsHelper
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -34,6 +35,9 @@ data class CommunityEventUiState(
     val isSharingLocation: Boolean = false,
     val selectedParticipant: LiveLocation? = null,
     val routeDestination: LatLng? = null,
+    val routePolyline: List<LatLng> = emptyList(),
+    val isLoadingRoute: Boolean = false,
+    val routeError: String? = null,
     val userLocation: LatLng? = null,
     val error: String? = null
 )
@@ -250,13 +254,53 @@ class CommunityEventViewModel @JvmOverloads constructor(
         _uiState.update {
             it.copy(
                 selectedParticipant = location,
-                routeDestination = LatLng(location.latitude, location.longitude)
+                routeDestination = LatLng(location.latitude, location.longitude),
+                routePolyline = emptyList(),
+                routeError = null
             )
         }
     }
 
     fun dismissParticipant() {
-        _uiState.update { it.copy(selectedParticipant = null, routeDestination = null) }
+        _uiState.update {
+            it.copy(
+                selectedParticipant = null,
+                routeDestination = null,
+                routePolyline = emptyList(),
+                routeError = null
+            )
+        }
+    }
+
+    fun fetchRouteToParticipant() {
+        val destination = _uiState.value.routeDestination ?: return
+        val origin = _uiState.value.userLocation ?: run {
+            _uiState.update {
+                it.copy(routeError = "Tu ubicacion actual no esta disponible aun")
+            }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingRoute = true, routeError = null) }
+            DirectionsHelper.fetchRoute(getApplication(), origin, destination)
+                .onSuccess { points ->
+                    _uiState.update {
+                        it.copy(routePolyline = points, isLoadingRoute = false)
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoadingRoute = false,
+                            routeError = e.message ?: "Error al obtener la ruta"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun clearRouteError() {
+        _uiState.update { it.copy(routeError = null) }
     }
 
     private fun distanceMeters(a: LatLng, b: LatLng): Double {

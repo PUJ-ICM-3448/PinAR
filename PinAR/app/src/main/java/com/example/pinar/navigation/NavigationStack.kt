@@ -300,6 +300,8 @@ fun NavigationStack() {
 
                 currentScreen = Screen.AR,
 
+                userData = userData,
+
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
 
                 onNavigateToMap = { navController.navigate(Screen.Map.route) },
