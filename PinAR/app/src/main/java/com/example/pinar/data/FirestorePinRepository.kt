@@ -6,20 +6,33 @@ class FirestorePinRepository(
     private val cloudAnchorRepository: CloudAnchorRepository = CloudAnchorRepository()
 ) : PinRepository {
 
-    override suspend fun getPins(): List<PinMapItem> {
-        return cloudAnchorRepository.getAllPins()
-            .filter { it.latitude != 0.0 || it.longitude != 0.0 }
-            .map { pin ->
-                PinMapItem(
-                    id = pin.id.ifBlank { pin.cloudAnchorId },
-                    title = pin.title.ifBlank { "PinAR" },
-                    subtitle = buildSubtitle(pin),
-                    position = LatLng(pin.latitude, pin.longitude)
-                )
-            }
+    override suspend fun getVisiblePinsForUser(
+        uid: String,
+        communities: List<CommunityBasicInfo>
+    ): List<PinMapItem> {
+        val communityIds = communities.map { it.id }
+        val nameById = communities.associate { it.id to it.name }
+        return cloudAnchorRepository.getVisiblePinsForUser(uid, communityIds)
+            .map { pin -> toPinMapItem(pin, uid, nameById) }
     }
 
-    //a implementar bien
+    private fun toPinMapItem(
+        pin: CloudAnchorPin,
+        currentUid: String,
+        nameById: Map<String, String>
+    ): PinMapItem {
+        val visibleNames = pin.comunidades.mapNotNull { nameById[it] }.distinct()
+        return PinMapItem(
+            id = pin.id.ifBlank { pin.cloudAnchorId },
+            title = pin.title.ifBlank { "PinAR" },
+            subtitle = buildSubtitle(pin),
+            position = LatLng(pin.latitude, pin.longitude),
+            createdBy = pin.createdBy,
+            communityIds = pin.comunidades,
+            visibleCommunityNames = visibleNames
+        )
+    }
+
     private fun buildSubtitle(pin: CloudAnchorPin): String {
         val buildingLabel = pin.buildingId.takeIf { it.isNotBlank() } ?: "Ubicacion"
         val floorLabel = if (pin.floor > 0) "Piso ${pin.floor}" else ""

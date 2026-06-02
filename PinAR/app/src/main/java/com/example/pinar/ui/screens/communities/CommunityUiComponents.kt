@@ -22,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +70,7 @@ fun CommunityListCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (description.isNotBlank()) {
+                if (!description.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = description,
@@ -94,7 +95,7 @@ fun CommunityListCard(
 
 @Composable
 fun CommunityAvatar(imageUrl: String, name: String, modifier: Modifier = Modifier) {
-    if (imageUrl.isNotBlank()) {
+    if (!imageUrl.isNullOrBlank()) {
         AsyncImage(
             model = imageUrl,
             contentDescription = name,
@@ -143,7 +144,11 @@ fun Community.toListCard(onClick: () -> Unit) {
 }
 
 @Composable
-fun SharedPinCard(pin: CloudAnchorPin, onClick: () -> Unit) {
+fun SharedPinCard(
+    pin: CloudAnchorPin,
+    onClick: () -> Unit,
+    onShare: (() -> Unit)? = null
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -180,6 +185,11 @@ fun SharedPinCard(pin: CloudAnchorPin, onClick: () -> Unit) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+                onShare?.let { share ->
+                    TextButton(onClick = share) {
+                        Text(stringResource(R.string.pin_share_boton))
+                    }
                 }
             }
         }

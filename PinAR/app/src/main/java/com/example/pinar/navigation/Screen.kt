@@ -29,4 +29,17 @@ sealed class Screen(val route: String) {
     object PinDetail : Screen("pin_detail/{pinId}") {
         fun createRoute(pinId: String) = "pin_detail/$pinId"
     }
+
+    object CreateCommunityEvent : Screen("create_community_event/{communityId}") {
+        fun createRoute(communityId: String) = "create_community_event/$communityId"
+    }
+
+    object CommunityEvent : Screen("community_event/{communityId}/{eventId}") {
+        fun createRoute(communityId: String, eventId: String) =
+            "community_event/$communityId/$eventId"
+    }
+
+    object PinShare : Screen("pin_share/{pinId}") {
+        fun createRoute(pinId: String) = "pin_share/$pinId"
+    }
 }

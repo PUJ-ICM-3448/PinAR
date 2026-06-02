@@ -79,11 +79,17 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToCommunities: () -> Unit = {},
     onNavigateToPinDetail: (String) -> Unit = {},
+    onNavigateToCommunityEvent: (String, String) -> Unit = { _, _ -> },
+    onNavigateToNotifications: () -> Unit = {},
     userData: UserData?,
     viewModel: HomeViewModel = viewModel()
 ) {
     val state by viewModel.state
     val myCommunities = userData?.memberOf.orEmpty()
+
+    LaunchedEffect(myCommunities) {
+        viewModel.loadHomeContent(myCommunities)
+    }
     val myCommunityIds = myCommunities.map { it.id }.toSet()
     val recommendedToShow = state.recommendedCommunities
         .filter { it.id !in myCommunityIds }
@@ -297,11 +303,55 @@ fun HomeScreen(
                 SeccionHeader(titulo = stringResource(R.string.home_eventos_titulo))
             }
 
-            item {
-                EmptyStateCard(
-                    titulo = stringResource(R.string.home_eventos_vacio_titulo),
-                    descripcion = stringResource(R.string.home_eventos_vacio_desc)
-                )
+            when {
+                state.isLoadingEvents -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                        }
+                    }
+                }
+
+                state.activeEvents.isEmpty() -> {
+                    item {
+                        EmptyStateCard(
+                            titulo = stringResource(R.string.home_eventos_vacio_titulo),
+                            descripcion = stringResource(R.string.home_eventos_vacio_desc)
+                        )
+                    }
+                }
+
+                else -> {
+                    items(state.activeEvents, key = { "${it.communityId}_${it.event.id}" }) { item ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    onNavigateToCommunityEvent(item.communityId, item.event.id)
+                                },
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = item.event.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = item.communityName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -475,7 +525,7 @@ private fun MyCommunityChip(community: CommunityBasicInfo) {
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (community.imgUrl.isNotBlank()) {
+            if (!community.imgUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = community.imgUrl,
                     contentDescription = null,
@@ -520,7 +570,7 @@ private fun RecommendedCommunityCard(community: Community) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            if (community.imageUrl.isNotBlank()) {
+            if (!community.imageUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = community.imageUrl,
                     contentDescription = null,

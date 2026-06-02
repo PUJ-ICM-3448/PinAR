@@ -45,4 +45,18 @@ interface CommunityApiService {
         @Body request: CreateCommunityRequest,
         @Header("Authorization") authorization: String
     ): Community
+
+    @POST("api/v1/comunidades/{id}/pines/{pinId}")
+    suspend fun sharePinWithCommunity(
+        @Path("id") communityId: String,
+        @Path("pinId") pinId: String,
+        @Header("Authorization") authorization: String
+    )
+
+    @DELETE("api/v1/comunidades/{id}/pines/{pinId}")
+    suspend fun unsharePinFromCommunity(
+        @Path("id") communityId: String,
+        @Path("pinId") pinId: String,
+        @Header("Authorization") authorization: String
+    )
 }

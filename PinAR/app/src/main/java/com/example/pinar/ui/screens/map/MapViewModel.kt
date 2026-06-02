@@ -12,10 +12,10 @@ import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pinar.data.CloudAnchorRepository
+import com.example.pinar.data.CommunityBasicInfo
 import com.example.pinar.data.FirestorePinRepository
 import com.example.pinar.data.PinMapItem
 import com.example.pinar.data.PinRepository
-import com.example.pinar.data.UserData
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -23,8 +23,6 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,17 +44,14 @@ class MapViewModel @JvmOverloads constructor(
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
     private val cloudAnchorRepository = CloudAnchorRepository()
-    private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private var usersListener: ListenerRegistration? = null
-    private var currentUserListener: ListenerRegistration? = null
-    // Cache local para no leer Firestore en cada actualización de GPS
-    private var compartirUbicacionActivo: Boolean = false
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
     private var initialSteps = -1
+    private var currentUid: String = ""
+    private var memberCommunities: List<CommunityBasicInfo> = emptyList()
 
     private val locationRequest = LocationRequest.Builder(4000L)
         .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -69,88 +64,60 @@ class MapViewModel @JvmOverloads constructor(
                 _uiState.update {
                     it.copy(userLocation = LatLng(location.latitude, location.longitude))
                 }
-                // ✅ Escribir ubicación en Firestore si el usuario comparte
-                if (compartirUbicacionActivo) {
-                    val uid = auth.currentUser?.uid ?: return@let
-                    db.collection("usuarios").document(uid).update(
-                        mapOf(
-                            "latitud" to location.latitude,
-                            "longitud" to location.longitude
-                        )
-                    )
-                }
             }
         }
     }
 
-    init {
+    fun setUserContext(uid: String, communities: List<CommunityBasicInfo>) {
+        if (uid == currentUid && communities == memberCommunities) return
+        currentUid = uid
+        memberCommunities = communities
         loadPins()
-        startListeningOtherUsers()
-        startListeningCurrentUser()
     }
 
-    // ── Listeners en tiempo real ─────────────────────────────────────────────
-
-    /** Escucha el documento propio para mantener [compartirUbicacionActivo] sincronizado. */
-    private fun startListeningCurrentUser() {
-        val uid = auth.currentUser?.uid ?: return
-        currentUserListener = db.collection("usuarios").document(uid)
-            .addSnapshotListener { snapshot, _ ->
-                compartirUbicacionActivo =
-                    snapshot?.getBoolean("compartirUbicacion") ?: false
+    private fun applyFilters(state: MapUiState): MapUiState {
+        var list = state.allPins
+        when (state.communityFilter) {
+            MapCommunityFilter.OWN_PINS -> list = list.filter { it.createdBy == currentUid }
+            MapCommunityFilter.COMMUNITY -> {
+                val cid = state.selectedCommunityId
+                if (cid != null) list = list.filter { cid in it.communityIds }
             }
-    }
-
-    private fun startListeningOtherUsers() {
-        val currentUid = auth.currentUser?.uid
-        usersListener = db.collection("usuarios")
-            .whereEqualTo("compartirUbicacion", true)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
-                val users = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(UserData::class.java)
-                }.filter { user ->
-                    // Excluir al usuario actual y requerir coordenadas válidas
-                    user.uid != currentUid &&
-                    user.latitud != null &&
-                    user.longitud != null
-                }
-                _uiState.update { it.copy(otherUsers = users) }
-            }
-    }
-
-    fun selectUser(user: UserData) {
-        _uiState.update { it.copy(selectedUser = user) }
-    }
-
-    fun dismissSelectedUser() {
-        _uiState.update { it.copy(selectedUser = null) }
-    }
-
-    fun navigateToUser(user: UserData) {
-        val lat = user.latitud ?: return
-        val lng = user.longitud ?: return
-        _uiState.update {
-            it.copy(
-                selectedUser = null,
-                isFollowingUser = false,
-                routeDestination = LatLng(lat, lng)
-            )
+            MapCommunityFilter.ALL -> Unit
         }
+        if (state.searchQuery.isNotBlank()) {
+            list = list.filter { it.title.contains(state.searchQuery, ignoreCase = true) }
+        }
+        return state.copy(displayPins = list)
     }
 
     fun loadPins() {
+        if (currentUid.isBlank()) return
         viewModelScope.launch {
-            runCatching { pinRepository.getPins() }
+            _uiState.update { it.copy(isLoadingPins = true, pinsError = null) }
+            runCatching {
+                pinRepository.getVisiblePinsForUser(currentUid, memberCommunities)
+            }
                 .onSuccess { pins ->
-                    _uiState.update { it.copy(pins = pins) }
+                    _uiState.update { applyFilters(it.copy(allPins = pins, isLoadingPins = false)) }
                 }
                 .onFailure {
                     _uiState.update { state ->
-                        state.copy(routeError = "No fue posible cargar los pines")
+                        state.copy(
+                            isLoadingPins = false,
+                            pinsError = "No fue posible cargar los pines"
+                        )
                     }
                 }
         }
+    }
+
+    fun setCommunityFilter(filter: MapCommunityFilter, communityId: String? = null) {
+        _uiState.update { applyFilters(it.copy(communityFilter = filter, selectedCommunityId = communityId)) }
+    }
+
+    fun setSearchQuery(query: String) {
+        _uiState.update { applyFilters(it.copy(searchQuery = query)) }
     }
 
     fun onLocationPermissionChanged(granted: Boolean) {
@@ -228,7 +195,9 @@ class MapViewModel @JvmOverloads constructor(
     }
 
     fun clearRoute() {
-        _uiState.update { it.copy(routePolyline = emptyList(), selectedPin = null, routeDestination = null) }
+        _uiState.update {
+            it.copy(routePolyline = emptyList(), selectedPin = null, routeDestination = null)
+        }
     }
 
     fun fetchRouteToSelectedPin() {
@@ -355,7 +324,5 @@ class MapViewModel @JvmOverloads constructor(
         super.onCleared()
         stopLocationUpdates()
         stopStepCounting()
-        usersListener?.remove()
-        currentUserListener?.remove()
     }
 }

@@ -5,29 +5,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.util.Log
+import com.example.pinar.data.CommunityBasicInfo
+import com.example.pinar.data.CommunityEventRepository
 import com.example.pinar.data.CommunityRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
 import java.io.IOException
 
 class HomeViewModel(
-    private val communityRepository: CommunityRepository = CommunityRepository()
+    private val communityRepository: CommunityRepository = CommunityRepository(),
+    private val eventRepository: CommunityEventRepository = CommunityEventRepository()
 ) : ViewModel() {
 
     private val _state = mutableStateOf(HomeState())
     val state: State<HomeState> = _state
 
-    init {
-        loadHomeContent()
-    }
-
-    fun loadHomeContent() {
+    fun loadHomeContent(memberOf: List<CommunityBasicInfo> = emptyList()) {
         viewModelScope.launch {
             _state.value = _state.value.copy(
                 isLoadingFeed = true,
                 isLoadingRecommended = true,
+                isLoadingEvents = true,
                 feedError = null,
                 recommendedError = null,
             )
@@ -39,12 +42,17 @@ class HomeViewModel(
                 val recommendedDeferred = async {
                     runCatching { communityRepository.getRecommendedCommunities() }
                 }
+                val eventsDeferred = async {
+                    runCatching { loadActiveEvents(memberOf) }
+                }
 
                 val feedResult = feedDeferred.await()
                 val recommendedResult = recommendedDeferred.await()
+                val eventsResult = eventsDeferred.await()
 
                 val feedError = feedResult.exceptionOrNull()?.let { toUserMessage("feed", it) }
-                val recommendedError = recommendedResult.exceptionOrNull()?.let { toUserMessage("recomendadas", it) }
+                val recommendedError =
+                    recommendedResult.exceptionOrNull()?.let { toUserMessage("recomendadas", it) }
 
                 _state.value = _state.value.copy(
                     feedItems = feedResult.getOrElse { emptyList() },
@@ -53,8 +61,30 @@ class HomeViewModel(
                     recommendedCommunities = recommendedResult.getOrElse { emptyList() },
                     recommendedError = recommendedError,
                     isLoadingRecommended = false,
+                    activeEvents = eventsResult.getOrElse { emptyList() },
+                    isLoadingEvents = false,
                 )
             }
+        }
+    }
+
+    private suspend fun loadActiveEvents(memberOf: List<CommunityBasicInfo>): List<HomeEventItem> {
+        if (memberOf.isEmpty()) return emptyList()
+        return coroutineScope {
+            memberOf.take(5).map { community ->
+                async {
+                    val events = withTimeoutOrNull(3000L) {
+                        eventRepository.observeActiveEvents(community.id).first()
+                    }.orEmpty()
+                    events.map { event ->
+                        HomeEventItem(
+                            communityId = community.id,
+                            communityName = community.name,
+                            event = event
+                        )
+                    }
+                }
+            }.awaitAll().flatten().take(10)
         }
     }
 

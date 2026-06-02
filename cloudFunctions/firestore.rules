@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function communityDoc(communityId) {
+      return get(/databases/$(database)/documents/comunidades/$(communityId));
+    }
+
+    function isCommunityMember(communityId) {
+      return isSignedIn()
+        && request.auth.uid in communityDoc(communityId).data.members;
+    }
+
+    match /usuarios/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /comunidades/{communityId} {
+      allow read: if isSignedIn()
+        && (resource.data.isPublic == true
+            || request.auth.uid in resource.data.members);
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn()
+        && request.auth.uid == resource.data.createdBy;
+
+      match /eventos/{eventId} {
+        allow read: if isCommunityMember(communityId);
+        allow create: if isCommunityMember(communityId);
+        allow update, delete: if isCommunityMember(communityId)
+          && (request.auth.uid == resource.data.createdBy
+              || request.auth.uid == communityDoc(communityId).data.createdBy);
+
+        match /live_locations/{liveUid} {
+          allow read: if isCommunityMember(communityId);
+          allow create, update, delete: if isOwner(liveUid)
+            && isCommunityMember(communityId);
+        }
+      }
+    }
+
+    match /cloud_anchor_pins/{pinId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.createdBy;
+      allow update, delete: if isSignedIn()
+        && request.auth.uid == resource.data.createdBy;
+    }
+
+    match /comentarios/{commentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn()
+        && request.auth.uid == resource.data.userId;
+    }
+  }
+}

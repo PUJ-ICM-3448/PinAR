@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,6 +55,10 @@ fun CommunityDetailScreen(
     mainViewModel: MainViewModel,
     onBackClick: () -> Unit,
     onNavigateToPinDetail: (String) -> Unit,
+    onNavigateToCreateEvent: (String) -> Unit = {},
+    onNavigateToEvent: (String, String) -> Unit = { _, _ -> },
+    onNavigateToPinShare: (String) -> Unit = {},
+    onNavigateToAR: () -> Unit = {},
     viewModel: CommunityDetailViewModel = viewModel()
 ) {
     val state by viewModel.state
@@ -131,7 +136,7 @@ fun CommunityDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {
-                        if (community.imageUrl.isNotBlank()) {
+                        if (!community.imageUrl.isNullOrBlank()) {
                             AsyncImage(
                                 model = community.imageUrl,
                                 contentDescription = null,
@@ -165,6 +170,20 @@ fun CommunityDetailScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         if (state.isMember) {
+                            Button(
+                                onClick = { onNavigateToCreateEvent(communityId) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.evento_crear_titulo))
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = onNavigateToAR,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.crear_pin))
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
                             OutlinedButton(
                                 onClick = {
                                     viewModel.leaveCommunity(communityId, mainViewModel)
@@ -197,19 +216,37 @@ fun CommunityDetailScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         SeccionHeader(titulo = stringResource(R.string.communities_eventos))
                     }
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            )
-                        ) {
+                    if (state.activeEvents.isEmpty()) {
+                        item {
                             Text(
                                 text = stringResource(R.string.home_eventos_vacio_desc),
                                 style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(16.dp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
+                        }
+                    } else {
+                        items(state.activeEvents, key = { it.id }) { event ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable { onNavigateToEvent(communityId, event.id) }
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = event.name,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    if (event.description.isNotBlank()) {
+                                        Text(
+                                            text = event.description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 2
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -237,7 +274,13 @@ fun CommunityDetailScreen(
                         }
                     } else {
                         items(state.sharedPins, key = { it.id }) { pin ->
-                            SharedPinCard(pin) { onNavigateToPinDetail(pin.id) }
+                            SharedPinCard(
+                                pin = pin,
+                                onClick = { onNavigateToPinDetail(pin.id) },
+                                onShare = if (state.isMember && pin.createdBy == userData?.uid) {
+                                    { onNavigateToPinShare(pin.id) }
+                                } else null
+                            )
                         }
                     }
                 }

@@ -24,7 +24,6 @@ class PinARFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(message)
 
         Log.d(TAG, "Mensaje recibido de: ${message.from}")
-        Log.d(TAG, "Notification: ${message.notification}")
         Log.d(TAG, "Data: ${message.data}")
 
         val title = message.notification?.title
@@ -34,7 +33,7 @@ class PinARFirebaseMessagingService : FirebaseMessagingService() {
             ?: message.data["body"]
             ?: "Tienes una nueva notificacion"
 
-        showNotification(title, body)
+        showNotification(title, body, message.data)
     }
 
     override fun onNewToken(token: String) {
@@ -47,7 +46,7 @@ class PinARFirebaseMessagingService : FirebaseMessagingService() {
             .update("FCMToken", token)
     }
 
-    private fun showNotification(title: String, body: String) {
+    private fun showNotification(title: String, body: String, data: Map<String, String>) {
         createNotificationChannel()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -60,10 +59,11 @@ class PinARFirebaseMessagingService : FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            data.forEach { (key, value) -> putExtra(key, value) }
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0,
+            data.hashCode(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

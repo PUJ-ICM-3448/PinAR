@@ -6,23 +6,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pinar.data.CloudAnchorRepository
+import com.example.pinar.data.CommunityEventRepository
 import com.example.pinar.data.CommunityRepository
 import com.example.pinar.ui.MainViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
 class CommunityDetailViewModel(
     private val communityRepository: CommunityRepository = CommunityRepository(),
-    private val pinRepository: CloudAnchorRepository = CloudAnchorRepository()
+    private val pinRepository: CloudAnchorRepository = CloudAnchorRepository(),
+    private val eventRepository: CommunityEventRepository = CommunityEventRepository()
 ) : ViewModel() {
 
     private val _state = mutableStateOf(CommunityDetailState())
     val state: State<CommunityDetailState> = _state
+    private var eventsJob: Job? = null
 
     fun load(communityId: String, myCommunityIds: Set<String>) {
         viewModelScope.launch {
-            _state.value = CommunityDetailState(isLoading = true)
+            _state.value = _state.value.copy(isLoading = true)
             runCatching {
                 val community = communityRepository.getCommunity(communityId)
                 val uid = communityRepository.currentUid()
@@ -47,6 +52,7 @@ class CommunityDetailViewModel(
                         isLoading = false,
                         isMember = isMember
                     )
+                    if (isMember) observeEvents(communityId)
                 }
                 .onFailure { error ->
                     Log.e("CommunityDetailViewModel", "Error cargando comunidad", error)
@@ -54,6 +60,17 @@ class CommunityDetailViewModel(
                         isLoading = false,
                         error = toUserMessage(error)
                     )
+                }
+        }
+    }
+
+    private fun observeEvents(communityId: String) {
+        eventsJob?.cancel()
+        eventsJob = viewModelScope.launch {
+            eventRepository.observeActiveEvents(communityId)
+                .catch { Log.w("CommunityDetailViewModel", "Error eventos", it) }
+                .collect { events ->
+                    _state.value = _state.value.copy(activeEvents = events)
                 }
         }
     }
@@ -82,6 +99,7 @@ class CommunityDetailViewModel(
             _state.value = _state.value.copy(isJoinLeaveInProgress = true, actionMessage = null)
             runCatching { communityRepository.leaveCommunity(communityId) }
                 .onSuccess {
+                    eventsJob?.cancel()
                     mainViewModel.refreshUserData()
                     val ids = mainViewModel.userData.value?.memberOf.orEmpty()
                         .map { it.id }.toSet() - communityId
@@ -98,6 +116,11 @@ class CommunityDetailViewModel(
 
     fun clearActionMessage() {
         _state.value = _state.value.copy(actionMessage = null)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        eventsJob?.cancel()
     }
 
     private fun toUserMessage(error: Throwable): String = when (error) {

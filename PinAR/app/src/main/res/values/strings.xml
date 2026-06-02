@@ -148,7 +148,6 @@
     <string name="home_miembros_count">%1$d miembros</string>
     <string name="home_eventos_titulo">Eventos activos</string>
     <string name="home_eventos_vacio_titulo">Próximamente</string>
-    <string name="home_eventos_vacio_desc">Los eventos de comunidad con ubicación en vivo llegarán en la siguiente fase.</string>
     <string name="communities_titulo">Comunidades</string>
     <string name="communities_subtitulo">Únete a comunidades y comparte pines con otros miembros</string>
     <string name="communities_mis_vacio">Aún no perteneces a ninguna comunidad. Explora las recomendadas o crea la tuya.</string>
@@ -167,4 +166,29 @@
     <string name="communities_pines_compartidos">Pines compartidos</string>
     <string name="communities_pines_vacio">Aún no hay pines compartidos en esta comunidad.</string>
     <string name="communities_pines_solo_miembros">Los pines solo son visibles para miembros.</string>
+    <string name="map_filtro_todos">Todos</string>
+    <string name="map_filtro_mis_pines">Mis pines</string>
+    <string name="ver_detalle">Ver detalle</string>
+    <string name="pin_share_titulo">Compartir pin</string>
+    <string name="pin_share_subtitulo">Elige una comunidad para compartir este pin</string>
+    <string name="pin_share_boton">Compartir</string>
+    <string name="pin_share_ya_compartido">Ya compartido en esta comunidad</string>
+    <string name="pin_share_sin_comunidades">Únete a una comunidad para compartir pines.</string>
+    <string name="evento_crear_titulo">Crear evento</string>
+    <string name="evento_crear_desc">Duración máxima: 7 días. Cualquier miembro puede crear eventos.</string>
+    <string name="evento_nombre">Nombre del evento</string>
+    <string name="evento_descripcion">Descripción</string>
+    <string name="evento_crear_confirmar">Crear evento</string>
+    <string name="evento_detalle">Evento</string>
+    <string name="evento_no_encontrado">Evento no encontrado</string>
+    <string name="evento_activo">Activo</string>
+    <string name="evento_finalizado">Finalizado</string>
+    <string name="evento_participantes_count">%1$d participantes</string>
+    <string name="evento_compartir_ubicacion">Compartir mi ubicación</string>
+    <string name="evento_detener_ubicacion">Detener ubicación</string>
+    <string name="evento_participantes_activos">Participantes con ubicación activa</string>
+    <string name="evento_sin_ubicaciones">Nadie está compartiendo ubicación ahora.</string>
+    <string name="evento_en_vivo">En vivo</string>
+    <string name="evento_trazar_ruta">Trazar ruta</string>
+    <string name="home_eventos_vacio_desc">Cuando haya eventos activos en tus comunidades, aparecerán aquí.</string>
 </resources>

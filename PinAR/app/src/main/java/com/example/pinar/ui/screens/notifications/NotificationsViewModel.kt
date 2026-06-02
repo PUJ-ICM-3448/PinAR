@@ -3,12 +3,11 @@ package com.example.pinar.ui.screens.notifications
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.pinar.data.mock.mockNotifications
 import com.example.pinar.data.models.Notification
 import com.example.pinar.data.models.NotificationType
 
 class NotificationsViewModel : ViewModel() {
-    private val _state = mutableStateOf(NotificationsState(notificaciones = mockNotifications))
+    private val _state = mutableStateOf(NotificationsState(notificaciones = emptyList()))
     val state: State<NotificationsState> = _state
 
     fun toggleFilterChips() {

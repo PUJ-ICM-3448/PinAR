@@ -20,13 +20,14 @@ class CommunityRepository(
 
     fun currentUid(): String? = auth.currentUser?.uid
 
-    suspend fun getFeed(): List<FeedItem> = api.getFeed(authorizationHeader())
+    suspend fun getFeed(): List<FeedItem> =
+        api.getFeed(authorizationHeader()).map { it.sanitized() }
 
     suspend fun getRecommendedCommunities(): List<Community> =
-        api.getRecommendedCommunities(authorizationHeader())
+        api.getRecommendedCommunities(authorizationHeader()).map { it.sanitized() }
 
     suspend fun getCommunity(id: String): Community =
-        api.getCommunity(id, authorizationHeader())
+        api.getCommunity(id, authorizationHeader()).sanitized()
 
     suspend fun joinCommunity(id: String) {
         api.joinCommunity(id, authorizationHeader())
@@ -50,6 +51,14 @@ class CommunityRepository(
                 imageUrl = imageUrl
             ),
             authorizationHeader()
-        )
+        ).sanitized()
+    }
+
+    suspend fun sharePinWithCommunity(communityId: String, pinId: String) {
+        api.sharePinWithCommunity(communityId, pinId, authorizationHeader())
+    }
+
+    suspend fun unsharePinFromCommunity(communityId: String, pinId: String) {
+        api.unsharePinFromCommunity(communityId, pinId, authorizationHeader())
     }
 }
