@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.Card
 import com.example.pinar.navigation.Screen
 
@@ -118,8 +118,9 @@ fun Footer(
     onHomeClick: () -> Unit = {},
     onMapClick: () -> Unit = {},
     onARClick: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onCommunitiesClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {}
 ) {
     val navColors = NavigationBarItemDefaults.colors(
         unselectedIconColor = Color.LightGray,
@@ -172,29 +173,16 @@ fun Footer(
             colors = navColors
         )
         NavigationBarItem(
-            selected = currentScreen == Screen.Notifications,
-            onClick = onNotificationsClick,
+            selected = currentScreen == Screen.Communities,
+            onClick = onCommunitiesClick,
             icon = {
-                BadgedBox(
-                    badge = {
-                        if (unreadCount > 0) {
-                            Badge(
-                                containerColor = Color.Red,
-                                contentColor = Color.White
-                            ) {
-                                Text(text = unreadCount.toString(), fontSize = 10.sp)
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.Groups,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
             },
-            label = { Text("Notif", fontSize = 12.sp) },
+            label = { Text("Comunidades", fontSize = 11.sp) },
             colors = navColors
         )
         NavigationBarItem(

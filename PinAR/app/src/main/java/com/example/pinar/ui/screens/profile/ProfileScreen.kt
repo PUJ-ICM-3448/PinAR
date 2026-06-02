@@ -41,7 +41,7 @@ fun ProfileScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToCommunities: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onClickLogout: () -> Unit = {},
     userData: UserData?,
@@ -145,7 +145,7 @@ fun ProfileScreen(
             onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
             onARClick = onNavigateToAR,
-            onNotificationsClick = onNavigateToNotifications,
+            onCommunitiesClick = onNavigateToCommunities,
             onProfileClick = onNavigateToProfile
         )
     }

@@ -74,7 +74,7 @@ fun ARScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToCommunities: () -> Unit = {},
     onNavigateToPins: () -> Unit = {},
     viewModel: ARViewModel = viewModel()
 ) {
@@ -175,7 +175,7 @@ fun ARScreen(
                 onHomeClick = onNavigateToHome,
                 onMapClick = onNavigateToMap,
                 onARClick = {},
-                onNotificationsClick = onNavigateToNotifications,
+                onCommunitiesClick = onNavigateToCommunities,
                 onProfileClick = onNavigateToProfile
             )
         }

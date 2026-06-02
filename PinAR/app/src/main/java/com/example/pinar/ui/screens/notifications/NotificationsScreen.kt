@@ -218,7 +218,7 @@ fun NotificationsScreen(
             onHomeClick = onNavigateToHome,
             onMapClick = onNavigateToMap,
             onARClick = onNavigateToAR,
-            onNotificationsClick = { },
+            onCommunitiesClick = { },
             onProfileClick = onNavigateToProfile
         )
     }

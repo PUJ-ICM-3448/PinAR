@@ -239,6 +239,16 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    suspend fun refreshUserData() {
+        val uid = auth.currentUser?.uid ?: return
+        try {
+            val document = db.collection("usuarios").document(uid).get().await()
+            _userData.value = document.toObject(UserData::class.java)
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "No se pudo refrescar el usuario", e)
+        }
+    }
+
     suspend fun numComentarios(uid: String): Int {
         return try {
             val querySnapshot = db.collection("comentarios")

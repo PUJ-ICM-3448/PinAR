@@ -78,6 +78,7 @@ import com.example.pinar.data.UserData
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import com.example.pinar.ui.screens.map.MapViewModel
+import com.example.pinar.ui.screens.map.util.CustomMapMarker
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -90,9 +91,6 @@ import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerComposable
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
@@ -106,6 +104,7 @@ fun MapScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCommunities: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     viewModel: MapViewModel = viewModel()
 ) {
@@ -247,55 +246,40 @@ fun MapScreen(
                     // Marcadores de pines
                     uiState.pins.filter { searchQuery.isBlank() || it.title.contains(searchQuery, true) }
                         .forEach { pin ->
-                            Marker(state = MarkerState(pin.position), title = pin.title, snippet = pin.subtitle, onClick = { viewModel.selectPin(pin); true })
+                            CustomMapMarker(
+                                imageUrl = null,
+                                fullName = pin.title,
+                                snippet = pin.subtitle,
+                                location = pin.position,
+                                markerColor = MaterialTheme.colorScheme.secondary,
+                                onClick = { viewModel.selectPin(pin) }
+                            )
                         }
-                    uiState.userLocation?.let { Marker(state = MarkerState(it), title = stringResource(R.string.mi_ubicacion)) }
+                    
+                    uiState.userLocation?.let { 
+                        CustomMapMarker(
+                            imageUrl = null,
+                            fullName = stringResource(R.string.mi_ubicacion),
+                            location = it,
+                            markerColor = Color.Blue, // Color distintivo para mi ubicación
+                            onClick = { /* Acción opcional */ }
+                        )
+                    }
+
                     if (uiState.routePolyline.size >= 2) Polyline(points = uiState.routePolyline, width = 14f)
 
                     // Marcadores de otros usuarios
                     uiState.otherUsers.forEach { user ->
                         val lat = user.latitud ?: return@forEach
                         val lng = user.longitud ?: return@forEach
-                        MarkerComposable(
-                            state = MarkerState(LatLng(lat, lng)),
-                            title = user.nombre.ifBlank { "Usuario" },
-                            onClick = {
-                                viewModel.selectUser(user)
-                                true
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(Color.White, CircleShape)
-                                    .padding(2.dp)
-                                    .clip(CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (user.fotoUrl.isNotBlank()) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(user.fotoUrl),
-                                        contentDescription = null,
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.primaryContainer),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        CustomMapMarker(
+                            imageUrl = user.fotoUrl.ifBlank { null },
+                            fullName = user.nombre.ifBlank { "Usuario" },
+                            snippet = user.biografia,
+                            location = LatLng(lat, lng),
+                            markerColor = MaterialTheme.colorScheme.primary,
+                            onClick = { viewModel.selectUser(user) }
+                        )
                     }
                 }
 
@@ -339,8 +323,9 @@ fun MapScreen(
                 onHomeClick = onNavigateToHome,
                 onMapClick = onNavigateToMap,
                 onARClick = onNavigateToAR,
-                onNotificationsClick = onNavigateToNotifications,
-                onProfileClick = onNavigateToProfile
+                onCommunitiesClick = onNavigateToCommunities,
+                onProfileClick = onNavigateToProfile,
+                onNotificationsClick = onNavigateToNotifications
             )
         }
     }

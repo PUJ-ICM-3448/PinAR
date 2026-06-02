@@ -18,6 +18,13 @@ data class Community(
     val members: List<String> = emptyList()
 )
 
+data class CreateCommunityRequest(
+    val name: String = "",
+    val description: String = "",
+    val isPublic: Boolean = true,
+    val imageUrl: String = ""
+)
+
 data class FeedItem(
     val pinId: String = "",
     val pinTitle: String = "",
