@@ -177,6 +177,9 @@
     <string name="communities_pines_solo_miembros">Los pines solo son visibles para miembros.</string>
     <string name="map_filtro_todos">Todos</string>
     <string name="map_filtro_mis_pines">Mis pines</string>
+    <string name="map_filtros_titulo">Filtrar pines</string>
+    <string name="map_filtro_activo">Filtro: %1$s</string>
+    <string name="map_busqueda_activa">Buscando: %1$s</string>
     <string name="ver_detalle">Ver detalle</string>
     <string name="pin_share_titulo">Compartir pin</string>
     <string name="pin_share_subtitulo">Elige una comunidad para compartir este pin</string>

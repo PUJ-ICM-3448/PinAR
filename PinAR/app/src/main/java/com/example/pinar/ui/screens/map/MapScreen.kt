@@ -8,10 +8,9 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,14 +32,18 @@ import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +52,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -65,6 +69,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -242,37 +247,111 @@ fun MapScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(80.dp))
-            LazyRow(
+            val hasCommunityFilter = uiState.communityFilter != MapCommunityFilter.ALL
+            val hasSearchFilter = uiState.searchQuery.isNotBlank()
+            val activeCommunityFilterLabel = when (uiState.communityFilter) {
+                MapCommunityFilter.ALL -> null
+                MapCommunityFilter.OWN_PINS -> stringResource(R.string.map_filtro_mis_pines)
+                MapCommunityFilter.COMMUNITY -> memberCommunities
+                    .find { it.id == uiState.selectedCommunityId }
+                    ?.name
+            }
+
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                tonalElevation = 1.dp
             ) {
-                item {
-                    FilterChip(
-                        label = stringResource(R.string.map_filtro_todos),
-                        selected = uiState.communityFilter == MapCommunityFilter.ALL,
-                        onClick = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
-                    )
-                }
-                item {
-                    FilterChip(
-                        label = stringResource(R.string.map_filtro_mis_pines),
-                        selected = uiState.communityFilter == MapCommunityFilter.OWN_PINS,
-                        onClick = { viewModel.setCommunityFilter(MapCommunityFilter.OWN_PINS) }
-                    )
-                }
-                items(memberCommunities, key = { it.id }) { community ->
-                    FilterChip(
-                        label = community.name,
-                        selected = uiState.communityFilter == MapCommunityFilter.COMMUNITY
-                            && uiState.selectedCommunityId == community.id,
-                        onClick = {
-                            viewModel.setCommunityFilter(MapCommunityFilter.COMMUNITY, community.id)
+                Column(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.map_filtros_titulo),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            MapFilterChip(
+                                label = stringResource(R.string.map_filtro_todos),
+                                icon = Icons.Outlined.FilterList,
+                                selected = uiState.communityFilter == MapCommunityFilter.ALL,
+                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
+                            )
                         }
-                    )
+                        item {
+                            MapFilterChip(
+                                label = stringResource(R.string.map_filtro_mis_pines),
+                                icon = Icons.Outlined.Person,
+                                selected = uiState.communityFilter == MapCommunityFilter.OWN_PINS,
+                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.OWN_PINS) }
+                            )
+                        }
+                        items(memberCommunities, key = { it.id }) { community ->
+                            MapFilterChip(
+                                label = community.name,
+                                icon = Icons.Outlined.Groups,
+                                selected = uiState.communityFilter == MapCommunityFilter.COMMUNITY
+                                    && uiState.selectedCommunityId == community.id,
+                                onClick = {
+                                    viewModel.setCommunityFilter(MapCommunityFilter.COMMUNITY, community.id)
+                                }
+                            )
+                        }
+                    }
+
+                    if (hasCommunityFilter || hasSearchFilter) {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            activeCommunityFilterLabel?.let { label ->
+                                item {
+                                    ActiveFilterPill(
+                                        text = stringResource(R.string.map_filtro_activo, label),
+                                        onClear = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
+                                    )
+                                }
+                            }
+                            if (hasSearchFilter) {
+                                item {
+                                    ActiveFilterPill(
+                                        text = stringResource(R.string.map_busqueda_activa, uiState.searchQuery),
+                                        onClear = { viewModel.setSearchQuery("") }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             OutlinedTextField(
                 value = uiState.searchQuery,
@@ -295,7 +374,9 @@ fun MapScreen(
                     googleMapOptionsFactory = {
                         GoogleMapOptions().mapId(GOOGLE_MAP_CLOUD_ID)
                     },
-                    properties = MapProperties(isMyLocationEnabled = uiState.hasLocationPermission),
+                    properties = MapProperties(
+                        isMyLocationEnabled = uiState.hasLocationPermission && uiState.userLocation == null
+                    ),
                     uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = true, compassEnabled = !isCompassModeEnabled)
                 ) {
                     uiState.pins.forEach { pin ->
@@ -307,13 +388,15 @@ fun MapScreen(
                         )
                     }
                     
-                    uiState.userLocation?.let { 
+                    uiState.userLocation?.let { location ->
                         CustomMapMarker(
-                            imageUrl = null,
-                            fullName = stringResource(R.string.mi_ubicacion),
-                            location = it,
-                            markerColor = Color.Blue, // Color distintivo para mi ubicación
-                            onClick = { /* Acción opcional */ }
+                            imageUrl = userData?.fotoUrl?.ifBlank { null },
+                            fullName = userData?.nombre?.ifBlank { stringResource(R.string.mi_ubicacion) }
+                                ?: stringResource(R.string.mi_ubicacion),
+                            location = location,
+                            markerColor = MaterialTheme.colorScheme.tertiary,
+                            placeholderResId = R.drawable.profile,
+                            onClick = { }
                         )
                     }
 
@@ -421,13 +504,80 @@ fun MapScreen(
 }
 
 @Composable
-private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    AssistChip(
+private fun MapFilterChip(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    FilterChip(
+        selected = selected,
         onClick = onClick,
-        label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        border = null,
-        modifier = Modifier,
+        label = {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(FilterChipDefaults.IconSize),
+                tint = if (selected) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            labelColor = MaterialTheme.colorScheme.onSurface,
+            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outlineVariant
+        ),
+        shape = RoundedCornerShape(20.dp)
     )
+}
+
+@Composable
+private fun ActiveFilterPill(
+    text: String,
+    onClear: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            IconButton(onClick = onClear, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
 }
 
 private fun buildPinSnippet(pin: com.example.pinar.data.PinMapItem): String {
