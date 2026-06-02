@@ -135,6 +135,10 @@
     <string name="usuarioo">Usuario</string>
     <string name="actividad_en_tus_comunidades">Revisa la actividad en tus comunidades</string>
     <string name="home_subtitulo_comunidades">Descubre pines y actividad de tus comunidades</string>
+    <string name="home_tus_pines_titulo">Tus pines</string>
+    <string name="home_tus_pines_vacio_titulo">Aún no tienes pines</string>
+    <string name="home_tus_pines_vacio_desc">Los pines que crees aparecerán aquí.</string>
+    <string name="home_tus_pines_error">No pudimos cargar tus pines. Revisa tu conexión e intenta de nuevo.</string>
     <string name="home_feed_titulo">Nuevos pines en tus comunidades</string>
     <string name="home_feed_vacio_titulo">Sin actividad reciente</string>
     <string name="home_feed_vacio_desc">Cuando alguien comparta un pin en tus comunidades, aparecerá aquí.</string>

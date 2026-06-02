@@ -33,6 +33,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberMarkerState
 
+const val GOOGLE_MAP_CLOUD_ID = "24e6cc998b92b9e4c36bd06d"
+
 @Composable
 fun CustomMapMarker(
     imageUrl: Any?,

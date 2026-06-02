@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.util.Log
+import com.example.pinar.data.CloudAnchorRepository
 import com.example.pinar.data.CommunityBasicInfo
 import com.example.pinar.data.CommunityEventRepository
 import com.example.pinar.data.CommunityRepository
@@ -19,48 +20,54 @@ import java.io.IOException
 
 class HomeViewModel(
     private val communityRepository: CommunityRepository = CommunityRepository(),
-    private val eventRepository: CommunityEventRepository = CommunityEventRepository()
+    private val eventRepository: CommunityEventRepository = CommunityEventRepository(),
+    private val pinRepository: CloudAnchorRepository = CloudAnchorRepository()
 ) : ViewModel() {
 
     private val _state = mutableStateOf(HomeState())
     val state: State<HomeState> = _state
 
-    fun loadHomeContent(memberOf: List<CommunityBasicInfo> = emptyList()) {
+    fun loadHomeContent(
+        memberOf: List<CommunityBasicInfo> = emptyList(),
+        uid: String? = null
+    ) {
         viewModelScope.launch {
             _state.value = _state.value.copy(
+                isLoadingOwnPins = true,
                 isLoadingFeed = true,
-                isLoadingRecommended = true,
                 isLoadingEvents = true,
+                ownPinsError = null,
                 feedError = null,
-                recommendedError = null,
             )
 
             coroutineScope {
+                val ownPinsDeferred = async {
+                    runCatching {
+                        if (uid.isNullOrBlank()) emptyList()
+                        else pinRepository.getOwnPins(uid)
+                    }
+                }
                 val feedDeferred = async {
                     runCatching { communityRepository.getFeed() }
-                }
-                val recommendedDeferred = async {
-                    runCatching { communityRepository.getRecommendedCommunities() }
                 }
                 val eventsDeferred = async {
                     runCatching { loadActiveEvents(memberOf) }
                 }
 
+                val ownPinsResult = ownPinsDeferred.await()
                 val feedResult = feedDeferred.await()
-                val recommendedResult = recommendedDeferred.await()
                 val eventsResult = eventsDeferred.await()
 
+                val ownPinsError = ownPinsResult.exceptionOrNull()?.let { toUserMessage("tus pines", it) }
                 val feedError = feedResult.exceptionOrNull()?.let { toUserMessage("feed", it) }
-                val recommendedError =
-                    recommendedResult.exceptionOrNull()?.let { toUserMessage("recomendadas", it) }
 
                 _state.value = _state.value.copy(
+                    ownPins = ownPinsResult.getOrElse { emptyList() },
+                    ownPinsError = ownPinsError,
+                    isLoadingOwnPins = false,
                     feedItems = feedResult.getOrElse { emptyList() },
                     feedError = feedError,
                     isLoadingFeed = false,
-                    recommendedCommunities = recommendedResult.getOrElse { emptyList() },
-                    recommendedError = recommendedError,
-                    isLoadingRecommended = false,
                     activeEvents = eventsResult.getOrElse { emptyList() },
                     isLoadingEvents = false,
                 )

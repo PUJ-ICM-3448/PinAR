@@ -53,10 +53,12 @@ import com.example.pinar.R
 import com.example.pinar.data.LiveLocation
 import com.example.pinar.data.UserData
 import com.example.pinar.ui.screens.map.util.CustomMapMarker
+import com.example.pinar.ui.screens.map.util.GOOGLE_MAP_CLOUD_ID
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -245,6 +247,9 @@ fun CommunityEventScreen(
                         GoogleMap(
                             modifier = Modifier.fillMaxSize(),
                             cameraPositionState = cameraState,
+                            googleMapOptionsFactory = {
+                                GoogleMapOptions().mapId(GOOGLE_MAP_CLOUD_ID)
+                            },
                             properties = MapProperties(isMyLocationEnabled = locationGranted),
                             uiSettings = MapUiSettings(zoomControlsEnabled = true)
                         ) {

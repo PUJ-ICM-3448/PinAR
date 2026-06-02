@@ -23,14 +23,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,7 +44,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,13 +52,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.pinar.R
-import com.example.pinar.data.Community
-import com.example.pinar.data.CommunityBasicInfo
+import com.example.pinar.data.CloudAnchorPin
 import com.example.pinar.data.FeedItem
 import com.example.pinar.data.UserData
-import com.example.pinar.data.displayImageUrl
 import com.example.pinar.navigation.Screen
 import com.example.pinar.ui.utils.Footer
 import java.text.SimpleDateFormat
@@ -80,21 +73,21 @@ fun HomeScreen(
     onNavigateToCommunities: () -> Unit = {},
     onNavigateToPinDetail: (String) -> Unit = {},
     onNavigateToCommunityEvent: (String, String) -> Unit = { _, _ -> },
-    onNavigateToCommunityDetail: (String) -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     userData: UserData?,
     viewModel: HomeViewModel = viewModel()
 ) {
     val state by viewModel.state
     val myCommunities = userData?.memberOf.orEmpty()
+    val uid = userData?.uid
 
-    LaunchedEffect(myCommunities) {
-        viewModel.loadHomeContent(myCommunities)
+    val reloadHome: () -> Unit = {
+        viewModel.loadHomeContent(memberOf = myCommunities, uid = uid)
     }
-    val myCommunityIds = myCommunities.map { it.id }.toSet()
-    val recommendedToShow = state.recommendedCommunities
-        .filter { it.id !in myCommunityIds }
-        .take(6)
+
+    LaunchedEffect(myCommunities, uid) {
+        viewModel.loadHomeContent(memberOf = myCommunities, uid = uid)
+    }
 
     val context = LocalContext.current
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -166,9 +159,61 @@ fun HomeScreen(
             contentPadding = PaddingValues(top = 8.dp, bottom = 160.dp)
         ) {
             item {
-                SeccionHeader(
-                    titulo = stringResource(R.string.home_feed_titulo)
-                )
+                SeccionHeader(titulo = stringResource(R.string.home_tus_pines_titulo))
+            }
+
+            when {
+                state.isLoadingOwnPins -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                state.ownPinsError != null -> {
+                    item {
+                        ErrorStateCard(
+                            titulo = stringResource(R.string.home_tus_pines_error),
+                            descripcion = state.ownPinsError,
+                            onRetry = reloadHome
+                        )
+                    }
+                }
+
+                state.ownPins.isEmpty() -> {
+                    item {
+                        EmptyStateCard(
+                            titulo = stringResource(R.string.home_tus_pines_vacio_titulo),
+                            descripcion = stringResource(R.string.home_tus_pines_vacio_desc)
+                        )
+                    }
+                }
+
+                else -> {
+                    items(
+                        state.ownPins.sortedByDescending { it.fecha?.seconds ?: it.createdAt }.take(8),
+                        key = { it.id.ifBlank { it.cloudAnchorId } }
+                    ) { pin ->
+                        OwnPinCard(
+                            pin = pin,
+                            onClick = {
+                                onNavigateToPinDetail(pin.id.ifBlank { pin.cloudAnchorId })
+                            }
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+
+            item {
+                SeccionHeader(titulo = stringResource(R.string.home_feed_titulo))
             }
 
             when {
@@ -190,7 +235,7 @@ fun HomeScreen(
                         ErrorStateCard(
                             titulo = stringResource(R.string.home_feed_error),
                             descripcion = state.feedError,
-                            onRetry = { viewModel.loadHomeContent() }
+                            onRetry = reloadHome
                         )
                     }
                 }
@@ -210,86 +255,6 @@ fun HomeScreen(
                             item = item,
                             onClick = { onNavigateToPinDetail(item.pinId) }
                         )
-                    }
-                }
-            }
-
-            if (myCommunities.isNotEmpty()) {
-                item { Spacer(modifier = Modifier.height(8.dp)) }
-                item {
-                    SeccionHeader(
-                        titulo = stringResource(R.string.home_mis_comunidades),
-                    )
-                }
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(vertical = 4.dp)
-                    ) {
-                        items(myCommunities) { community ->
-                            MyCommunityChip(
-                                community = community,
-                                onClick = { onNavigateToCommunityDetail(community.id) }
-                            )
-                        }
-                    }
-                }
-            }
-
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-
-            item {
-                SeccionHeader(
-                    titulo = stringResource(R.string.home_recomendadas_titulo),
-                )
-            }
-
-            when {
-                state.isLoadingRecommended -> {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(28.dp))
-                        }
-                    }
-                }
-
-                state.recommendedError != null -> {
-                    item {
-                        ErrorStateCard(
-                            titulo = stringResource(R.string.home_recomendadas_error),
-                            descripcion = state.recommendedError,
-                            onRetry = { viewModel.loadHomeContent() }
-                        )
-                    }
-                }
-
-                recommendedToShow.isEmpty() -> {
-                    item {
-                        EmptyStateCard(
-                            titulo = stringResource(R.string.home_recomendadas_vacio_titulo),
-                            descripcion = stringResource(R.string.home_recomendadas_vacio_desc)
-                        )
-                    }
-                }
-
-                else -> {
-                    item {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(vertical = 4.dp)
-                        ) {
-                            items(recommendedToShow) { community ->
-                                RecommendedCommunityCard(
-                                    community = community,
-                                    onClick = { onNavigateToCommunityDetail(community.id) }
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -451,116 +416,18 @@ private fun FeedPinCard(
 }
 
 @Composable
-private fun MyCommunityChip(community: CommunityBasicInfo, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(140.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (community.displayImageUrl().isNotBlank()) {
-                AsyncImage(
-                    model = community.displayImageUrl(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Groups,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = community.name,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
+private fun OwnPinCard(pin: CloudAnchorPin, onClick: () -> Unit) {
+    val fechaLegible = pin.fecha?.toDate()?.let { date ->
+        SimpleDateFormat("dd MMM", Locale.getDefault()).format(date)
+    } ?: "Reciente"
 
-@Composable
-private fun RecommendedCommunityCard(community: Community, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(200.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            if (!community.imageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = community.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Groups,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = community.name,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = community.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = stringResource(R.string.home_miembros_count, community.memberCount),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
+    PinReciente(
+        nombre = pin.title.ifBlank { stringResource(R.string.pinar) },
+        sitio = pin.description.ifBlank { stringResource(R.string.home_pin_sin_descripcion) },
+        tiempo = fechaLegible,
+        personas = pin.visitas,
+        onClick = onClick
+    )
 }
 
 @Composable
