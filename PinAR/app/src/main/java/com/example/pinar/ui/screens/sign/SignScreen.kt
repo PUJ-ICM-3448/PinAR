@@ -2,55 +2,22 @@ package com.example.pinar.ui.screens.sign
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pinar.R
-import com.example.pinar.ui.utils.LogoVertical
 import com.example.pinar.ui.utils.PinArLogo
-
-@Composable
-fun SignButton(onClick: () -> Unit, text: String) {
-    FilledTonalButton(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(28.dp)),
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = Color.White.copy(alpha = 0.9f),
-            contentColor = MaterialTheme.colorScheme.primary
-        )
-    ) {
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
-
-@Composable
-fun Logos(modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(24.dp),
-        modifier = modifier
-    ) {
-        LogoVertical(icono = R.drawable.camera, text = stringResource(R.string.vista_ar))
-        LogoVertical(icono = R.drawable.location, text = stringResource(R.string.pines))
-        LogoVertical(icono = R.drawable.navegaci_on, text = stringResource(R.string.navegaci_n))
-    }
-}
 
 @Composable
 fun SignScreen(
@@ -58,66 +25,123 @@ fun SignScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    Box(modifier = modifier
-        .fillMaxSize()
-        .background(
-            Brush.verticalGradient(
-                colors = listOf(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        )) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(80.dp),
+                .padding(horizontal = 28.dp, vertical = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            
+            // --- Sección Superior: Branding ---
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                PinArLogo()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+                PinArLogo(modifier = Modifier.size(110.dp))
+                
                 Text(
                     text = stringResource(R.string.pinar),
-                    color = Color.White,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
+                    color = MaterialTheme.colorScheme.onBackground,
+                    letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                
                 Text(
                     text = stringResource(R.string.realidad_aumentada_para_ubicarte_en_espacios_cerrados),
-                    color = Color.White.copy(alpha = 0.85f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
-
             }
-            Logos()
-            Column(
-                modifier = Modifier.fillMaxWidth()
+
+            // --- Sección Central: Iconos de Funcionalidades ---
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                modifier = Modifier.padding(vertical = 20.dp)
             ) {
-                SignButton(onClick = onNavigateToLogin, text = stringResource(R.string.iniciar_sesi_n))
-                Spacer(modifier = Modifier.height(12.dp))
+                FeatureItem(icon = R.drawable.camera, label = stringResource(R.string.vista_ar))
+                FeatureItem(icon = R.drawable.location, label = stringResource(R.string.pines))
+                FeatureItem(icon = R.drawable.navegaci_on, label = stringResource(R.string.navegaci_n))
+            }
+
+            // --- Sección Inferior: Botones ---
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = onNavigateToLogin,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(58.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.iniciar_sesi_n),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
                 OutlinedButton(
                     onClick = onNavigateToRegister,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White
-                    )
+                        .height(58.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Text(
                         text = stringResource(R.string.crear_cuenta),
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FeatureItem(icon: Int, label: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(56.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

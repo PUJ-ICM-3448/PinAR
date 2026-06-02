@@ -4,41 +4,41 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.pinar.R
 import com.example.pinar.data.AuthState
-import com.example.pinar.ui.theme.Charcoal
-import com.example.pinar.ui.theme.MutedGold
-import com.example.pinar.ui.theme.RedDark
-import com.example.pinar.ui.theme.RedDeep
-import com.example.pinar.ui.theme.RedPrimary
-import com.example.pinar.ui.theme.SoftCream
 
 @Composable
 fun RegisterScreen(
@@ -51,319 +51,391 @@ fun RegisterScreen(
     viewModel: RegisterViewModel = viewModel()
 ) {
     val state by viewModel.state
-
     val context = LocalContext.current
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
     val onePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { viewModel.seleccionarFoto(it, context) }
     }
 
-    val textGray = Color(0xFF9E9E9E)
-
-    Box(modifier = modifier.fillMaxSize()) {
-
-        Box(
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(RedDark, RedDeep)
-                    )
-                )
+                .fillMaxSize()
+                .padding(horizontal = 20.dp)
         ) {
-            IconButton(
-                onClick = onNavigateBack,
+            // --- TopBar manual ---
+            Box(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterStart)
+                    .fillMaxWidth()
+                    .padding(top = 52.dp, bottom = 8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = MutedGold
-                )
-            }
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(top = 80.dp),
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            colors = CardDefaults.cardColors(containerColor = SoftCream),
-            elevation = CardDefaults.cardElevation(8.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 28.dp, vertical = 36.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-
-                    // Título
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = "Crear cuenta",
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Charcoal
-                        )
-                        Text(
-                            text = stringResource(R.string.completa_tus_datos_para_registrarte),
-                            fontSize = 14.sp,
-                            color = textGray
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .align(Alignment.CenterStart),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.volver),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
+                }
+            }
 
-                    // Campo nombre
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // --- Encabezado ---
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(bottom = 32.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.crear_cuenta),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = stringResource(R.string.completa_tus_datos_para_registrarte),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // --- Campos ---
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+
+                    // Avatar Picker
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                    CircleShape
+                                )
+                                .padding(4.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { onePhotoPickerLauncher.launch("image/*") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (state.fotoUri != null) {
+                                AsyncImage(
+                                    model = state.fotoUri,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(32.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        // Badge pequeño para indicar acción
+                        Surface(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .align(Alignment.BottomEnd),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            shadowElevation = 2.dp
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Nombre
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = stringResource(R.string.nombre_completo),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.nombre,
                             onValueChange = { viewModel.onNombreChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text(stringResource(R.string.tu_nombre), color = textGray) },
+                            placeholder = { Text(stringResource(R.string.tu_nombre)) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
 
-                    // Campo correo
+                    // Correo
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Correo electrónico",
-                            fontSize = 13.sp,
+                            text = stringResource(R.string.correo_electr_nico),
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = { viewModel.onEmailChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text(stringResource(R.string.tu_email_com), color = textGray) },
+                            placeholder = { Text(stringResource(R.string.tu_email_com)) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Email,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
+
+                    // Biografía
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Biografía",
-                            fontSize = 13.sp,
+                            text = stringResource(R.string.biograf_a),
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.biografia,
                             onValueChange = { viewModel.onBiografiaChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text(stringResource(R.string.cu_ntanos_sobre_ti), color = textGray) },
+                            placeholder = { Text(stringResource(R.string.cu_ntanos_sobre_ti)) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
-                            singleLine = false,
+                            minLines = 2,
                             maxLines = 3,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             )
                         )
-                        
-                        OutlinedButton(
-                            onClick = { onePhotoPickerLauncher.launch("image/*") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Charcoal)
-                        ) {
-                            Text(text = stringResource(R.string.seleccionar_foto_de_perfil))
-                        }
-
-                        if (state.fotoUri != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .align(Alignment.CenterHorizontally)
-                                    .clip(RoundedCornerShape(50.dp))
-                                    .background(Color.LightGray)
-                            ) {
-                                AsyncImage(
-                                    model = state.fotoUri,
-                                    contentDescription = stringResource(R.string.preview),
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                        }
                     }
 
-                    // Campo contraseña
+                    // Contraseña
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Contraseña",
-                            fontSize = 13.sp,
+                            text = stringResource(R.string.contrase_a),
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.password,
                             onValueChange = { viewModel.onPasswordChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("••••••••", color = textGray) },
+                            placeholder = { Text("••••••••") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
-                            visualTransformation = PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
 
+                    // Confirmar Contraseña
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = stringResource(R.string.confirmar_contrase_a),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = Charcoal
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         OutlinedTextField(
                             value = state.confirmPassword,
                             onValueChange = { viewModel.onConfirmPasswordChange(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("••••••••", color = textGray) },
+                            placeholder = { Text("••••••••") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = null,
-                                    tint = RedDark
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
-                            visualTransformation = PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                    Icon(
+                                        imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = RedPrimary,
-                                unfocusedBorderColor = Color(0xFFE0E0E0),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                            .clip(RoundedCornerShape(28.dp))
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(RedDark, RedPrimary)
-                                )
-                            )
-                            .clickable {
-                                onClickRegister(
-                                    state.nombre,
-                                    state.email,
-                                    state.password,
-                                    state.biografia,
-                                    state.fotoUri,
-                                    context
-                                )
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Crear cuenta",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.ya_tienes_cuenta),
-                            color = textGray,
-                            fontSize = 14.sp
-                        )
-                        TextButton(
-                            onClick = onNavigateToLogin,
-                            contentPadding = PaddingValues(0.dp)
+                    // Error
+                    if (authState is AuthState.Error) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = stringResource(R.string.inicia_sesi_n),
-                                color = RedPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
+                                text = authState.mensaje,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                             )
                         }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(40.dp))
+            }
+
+            // --- Acciones inferiores ---
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(bottom = 40.dp)
+            ) {
+                Button(
+                    onClick = {
+                        onClickRegister(
+                            state.nombre,
+                            state.email,
+                            state.password,
+                            state.biografia,
+                            state.fotoUri,
+                            context
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.registrarse),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.ya_tienes_cuenta),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    TextButton(
+                        onClick = onNavigateToLogin,
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.inicia_sesi_n),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
