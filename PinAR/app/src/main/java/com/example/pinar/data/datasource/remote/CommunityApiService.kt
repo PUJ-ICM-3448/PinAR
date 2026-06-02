@@ -8,6 +8,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface CommunityApiService {
@@ -43,6 +44,13 @@ interface CommunityApiService {
     @POST("api/v1/comunidades")
     suspend fun createCommunity(
         @Body request: CreateCommunityRequest,
+        @Header("Authorization") authorization: String
+    ): Community
+
+    @PUT("api/v1/comunidades/{id}")
+    suspend fun updateCommunity(
+        @Path("id") communityId: String,
+        @Body community: Community,
         @Header("Authorization") authorization: String
     ): Community
 

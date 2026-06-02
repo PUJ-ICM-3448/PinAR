@@ -1,5 +1,7 @@
 package com.example.pinar.ui.screens.communities
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -108,6 +110,59 @@ class CommunityDetailViewModel(
                 .onFailure { error ->
                     _state.value = _state.value.copy(
                         isJoinLeaveInProgress = false,
+                        actionMessage = toUserMessage(error)
+                    )
+                }
+        }
+    }
+
+    fun updateCommunity(
+        name: String,
+        description: String,
+        isPublic: Boolean,
+        imageUri: Uri?,
+        context: Context,
+        mainViewModel: MainViewModel,
+        onUpdated: () -> Unit
+    ) {
+        val current = _state.value.community ?: return
+        if (name.isBlank()) {
+            _state.value = _state.value.copy(actionMessage = "El nombre es obligatorio")
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isUpdating = true, actionMessage = null)
+            runCatching {
+                var imageUrl = current.imageUrl
+                if (imageUri != null) {
+                    imageUrl = communityRepository.uploadCommunityImage(
+                        current.id,
+                        imageUri,
+                        context
+                    )
+                }
+                val updated = communityRepository.updateCommunity(
+                    current.copy(
+                        name = name.trim(),
+                        description = description.trim(),
+                        isPublic = isPublic,
+                        imageUrl = imageUrl
+                    )
+                )
+                mainViewModel.refreshUserData()
+                val ids = mainViewModel.userData.value?.memberOf.orEmpty()
+                    .map { it.id }.toSet()
+                load(updated.id, ids)
+                updated
+            }
+                .onSuccess {
+                    _state.value = _state.value.copy(isUpdating = false)
+                    onUpdated()
+                }
+                .onFailure { error ->
+                    Log.e("CommunityDetailViewModel", "Error actualizando comunidad", error)
+                    _state.value = _state.value.copy(
+                        isUpdating = false,
                         actionMessage = toUserMessage(error)
                     )
                 }

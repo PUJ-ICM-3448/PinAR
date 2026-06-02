@@ -1,5 +1,6 @@
 package com.example.pinar.ui.screens.communities
 
+import android.Manifest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,12 +25,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +47,9 @@ import com.example.pinar.R
 import com.example.pinar.data.LiveLocation
 import com.example.pinar.data.UserData
 import com.example.pinar.ui.screens.map.util.CustomMapMarker
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -49,7 +57,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun CommunityEventScreen(
     communityId: String,
@@ -59,19 +67,44 @@ fun CommunityEventScreen(
     viewModel: CommunityEventViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
     val cameraState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(4.628, -74.064), 16f)
+    }
+
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    )
+    val locationGranted = permissionsState.permissions.any {
+        (it.permission == Manifest.permission.ACCESS_FINE_LOCATION ||
+            it.permission == Manifest.permission.ACCESS_COARSE_LOCATION) && it.status.isGranted
+    }
+    var pendingShare by remember { mutableStateOf(false) }
+
+    LaunchedEffect(locationGranted, pendingShare) {
+        if (locationGranted && pendingShare) {
+            pendingShare = false
+            viewModel.onShareLocationClicked(true)
+        }
+    }
+
+    LaunchedEffect(locationGranted, uiState.isSharingLocation) {
+        if (locationGranted && uiState.isSharingLocation) {
+            viewModel.ensureLocationUpdatesIfSharing()
+        }
     }
 
     LaunchedEffect(communityId, eventId, userData) {
         viewModel.init(communityId, eventId, userData)
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            if (uiState.isSharingLocation) {
-                viewModel.stopSharingLocation()
-            }
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearError()
         }
     }
 
@@ -87,7 +120,8 @@ fun CommunityEventScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         when {
             uiState.isLoading -> {
@@ -150,7 +184,14 @@ fun CommunityEventScreen(
                             ) {
                                 if (!uiState.isSharingLocation) {
                                     Button(
-                                        onClick = viewModel::startSharingLocation,
+                                        onClick = {
+                                            if (locationGranted) {
+                                                viewModel.onShareLocationClicked(true)
+                                            } else {
+                                                pendingShare = true
+                                                permissionsState.launchMultiplePermissionRequest()
+                                            }
+                                        },
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Text(stringResource(R.string.evento_compartir_ubicacion))
@@ -176,9 +217,22 @@ fun CommunityEventScreen(
                         GoogleMap(
                             modifier = Modifier.fillMaxSize(),
                             cameraPositionState = cameraState,
-                            properties = MapProperties(isMyLocationEnabled = true),
+                            properties = MapProperties(isMyLocationEnabled = locationGranted),
                             uiSettings = MapUiSettings(zoomControlsEnabled = true)
                         ) {
+                            uiState.userLocation?.let { myLoc ->
+                                if (uiState.isSharingLocation) {
+                                    CustomMapMarker(
+                                        imageUrl = userData?.fotoUrl?.ifBlank { null },
+                                        fullName = userData?.nombre?.ifBlank { stringResource(R.string.evento_tu_ubicacion) }
+                                            ?: stringResource(R.string.evento_tu_ubicacion),
+                                        snippet = stringResource(R.string.evento_compartiendo),
+                                        location = myLoc,
+                                        markerColor = MaterialTheme.colorScheme.tertiary,
+                                        onClick = { }
+                                    )
+                                }
+                            }
                             uiState.liveLocations.forEach { loc ->
                                 CustomMapMarker(
                                     imageUrl = loc.photoUrl.ifBlank { null },

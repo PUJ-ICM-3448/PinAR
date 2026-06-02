@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,9 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -80,6 +79,7 @@ fun HomeScreen(
     onNavigateToCommunities: () -> Unit = {},
     onNavigateToPinDetail: (String) -> Unit = {},
     onNavigateToCommunityEvent: (String, String) -> Unit = { _, _ -> },
+    onNavigateToCommunityDetail: (String) -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     userData: UserData?,
     viewModel: HomeViewModel = viewModel()
@@ -122,7 +122,12 @@ fun HomeScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Column(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 8.dp)
+            ) {
                 Text(
                     text = stringResource(
                         R.string.hola2,
@@ -160,23 +165,8 @@ fun HomeScreen(
             contentPadding = PaddingValues(top = 8.dp, bottom = 160.dp)
         ) {
             item {
-                QuickActionsRow(
-                    onCreatePin = onNavigateToAR,
-                    onOpenMap = onNavigateToMap
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-
-            item {
                 SeccionHeader(
-                    titulo = stringResource(R.string.home_feed_titulo),
-                    accion = if (state.feedItems.isNotEmpty()) {
-                        stringResource(R.string.ver_mapa)
-                    } else {
-                        null
-                    },
-                    onAccionClick = onNavigateToMap
+                    titulo = stringResource(R.string.home_feed_titulo)
                 )
             }
 
@@ -236,7 +226,10 @@ fun HomeScreen(
                         contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
                         items(myCommunities) { community ->
-                            MyCommunityChip(community = community)
+                            MyCommunityChip(
+                                community = community,
+                                onClick = { onNavigateToCommunityDetail(community.id) }
+                            )
                         }
                     }
                 }
@@ -290,7 +283,10 @@ fun HomeScreen(
                             contentPadding = PaddingValues(vertical = 4.dp)
                         ) {
                             items(recommendedToShow) { community ->
-                                RecommendedCommunityCard(community = community)
+                                RecommendedCommunityCard(
+                                    community = community,
+                                    onClick = { onNavigateToCommunityDetail(community.id) }
+                                )
                             }
                         }
                     }
@@ -353,66 +349,6 @@ fun HomeScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun QuickActionsRow(
-    onCreatePin: () -> Unit,
-    onOpenMap: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        QuickActionCard(
-            modifier = Modifier.weight(1f),
-            titulo = stringResource(R.string.crear_pin),
-            icon = Icons.Default.Add,
-            onClick = onCreatePin
-        )
-        QuickActionCard(
-            modifier = Modifier.weight(1f),
-            titulo = stringResource(R.string.ver_mapa),
-            icon = Icons.Default.Map,
-            onClick = onOpenMap
-        )
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    modifier: Modifier = Modifier,
-    titulo: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
         }
     }
 }
@@ -514,9 +450,11 @@ private fun FeedPinCard(
 }
 
 @Composable
-private fun MyCommunityChip(community: CommunityBasicInfo) {
+private fun MyCommunityChip(community: CommunityBasicInfo, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.width(140.dp),
+        modifier = Modifier
+            .width(140.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -562,9 +500,11 @@ private fun MyCommunityChip(community: CommunityBasicInfo) {
 }
 
 @Composable
-private fun RecommendedCommunityCard(community: Community) {
+private fun RecommendedCommunityCard(community: Community, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.width(200.dp),
+        modifier = Modifier
+            .width(200.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)

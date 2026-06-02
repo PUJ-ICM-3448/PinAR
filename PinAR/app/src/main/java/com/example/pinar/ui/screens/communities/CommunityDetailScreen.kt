@@ -1,5 +1,8 @@
 package com.example.pinar.ui.screens.communities
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,13 +33,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -46,6 +56,7 @@ import com.example.pinar.R
 import com.example.pinar.data.UserData
 import com.example.pinar.ui.MainViewModel
 import com.example.pinar.ui.screens.home.SeccionHeader
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +74,22 @@ fun CommunityDetailScreen(
 ) {
     val state by viewModel.state
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val myIds = userData?.memberOf.orEmpty().map { it.id }.toSet()
+    val updatedOkMessage = stringResource(R.string.communities_editada_ok)
+
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editName by remember { mutableStateOf("") }
+    var editDescription by remember { mutableStateOf("") }
+    var editImageUri by remember { mutableStateOf<Uri?>(null) }
+    var editIsPublic by remember { mutableStateOf(true) }
+    val editImagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> editImageUri = uri }
+
+    val isCreator = userData?.uid != null &&
+        userData.uid == state.community?.createdBy
 
     LaunchedEffect(communityId, userData?.memberOf) {
         viewModel.load(communityId, myIds)
@@ -92,6 +118,25 @@ fun CommunityDetailScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null
                         )
+                    }
+                },
+                actions = {
+                    if (isCreator) {
+                        IconButton(
+                            onClick = {
+                                val c = state.community ?: return@IconButton
+                                editName = c.name
+                                editDescription = c.description
+                                editIsPublic = c.isPublic
+                                editImageUri = null
+                                showEditDialog = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.communities_editar)
+                            )
+                        }
                     }
                 }
             )
@@ -286,5 +331,64 @@ fun CommunityDetailScreen(
                 }
             }
         }
+    }
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!state.isUpdating) showEditDialog = false },
+            title = { Text(stringResource(R.string.communities_editar)) },
+            text = {
+                CommunityFormFields(
+                    name = editName,
+                    onNameChange = { editName = it },
+                    description = editDescription,
+                    onDescriptionChange = { editDescription = it },
+                    imageUri = editImageUri,
+                    existingImageUrl = state.community?.imageUrl,
+                    onPickImage = { editImagePicker.launch("image/*") },
+                    isPublic = editIsPublic,
+                    onIsPublicChange = { editIsPublic = it },
+                    showPublicToggle = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.updateCommunity(
+                            name = editName,
+                            description = editDescription,
+                            isPublic = editIsPublic,
+                            imageUri = editImageUri,
+                            context = context,
+                            mainViewModel = mainViewModel
+                        ) {
+                            showEditDialog = false
+                            editImageUri = null
+                            scope.launch {
+                                snackbarHostState.showSnackbar(updatedOkMessage)
+                            }
+                        }
+                    },
+                    enabled = !state.isUpdating
+                ) {
+                    Text(
+                        if (state.isUpdating) "..." else stringResource(R.string.communities_editar_confirmar)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        if (!state.isUpdating) {
+                            showEditDialog = false
+                            editImageUri = null
+                        }
+                    },
+                    enabled = !state.isUpdating
+                ) {
+                    Text(stringResource(R.string.cancelar))
+                }
+            }
+        )
     }
 }

@@ -246,6 +246,12 @@ fun NavigationStack() {
 
                 },
 
+                onNavigateToCommunityDetail = { communityId ->
+
+                    navController.navigate(Screen.CommunityDetail.createRoute(communityId))
+
+                },
+
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
 
                 userData = userData

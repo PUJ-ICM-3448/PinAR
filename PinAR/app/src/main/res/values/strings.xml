@@ -157,6 +157,11 @@
     <string name="communities_descripcion">Descripción</string>
     <string name="communities_crear_confirmar">Crear</string>
     <string name="communities_creada_ok">Comunidad creada</string>
+    <string name="communities_foto_tocar">Toca para elegir foto</string>
+    <string name="communities_publica">Comunidad pública</string>
+    <string name="communities_editar">Editar comunidad</string>
+    <string name="communities_editar_confirmar">Guardar cambios</string>
+    <string name="communities_editada_ok">Comunidad actualizada</string>
     <string name="communities_detalle">Comunidad</string>
     <string name="communities_sin_descripcion">Sin descripción</string>
     <string name="communities_unirme">Unirme</string>
@@ -190,5 +195,7 @@
     <string name="evento_sin_ubicaciones">Nadie está compartiendo ubicación ahora.</string>
     <string name="evento_en_vivo">En vivo</string>
     <string name="evento_trazar_ruta">Trazar ruta</string>
+    <string name="evento_tu_ubicacion">Tú</string>
+    <string name="evento_compartiendo">Compartiendo ubicación</string>
     <string name="home_eventos_vacio_desc">Cuando haya eventos activos en tus comunidades, aparecerán aquí.</string>
 </resources>

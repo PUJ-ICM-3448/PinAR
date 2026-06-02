@@ -106,10 +106,25 @@ class CommunityEventRepository(
         return snap.toCommunityEvent(communityId)
     }
 
+    suspend fun getMyLiveLocation(
+        communityId: String,
+        eventId: String,
+        uid: String
+    ): LiveLocation? {
+        val snap = liveLocationsCollection(communityId, eventId).document(uid).get().await()
+        val loc = snap.toObject(LiveLocation::class.java) ?: return null
+        val now = System.currentTimeMillis()
+        val expires = loc.expiresAt?.toDate()?.time ?: 0L
+        if (expires <= now) return null
+        if (loc.latitude == 0.0 && loc.longitude == 0.0) return null
+        return loc
+    }
+
     suspend fun startLiveLocation(
         communityId: String,
         eventId: String,
-        user: UserData
+        user: UserData,
+        latLng: LatLng
     ) {
         val uid = user.uid
         val expiresAt = Timestamp(Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(15)))
@@ -117,8 +132,8 @@ class CommunityEventRepository(
             uid = uid,
             name = user.nombre,
             photoUrl = user.fotoUrl,
-            latitude = user.latitud ?: 0.0,
-            longitude = user.longitud ?: 0.0,
+            latitude = latLng.latitude,
+            longitude = latLng.longitude,
             updatedAt = Timestamp.now(),
             expiresAt = expiresAt
         )
@@ -149,12 +164,13 @@ class CommunityEventRepository(
         ).await()
     }
 
-    fun observeLiveLocations(communityId: String, eventId: String): Flow<List<LiveLocation>> =
+    fun observeLiveLocations(communityId: String, eventId: String): Flow<LiveLocationsUpdate> =
         callbackFlow {
             val listener = liveLocationsCollection(communityId, eventId)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        trySend(emptyList())
+                        Log.e(TAG, "Error observing live locations", error)
+                        trySend(LiveLocationsUpdate(emptyList(), error.message))
                         return@addSnapshotListener
                     }
                     val now = System.currentTimeMillis()
@@ -165,8 +181,13 @@ class CommunityEventRepository(
                             val expires = loc.expiresAt?.toDate()?.time ?: 0L
                             expires > now && (loc.latitude != 0.0 || loc.longitude != 0.0)
                         }
-                    trySend(locations)
+                    trySend(LiveLocationsUpdate(locations, null))
                 }
             awaitClose { listener.remove() }
         }
 }
+
+data class LiveLocationsUpdate(
+    val locations: List<LiveLocation>,
+    val errorMessage: String?
+)

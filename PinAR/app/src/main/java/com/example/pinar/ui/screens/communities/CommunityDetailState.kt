@@ -11,6 +11,7 @@ data class CommunityDetailState(
     val isLoading: Boolean = true,
     val isMember: Boolean = false,
     val isJoinLeaveInProgress: Boolean = false,
+    val isUpdating: Boolean = false,
     val error: String? = null,
     val actionMessage: String? = null,
 )

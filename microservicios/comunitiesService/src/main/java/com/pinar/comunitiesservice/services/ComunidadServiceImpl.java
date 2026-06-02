@@ -78,7 +78,32 @@ public class ComunidadServiceImpl implements ComunidadService {
         updates.put("imageUrl", comunidad.getImageUrl());
         docRef.update(updates).get();
 
-        return toComunidad(docRef.get().get());
+        Comunidad actualizada = toComunidad(docRef.get().get());
+        syncMemberOfForAllMembers(db, actualizada);
+        return actualizada;
+    }
+
+    private void syncMemberOfForAllMembers(Firestore db, Comunidad comunidad)
+            throws ExecutionException, InterruptedException {
+        Map<String, Object> basicInfo = toBasicInfoMap(comunidad);
+        for (String memberUid : comunidad.getMembers()) {
+            DocumentReference userRef = db.collection(COLECCION_USUARIOS).document(memberUid);
+            DocumentSnapshot userSnap = userRef.get().get();
+            List<Map<String, Object>> updatedMemberOf = new ArrayList<>();
+            Object rawMemberOf = userSnap.get("memberOf");
+            if (rawMemberOf instanceof List<?> rawList) {
+                for (Object item : rawList) {
+                    if (item instanceof Map<?, ?> rawMap) {
+                        if (Objects.equals(rawMap.get("id"), comunidad.getId())) {
+                            updatedMemberOf.add(basicInfo);
+                        } else {
+                            updatedMemberOf.add(toStringObjectMap(rawMap));
+                        }
+                    }
+                }
+            }
+            userRef.set(Map.of("memberOf", updatedMemberOf), SetOptions.merge()).get();
+        }
     }
 
     @Override

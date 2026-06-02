@@ -1,5 +1,7 @@
 package com.example.pinar.ui.screens.communities
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +51,9 @@ class CommunitiesViewModel(
     fun createCommunity(
         name: String,
         description: String,
+        isPublic: Boolean,
+        imageUri: Uri?,
+        context: Context,
         mainViewModel: MainViewModel,
         onCreated: (String) -> Unit
     ) {
@@ -59,10 +64,26 @@ class CommunitiesViewModel(
         viewModelScope.launch {
             _state.value = _state.value.copy(isCreating = true, actionMessage = null)
             runCatching {
-                val created = communityRepository.createCommunity(
+                var created = communityRepository.createCommunity(
                     name = name.trim(),
-                    description = description.trim()
+                    description = description.trim(),
+                    isPublic = isPublic
                 )
+                if (imageUri != null) {
+                    val imageUrl = communityRepository.uploadCommunityImage(
+                        created.id,
+                        imageUri,
+                        context
+                    )
+                    created = communityRepository.updateCommunity(
+                        created.copy(
+                            name = name.trim(),
+                            description = description.trim(),
+                            isPublic = isPublic,
+                            imageUrl = imageUrl
+                        )
+                    )
+                }
                 mainViewModel.refreshUserData()
                 created.id
             }

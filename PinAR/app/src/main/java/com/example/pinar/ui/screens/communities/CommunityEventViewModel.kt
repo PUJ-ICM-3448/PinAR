@@ -15,12 +15,17 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.resume
 
 data class CommunityEventUiState(
     val event: CommunityEvent? = null,
@@ -49,6 +54,8 @@ class CommunityEventViewModel @JvmOverloads constructor(
     private var eventId: String = ""
     private var currentUser: UserData? = null
     private var lastWrittenLocation: LatLng? = null
+    private var liveLocationsJob: Job? = null
+    private var locationUpdatesActive = false
 
     private val locationRequest = LocationRequest.Builder(4000L)
         .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -73,10 +80,15 @@ class CommunityEventViewModel @JvmOverloads constructor(
         this.currentUser = user
         loadEvent()
         observeLiveLocations()
+        restoreSharingState()
         viewModelScope.launch {
             val uid = auth.currentUser?.uid ?: return@launch
             runCatching { eventRepository.joinEvent(communityId, eventId, uid) }
         }
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 
     private fun loadEvent() {
@@ -95,57 +107,142 @@ class CommunityEventViewModel @JvmOverloads constructor(
         }
     }
 
-    private fun observeLiveLocations() {
+    private fun restoreSharingState() {
+        val user = currentUser ?: return
+        val uid = user.uid
         viewModelScope.launch {
-            eventRepository.observeLiveLocations(communityId, eventId).collect { locations ->
+            val existing = runCatching {
+                eventRepository.getMyLiveLocation(communityId, eventId, uid)
+            }.getOrNull() ?: return@launch
+            lastWrittenLocation = LatLng(existing.latitude, existing.longitude)
+            _uiState.update {
+                it.copy(
+                    isSharingLocation = true,
+                    userLocation = LatLng(existing.latitude, existing.longitude)
+                )
+            }
+            startLocationUpdatesIfNeeded()
+        }
+    }
+
+    private fun observeLiveLocations() {
+        liveLocationsJob?.cancel()
+        liveLocationsJob = viewModelScope.launch {
+            eventRepository.observeLiveLocations(communityId, eventId).collect { update ->
                 val uid = auth.currentUser?.uid
                 _uiState.update {
                     it.copy(
-                        liveLocations = locations.filter { loc -> loc.uid != uid }
+                        liveLocations = update.locations.filter { loc -> loc.uid != uid },
+                        error = update.errorMessage ?: it.error
                     )
                 }
             }
         }
     }
 
+    fun onShareLocationClicked(hasLocationPermission: Boolean) {
+        if (!hasLocationPermission) return
+        startSharingLocation()
+    }
+
+    @SuppressLint("MissingPermission")
+    fun ensureLocationUpdatesIfSharing() {
+        if (_uiState.value.isSharingLocation) {
+            startLocationUpdatesIfNeeded()
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun startSharingLocation() {
-        val user = currentUser ?: return
+        val user = currentUser ?: run {
+            _uiState.update { it.copy(error = "Debes iniciar sesión para compartir ubicación") }
+            return
+        }
         if (_uiState.value.event?.isActive != true) return
         viewModelScope.launch {
+            _uiState.update { it.copy(error = null) }
+            val latLng = fetchCurrentLocation()
+            if (latLng == null) {
+                _uiState.update {
+                    it.copy(error = "No se pudo obtener tu ubicación. Activa el GPS e inténtalo de nuevo.")
+                }
+                return@launch
+            }
             runCatching {
-                eventRepository.startLiveLocation(communityId, eventId, user)
+                eventRepository.startLiveLocation(communityId, eventId, user, latLng)
             }.onSuccess {
-                _uiState.update { it.copy(isSharingLocation = true) }
-                fusedLocationClient.requestLocationUpdates(
-                    locationRequest,
-                    locationCallback,
-                    Looper.getMainLooper()
-                )
+                lastWrittenLocation = latLng
+                _uiState.update {
+                    it.copy(isSharingLocation = true, userLocation = latLng, error = null)
+                }
+                startLocationUpdatesIfNeeded()
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(error = e.message ?: "No se pudo compartir la ubicación")
+                }
             }
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdatesIfNeeded() {
+        if (locationUpdatesActive) return
+        locationUpdatesActive = true
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
     fun stopSharingLocation() {
         val uid = auth.currentUser?.uid ?: return
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        locationUpdatesActive = false
+        lastWrittenLocation = null
         _uiState.update { it.copy(isSharingLocation = false) }
         viewModelScope.launch {
             runCatching { eventRepository.stopLiveLocation(communityId, eventId, uid) }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(error = e.message ?: "No se pudo detener el compartido de ubicación")
+                    }
+                }
         }
     }
 
     private fun maybeUpdateLiveLocation(location: LatLng) {
         val user = currentUser ?: return
         val last = lastWrittenLocation
-        val shouldWrite = last == null ||
-            distanceMeters(last, location) > 15.0
+        val shouldWrite = last == null || distanceMeters(last, location) > 15.0
         if (!shouldWrite) return
         lastWrittenLocation = location
         viewModelScope.launch {
             runCatching {
                 eventRepository.updateLiveLocation(communityId, eventId, location, user)
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(error = e.message ?: "Error al actualizar ubicación")
+                }
             }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun fetchCurrentLocation(): LatLng? {
+        val last = runCatching { fusedLocationClient.lastLocation.await() }.getOrNull()
+        if (last != null) {
+            return LatLng(last.latitude, last.longitude)
+        }
+        return suspendCancellableCoroutine { cont ->
+            val tokenSource = CancellationTokenSource()
+            cont.invokeOnCancellation { tokenSource.cancel() }
+            fusedLocationClient
+                .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, tokenSource.token)
+                .addOnSuccessListener { loc ->
+                    cont.resume(loc?.let { LatLng(it.latitude, it.longitude) })
+                }
+                .addOnFailureListener { cont.resume(null) }
         }
     }
 
@@ -172,9 +269,7 @@ class CommunityEventViewModel @JvmOverloads constructor(
 
     override fun onCleared() {
         super.onCleared()
-        if (_uiState.value.isSharingLocation) {
-            stopSharingLocation()
-        }
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        locationUpdatesActive = false
     }
 }
