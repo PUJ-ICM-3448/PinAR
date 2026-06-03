@@ -1,6 +1,5 @@
 package com.example.pinar.ui.utils
 
-import androidx.compose.animation.core.copy
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,15 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.pinar.R
-import com.example.pinar.ui.theme.RedDeep
 import com.example.pinar.ui.theme.RedPrimary
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -40,6 +35,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.Card
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import com.example.pinar.navigation.Screen
 
 @Composable
@@ -129,6 +126,12 @@ fun Footer(
         selectedIconColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = MaterialTheme.colorScheme.primary
     )
+    
+    val labelStyle = MaterialTheme.typography.labelSmall.copy(
+        fontSize = 10.sp,
+        textAlign = TextAlign.Center
+    )
+
     NavigationBar(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface
@@ -143,7 +146,14 @@ fun Footer(
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Inicio", fontSize = 12.sp) },
+            label = { 
+                Text(
+                    text = stringResource(R.string.inicio),
+                    style = labelStyle,
+                    maxLines = 1,
+                    softWrap = false
+                ) 
+            },
             colors = navColors
         )
         NavigationBarItem(
@@ -156,7 +166,14 @@ fun Footer(
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Mapa", fontSize = 12.sp) },
+            label = { 
+                Text(
+                    text = stringResource(R.string.mapa),
+                    style = labelStyle,
+                    maxLines = 1,
+                    softWrap = false
+                ) 
+            },
             colors = navColors
         )
         NavigationBarItem(
@@ -169,7 +186,14 @@ fun Footer(
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("AR", fontSize = 12.sp) },
+            label = { 
+                Text(
+                    text = stringResource(R.string.ar),
+                    style = labelStyle,
+                    maxLines = 1,
+                    softWrap = false
+                ) 
+            },
             colors = navColors
         )
         NavigationBarItem(
@@ -182,7 +206,14 @@ fun Footer(
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Comunidades", fontSize = 11.sp) },
+            label = { 
+                Text(
+                    text = stringResource(R.string.comunidades),
+                    style = labelStyle,
+                    maxLines = 1,
+                    softWrap = false
+                ) 
+            },
             colors = navColors
         )
         NavigationBarItem(
@@ -195,7 +226,14 @@ fun Footer(
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Perfil", fontSize = 12.sp) },
+            label = { 
+                Text(
+                    text = stringResource(R.string.perfil),
+                    style = labelStyle,
+                    maxLines = 1,
+                    softWrap = false
+                ) 
+            },
             colors = navColors
         )
     }

@@ -21,12 +21,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Explore
@@ -35,13 +37,13 @@ import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -173,9 +175,9 @@ fun MapScreen(
     )
 
     LaunchedEffect(permissionsState.allPermissionsGranted) {
-        val locationGranted = permissionsState.permissions.any { 
-            (it.permission == Manifest.permission.ACCESS_FINE_LOCATION || 
-             it.permission == Manifest.permission.ACCESS_COARSE_LOCATION) && it.status.isGranted 
+        val locationGranted = permissionsState.permissions.any {
+            (it.permission == Manifest.permission.ACCESS_FINE_LOCATION ||
+             it.permission == Manifest.permission.ACCESS_COARSE_LOCATION) && it.status.isGranted
         }
         viewModel.onLocationPermissionChanged(locationGranted)
 
@@ -246,127 +248,100 @@ fun MapScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(80.dp))
-            val hasCommunityFilter = uiState.communityFilter != MapCommunityFilter.ALL
-            val hasSearchFilter = uiState.searchQuery.isNotBlank()
-            val activeCommunityFilterLabel = when (uiState.communityFilter) {
-                MapCommunityFilter.ALL -> null
-                MapCommunityFilter.OWN_PINS -> stringResource(R.string.map_filtro_mis_pines)
-                MapCommunityFilter.COMMUNITY -> memberCommunities
-                    .find { it.id == uiState.selectedCommunityId }
-                    ?.name
-            }
-
+            // Seccion superior: Filtros y Buscador, ajustada arriba
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color.White,
-                tonalElevation = 1.dp
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp,
+                shadowElevation = 4.dp,
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    // Texto descriptivo de filtros (como en la imagen)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Outlined.FilterList,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text(
                             text = stringResource(R.string.map_filtros_titulo),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
+                    // Fila de filtros con LazyRow (Selección Múltiple)
                     LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         item {
                             MapFilterChip(
                                 label = stringResource(R.string.map_filtro_todos),
                                 icon = Icons.Outlined.FilterList,
-                                selected = uiState.communityFilter == MapCommunityFilter.ALL,
-                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
+                                selected = uiState.isFilterAllSelected,
+                                onClick = { viewModel.toggleFilterAll() }
                             )
                         }
                         item {
                             MapFilterChip(
                                 label = stringResource(R.string.map_filtro_mis_pines),
                                 icon = Icons.Outlined.Person,
-                                selected = uiState.communityFilter == MapCommunityFilter.OWN_PINS,
-                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.OWN_PINS) }
+                                selected = uiState.filterOwnPins,
+                                onClick = { viewModel.toggleFilterOwnPins() }
                             )
                         }
                         items(memberCommunities, key = { it.id }) { community ->
                             MapFilterChip(
                                 label = community.name,
                                 icon = Icons.Outlined.Groups,
-                                selected = uiState.communityFilter == MapCommunityFilter.COMMUNITY
-                                    && uiState.selectedCommunityId == community.id,
+                                selected = community.id in uiState.selectedCommunityIds,
                                 onClick = {
-                                    viewModel.setCommunityFilter(MapCommunityFilter.COMMUNITY, community.id)
+                                    viewModel.toggleCommunityFilter(community.id)
                                 }
                             )
                         }
                     }
 
-                    if (hasCommunityFilter || hasSearchFilter) {
-                        LazyRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            activeCommunityFilterLabel?.let { label ->
-                                item {
-                                    ActiveFilterPill(
-                                        text = stringResource(R.string.map_filtro_activo, label),
-                                        onClear = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
-                                    )
+                    // Barra de búsqueda mejorada
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = viewModel::setSearchQuery,
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(R.string.buscar_pin_en_el_mapa)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (uiState.searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                    Icon(Icons.Default.Close, null)
                                 }
+                            } else {
+                                IconButton(onClick = ::focusOnSearchedPin) { Icon(Icons.Default.Search, null) }
                             }
-                            if (hasSearchFilter) {
-                                item {
-                                    ActiveFilterPill(
-                                        text = stringResource(R.string.map_busqueda_activa, uiState.searchQuery),
-                                        onClear = { viewModel.setSearchQuery("") }
-                                    )
-                                }
-                            }
-                        }
-                    }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focusOnSearchedPin() }),
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
+                        )
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::setSearchQuery,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                placeholder = { Text(stringResource(R.string.buscar_pin_en_el_mapa)) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = { IconButton(onClick = ::focusOnSearchedPin) { Icon(Icons.Default.Search, null) } },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focusOnSearchedPin() }),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.White, unfocusedContainerColor = Color.White)
-            )
-
+            // Area del mapa que ocupa el resto
             Box(modifier = Modifier.weight(1f)) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
@@ -387,7 +362,7 @@ fun MapScreen(
                             onClick = { viewModel.selectPin(pin) }
                         )
                     }
-                    
+
                     uiState.userLocation?.let { location ->
                         CustomMapMarker(
                             imageUrl = userData?.fotoUrl?.ifBlank { null },
@@ -403,6 +378,7 @@ fun MapScreen(
                     if (uiState.routePolyline.size >= 2) Polyline(points = uiState.routePolyline, width = 14f)
                 }
 
+                // Indicador de pasos (flotante sobre el mapa)
                 Card(
                     modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -416,6 +392,7 @@ fun MapScreen(
                     }
                 }
 
+                // Botones flotantes (Compass, MyLocation)
                 Column(modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
                     FloatingActionButton(
                         onClick = { isCompassModeEnabled = !isCompassModeEnabled },
@@ -425,7 +402,7 @@ fun MapScreen(
                     ) {
                         Icon(if (isCompassModeEnabled) Icons.Default.Explore else Icons.Default.Navigation, null, tint = if (isCompassModeEnabled) Color.White else Color.Gray)
                     }
-                    
+
                     FloatingActionButton(
                         onClick = { viewModel.setFollowingUser(true) },
                         containerColor = if (uiState.isFollowingUser) MaterialTheme.colorScheme.primary else Color.White,
@@ -437,6 +414,8 @@ fun MapScreen(
 
                 SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp))
             }
+
+            // Footer de navegacion
             Footer(
                 currentScreen = currentScreen,
                 onHomeClick = onNavigateToHome,
@@ -449,6 +428,7 @@ fun MapScreen(
         }
     }
 
+    // Dialogo de detalle de Pin
     uiState.selectedPin?.let { selectedPin ->
         AlertDialog(
             onDismissRequest = viewModel::dismissSelectedPin,
@@ -463,14 +443,6 @@ fun MapScreen(
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
-                    if (uiState.userLocation == null) {
-                        Text(
-                            text = stringResource(R.string.quieres_trazar_una_ruta_desde_tu_ubicacion_actual),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
                 }
             },
             confirmButton = {
@@ -479,11 +451,7 @@ fun MapScreen(
                     enabled = !uiState.isLoadingRoute && uiState.userLocation != null
                 ) {
                     if (uiState.isLoadingRoute) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MaterialTheme.colorScheme.onPrimary)
                     } else {
                         Text(stringResource(R.string.trazar_ruta))
                     }
@@ -503,6 +471,7 @@ fun MapScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MapFilterChip(
     label: String,
@@ -518,12 +487,12 @@ private fun MapFilterChip(
                 text = label,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
             )
         },
         leadingIcon = {
             Icon(
-                imageVector = icon,
+                imageVector = if (selected) Icons.Default.Check else icon,
                 contentDescription = null,
                 modifier = Modifier.size(FilterChipDefaults.IconSize),
                 tint = if (selected) MaterialTheme.colorScheme.onPrimary
@@ -539,45 +508,11 @@ private fun MapFilterChip(
             selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
         ),
         border = BorderStroke(
-            1.dp,
-            if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.outlineVariant
+            width = 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
         ),
         shape = RoundedCornerShape(20.dp)
     )
-}
-
-@Composable
-private fun ActiveFilterPill(
-    text: String,
-    onClear: () -> Unit
-) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            IconButton(onClick = onClear, modifier = Modifier.size(28.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-    }
 }
 
 private fun buildPinSnippet(pin: com.example.pinar.data.PinMapItem): String {

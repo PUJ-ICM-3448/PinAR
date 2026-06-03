@@ -206,4 +206,9 @@
     <string name="evento_tu_ubicacion">Tú</string>
     <string name="evento_compartiendo">Compartiendo ubicación</string>
     <string name="home_eventos_vacio_desc">Cuando haya eventos activos en tus comunidades, aparecerán aquí.</string>
+    <string name="mapa">Mapa</string>
+    <string name="inicio">Inicio</string>
+    <string name="ar">AR</string>
+    <string name="comunidades">Comunidades</string>
+    <string name="perfil">Perfil</string>
 </resources>
