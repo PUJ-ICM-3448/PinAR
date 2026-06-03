@@ -381,14 +381,6 @@ fun AROverlay(
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             !state.isHostingMode -> {
-                Button(
-                    onClick = onViewPinsClick,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(20.dp)
-                ) {
-                    Text(stringResource(R.string.ver_pines))
-                }
 
                 if (state.resolvedPins.isNotEmpty()) {
                     Box(
