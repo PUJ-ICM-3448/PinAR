@@ -81,7 +81,7 @@ fun CommunityEventScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val cameraState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(4.628, -74.064), 16f)
+        position = CameraPosition.fromLatLngZoom(LatLng(4.628, -74.064), 12f)
     }
 
     val permissionsState = rememberMultiplePermissionsState(

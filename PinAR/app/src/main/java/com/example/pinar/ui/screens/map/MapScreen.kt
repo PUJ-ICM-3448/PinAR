@@ -175,9 +175,9 @@ fun MapScreen(
     )
 
     LaunchedEffect(permissionsState.allPermissionsGranted) {
-        val locationGranted = permissionsState.permissions.any { 
-            (it.permission == Manifest.permission.ACCESS_FINE_LOCATION || 
-             it.permission == Manifest.permission.ACCESS_COARSE_LOCATION) && it.status.isGranted 
+        val locationGranted = permissionsState.permissions.any {
+            (it.permission == Manifest.permission.ACCESS_FINE_LOCATION ||
+             it.permission == Manifest.permission.ACCESS_COARSE_LOCATION) && it.status.isGranted
         }
         viewModel.onLocationPermissionChanged(locationGranted)
 
@@ -278,7 +278,7 @@ fun MapScreen(
                         )
                     }
 
-                    // Fila de filtros con LazyRow
+                    // Fila de filtros con LazyRow (Selección Múltiple)
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -287,26 +287,25 @@ fun MapScreen(
                             MapFilterChip(
                                 label = stringResource(R.string.map_filtro_todos),
                                 icon = Icons.Outlined.FilterList,
-                                selected = uiState.communityFilter == MapCommunityFilter.ALL,
-                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.ALL) }
+                                selected = uiState.isFilterAllSelected,
+                                onClick = { viewModel.toggleFilterAll() }
                             )
                         }
                         item {
                             MapFilterChip(
                                 label = stringResource(R.string.map_filtro_mis_pines),
                                 icon = Icons.Outlined.Person,
-                                selected = uiState.communityFilter == MapCommunityFilter.OWN_PINS,
-                                onClick = { viewModel.setCommunityFilter(MapCommunityFilter.OWN_PINS) }
+                                selected = uiState.filterOwnPins,
+                                onClick = { viewModel.toggleFilterOwnPins() }
                             )
                         }
                         items(memberCommunities, key = { it.id }) { community ->
                             MapFilterChip(
                                 label = community.name,
                                 icon = Icons.Outlined.Groups,
-                                selected = uiState.communityFilter == MapCommunityFilter.COMMUNITY
-                                    && uiState.selectedCommunityId == community.id,
+                                selected = community.id in uiState.selectedCommunityIds,
                                 onClick = {
-                                    viewModel.setCommunityFilter(MapCommunityFilter.COMMUNITY, community.id)
+                                    viewModel.toggleCommunityFilter(community.id)
                                 }
                             )
                         }
@@ -319,7 +318,7 @@ fun MapScreen(
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text(stringResource(R.string.buscar_pin_en_el_mapa)) },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = { 
+                        trailingIcon = {
                             if (uiState.searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.setSearchQuery("") }) {
                                     Icon(Icons.Default.Close, null)
@@ -363,7 +362,7 @@ fun MapScreen(
                             onClick = { viewModel.selectPin(pin) }
                         )
                     }
-                    
+
                     uiState.userLocation?.let { location ->
                         CustomMapMarker(
                             imageUrl = userData?.fotoUrl?.ifBlank { null },
@@ -403,7 +402,7 @@ fun MapScreen(
                     ) {
                         Icon(if (isCompassModeEnabled) Icons.Default.Explore else Icons.Default.Navigation, null, tint = if (isCompassModeEnabled) Color.White else Color.Gray)
                     }
-                    
+
                     FloatingActionButton(
                         onClick = { viewModel.setFollowingUser(true) },
                         containerColor = if (uiState.isFollowingUser) MaterialTheme.colorScheme.primary else Color.White,
@@ -504,7 +503,7 @@ private fun MapFilterChip(
             containerColor = MaterialTheme.colorScheme.surface,
             labelColor = MaterialTheme.colorScheme.onSurface,
             iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            selectedContainerColor = MaterialTheme.colorScheme.primary, // Usamos Primary para el seleccionado (rojo en tu caso)
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
             selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
             selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
         ),

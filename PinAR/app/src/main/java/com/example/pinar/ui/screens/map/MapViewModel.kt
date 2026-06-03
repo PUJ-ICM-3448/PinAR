@@ -72,14 +72,17 @@ class MapViewModel @JvmOverloads constructor(
 
     private fun applyFilters(state: MapUiState): MapUiState {
         var list = state.allPins
-        when (state.communityFilter) {
-            MapCommunityFilter.OWN_PINS -> list = list.filter { it.createdBy == currentUid }
-            MapCommunityFilter.COMMUNITY -> {
-                val cid = state.selectedCommunityId
-                if (cid != null) list = list.filter { cid in it.communityIds }
+        
+        // Si no hay filtros específicos, mostrar todo (MapUiState.isFilterAllSelected)
+        if (!state.isFilterAllSelected) {
+            list = list.filter { pin ->
+                val matchesOwn = if (state.filterOwnPins) pin.createdBy == currentUid else false
+                val matchesCommunity = pin.communityIds.any { it in state.selectedCommunityIds }
+                
+                matchesOwn || matchesCommunity
             }
-            MapCommunityFilter.ALL -> Unit
         }
+
         if (state.searchQuery.isNotBlank()) {
             list = list.filter { it.title.contains(state.searchQuery, ignoreCase = true) }
         }
@@ -107,8 +110,23 @@ class MapViewModel @JvmOverloads constructor(
         }
     }
 
-    fun setCommunityFilter(filter: MapCommunityFilter, communityId: String? = null) {
-        _uiState.update { applyFilters(it.copy(communityFilter = filter, selectedCommunityId = communityId)) }
+    fun toggleFilterAll() {
+        _uiState.update { applyFilters(it.copy(filterOwnPins = false, selectedCommunityIds = emptySet())) }
+    }
+
+    fun toggleFilterOwnPins() {
+        _uiState.update { applyFilters(it.copy(filterOwnPins = !it.filterOwnPins)) }
+    }
+
+    fun toggleCommunityFilter(communityId: String) {
+        _uiState.update { state ->
+            val newIds = if (communityId in state.selectedCommunityIds) {
+                state.selectedCommunityIds - communityId
+            } else {
+                state.selectedCommunityIds + communityId
+            }
+            applyFilters(state.copy(selectedCommunityIds = newIds))
+        }
     }
 
     fun setSearchQuery(query: String) {

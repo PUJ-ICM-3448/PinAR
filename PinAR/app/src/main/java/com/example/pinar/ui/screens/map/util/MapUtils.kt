@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.pinar.R
@@ -50,11 +51,13 @@ fun CustomMapMarker(
         markerState.position = location
     }
     val shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 0.dp)
+    
     val hasRemoteImage = when (imageUrl) {
         null -> false
         is String -> imageUrl.isNotBlank()
         else -> true
     }
+    
     val remotePainter = if (hasRemoteImage) {
         rememberAsyncImagePainter(
             ImageRequest.Builder(LocalContext.current)
@@ -65,15 +68,19 @@ fun CustomMapMarker(
     } else {
         null
     }
+
     val placeholderPainter = if (!hasRemoteImage && placeholderResId != null) {
         painterResource(placeholderResId)
     } else {
         null
     }
+    
     var expandMarker by remember { mutableStateOf(false) }
 
+    // NOTA: Añadimos remotePainter?.state a las keys para que MarkerComposable se refresque
+    // automáticamente cuando la imagen termine de cargar (de Loading a Success).
     MarkerComposable(
-        keys = arrayOf<Any>(fullName, hasRemoteImage, placeholderResId ?: -1, expandMarker, markerColor),
+        keys = arrayOf<Any?>(fullName, hasRemoteImage, remotePainter?.state, expandMarker, markerColor) as Array<out Any>,
         state = markerState,
         title = fullName,
         snippet = snippet,
